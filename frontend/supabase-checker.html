@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>Supabase Setup Checker — Shanmuga Organics</title>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    background: #f5f5f5;
+    color: #333;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  h1 {
+    margin: 0 0 10px 0;
+    color: #2f8f43;
+  }
+  .subtitle {
+    color: #666;
+    margin: 0 0 30px 0;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border-left: 4px solid #ddd;
+  }
+  .check-item.loading {
+    border-left-color: #3b82f6;
+  }
+  .check-item.success {
+    border-left-color: #2f8f43;
+    background: #f0f7ec;
+  }
+  .check-item.error {
+    border-left-color: #b5342a;
+    background: #fdf1ef;
+  }
+  .check-icon {
+    font-size: 24px;
+    margin-right: 15px;
+    min-width: 30px;
+  }
+  .check-content {
+    flex: 1;
+  }
+  .check-title {
+    font-weight: 600;
+    margin: 0 0 5px 0;
+  }
+  .check-message {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+  }
+  .actions {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid #eee;
+  }
+  .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    margin: 5px 10px 5px 0;
+    background: #2f8f43;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn:hover {
+    background: #227a35;
+  }
+  .btn-secondary {
+    background: #6f7d72;
+  }
+  .btn-secondary:hover {
+    background: #3f5045;
+  }
+  pre {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 13px;
+  }
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #ddd;
+    border-top-color: #2f8f43;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔧 Supabase Setup Checker</h1>
+  <p class="subtitle">Verifying your authentication system configuration...</p>
+
+  <div id="checks"></div>
+
+  <div class="actions">
+    <h3>Quick Links</h3>
+    <a href="signup.html" class="btn">Test Sign Up</a>
+    <a href="signin.html" class="btn">Test Sign In</a>
+    <a href="forgot-password.html" class="btn btn-secondary">Test Password Reset</a>
+  </div>
+
+  <div style="margin-top: 30px; padding: 20px; background: #f0f7fb; border-radius: 8px;">
+    <h3 style="margin-top: 0;">Next Steps:</h3>
+    <ol style="line-height: 1.8;">
+      <li>Run <code>supabase-migration-user-profiles.sql</code> in your Supabase SQL Editor</li>
+      <li>Configure email templates in Supabase Dashboard</li>
+      <li>Test the signup flow with a real email address</li>
+      <li>Check your inbox for verification email</li>
+      <li>Review <code>SUPABASE_SETUP_GUIDE.md</code> for detailed instructions</li>
+    </ol>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="plugins/supabase/supabase-client.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  const checksContainer = document.getElementById('checks');
+  const checks = [
+    {
+      id: 'supabase-client',
+      title: 'Supabase Client Initialization',
+      test: async () => {
+        if (window.SupabaseClient) {
+          return { success: true, message: 'Supabase client initialized successfully' };
+        }
+        throw new Error('Supabase client not found');
+      }
+    },
+    {
+      id: 'connection',
+      title: 'Database Connection',
+      test: async () => {
+        const { data, error } = await window.SupabaseClient.auth.getSession();
+        if (error) throw error;
+        return { success: true, message: 'Connected to Supabase successfully' };
+      }
+    },
+    {
+      id: 'auth-config',
+      title: 'Authentication Configuration',
+      test: async () => {
+        // Try to check auth settings
+        const { data, error } = await window.SupabaseClient.auth.getSession();
+        if (error) throw error;
+        return { success: true, message: 'Authentication is properly configured' };
+      }
+    },
+    {
+      id: 'helper-functions',
+      title: 'Helper Functions',
+      test: async () => {
+        if (window.Supabase &&
+            typeof window.Supabase.isAuthenticated === 'function' &&
+            typeof window.Supabase.signIn === 'function' &&
+            typeof window.Supabase.signUp === 'function') {
+          return { success: true, message: 'All helper functions are available' };
+        }
+        throw new Error('Helper functions not loaded');
+      }
+    }
+  ];
+
+  function addCheckItem(check, status, message) {
+    const item = document.createElement('div');
+    item.className = `check-item ${status}`;
+
+    let icon = '⏳';
+    if (status === 'success') icon = '✅';
+    if (status === 'error') icon = '❌';
+    if (status === 'loading') icon = '<div class="spinner"></div>';
+
+    item.innerHTML = `
+      <div class="check-icon">${icon}</div>
+      <div class="check-content">
+        <div class="check-title">${check.title}</div>
+        <div class="check-message">${message}</div>
+      </div>
+    `;
+
+    checksContainer.appendChild(item);
+    return item;
+  }
+
+  async function runChecks() {
+    for (const check of checks) {
+      const item = addCheckItem(check, 'loading', 'Checking...');
+
+      try {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Small delay for UX
+        const result = await check.test();
+        item.className = 'check-item success';
+        item.querySelector('.check-icon').textContent = '✅';
+        item.querySelector('.check-message').textContent = result.message;
+      } catch (error) {
+        item.className = 'check-item error';
+        item.querySelector('.check-icon').textContent = '❌';
+        item.querySelector('.check-message').textContent = error.message || 'Check failed';
+        console.error(`Check failed: ${check.id}`, error);
+      }
+    }
+
+    // Add current configuration info
+    const configItem = document.createElement('div');
+    configItem.className = 'check-item';
+    configItem.innerHTML = `
+      <div class="check-icon">ℹ️</div>
+      <div class="check-content">
+        <div class="check-title">Current Configuration</div>
+        <div class="check-message">
+          <pre>Supabase URL: ${window.SupabaseClient?.supabaseUrl || 'Not configured'}
+Project: ${window.__soSupabaseConfig ? 'LOCAL Docker' : 'Hosted (or local configuration unavailable)'}
+Status: ${window.SupabaseClient ? 'Connected' : 'Not connected'}</pre>
+        </div>
+      </div>
+    `;
+    checksContainer.appendChild(configItem);
+  }
+
+  // Run checks when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runChecks);
+  } else {
+    runChecks();
+  }
+})();
+</script>
+
+</body>
+</html>

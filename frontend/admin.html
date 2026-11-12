@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard — Shanmuga Organics</title>
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/admin.css">
+  <style>
+    /* ===== Admin Login Gate fields — shared style so Email & Password
+       always render identically (same height, border, focus state) ===== */
+    #adminGate .ag-field {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border: 1.5px solid #d5ddd2;
+      border-radius: 9px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: #22301f;
+      background: #fbfcfa;
+      outline: none;
+      box-sizing: border-box;
+      display: block;
+      transition: border-color .15s, background .15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    #adminGate .ag-field::placeholder { color: #a8b3a8; }
+    #adminGate .ag-field:focus {
+      border-color: #2f8f43;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(47, 143, 67, .08);
+    }
+    /* Keep browser autofill from repainting the field */
+    #adminGate .ag-field:-webkit-autofill,
+    #adminGate .ag-field:-webkit-autofill:hover,
+    #adminGate .ag-field:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #fff inset;
+      -webkit-text-fill-color: #22301f;
+      transition: background-color 9999s ease-in-out 0s;
+    }
+    #adminGatePass { padding-right: 48px !important; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ======== Admin Login Gate (shown until Supabase sign-in) ======== -->
+  <div id="adminGate" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:linear-gradient(135deg,#f6f2e4 0%,#eef4e8 100%);font-family:'Inter','Noto Sans Tamil',sans-serif">
+    <div style="background:#fff;border:1px solid #e2e8e0;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.08);padding:36px 32px;width:100%;max-width:380px;margin:16px;box-sizing:border-box">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:24px">
+        <img src="assets/img/logo.png" alt="Shanmuga Organics" style="height:64px;width:auto;max-width:180px;object-fit:contain;display:block;margin:0 auto 12px">
+        <h2 style="margin:0;font-size:20px;font-weight:700;color:#22301f">Admin Login</h2>
+        <p style="margin:6px 0 0;font-size:13px;color:#7a8677">Sign in with your admin account to continue</p>
+      </div>
+      <form id="adminGateForm" novalidate>
+        <div style="margin-bottom:14px">
+          <label for="adminGateEmail" style="display:block;font-size:12px;font-weight:600;color:#4a554a;margin-bottom:6px">Email</label>
+          <input type="email" id="adminGateEmail" class="ag-field" autocomplete="username" required placeholder="admin@example.com" autocapitalize="off" spellcheck="false">
+        </div>
+        <div style="margin-bottom:16px">
+          <label for="adminGatePass" style="display:block;font-size:12px;font-weight:600;color:#4a554a;margin-bottom:6px">Password</label>
+          <div style="position:relative">
+            <input type="password" id="adminGatePass" class="ag-field" autocomplete="current-password" required placeholder="••••••••">
+            <button type="button" id="togglePass" aria-label="Show password"
+              style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:pointer;color:#9aa79b;padding:0;border-radius:7px"
+              onmouseover="this.style.background='#f0f4ee'" onmouseout="this.style.background='transparent'">
+              <svg id="eyeOpen" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-7.5 11-7.5S23 12 23 12s-4 7.5-11 7.5S1 12 1 12z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="eyeClosed" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <path d="M17.94 17.94A10.5 10.5 0 0112 19.5C5 19.5 1 12 1 12a19.8 19.8 0 015.06-5.94M9.9 4.24A10.5 10.5 0 0112 4.5c7 0 11 7.5 11 7.5a19.8 19.8 0 01-3.22 4.19M1 1l22 22"/>
+                <path d="M14.12 14.12a3 3 0 11-4.24-4.24"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="adminGateError" style="display:none;background:#fdeeee;border:1px solid #f2c6c6;color:#b03333;font-size:13px;padding:9px 12px;border-radius:8px;margin-bottom:14px"></div>
+        <button type="submit" id="adminGateSubmit"
+          style="width:100%;padding:12px;background:#2f8f43;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s"
+          onmouseover="this.style.background='#277a38'" onmouseout="this.style.background='#2f8f43'">Sign In</button>
+      </form>
+      <p style="margin:16px 0 0;text-align:center;font-size:12px;color:#98a29a">
+        <a href="index.html" style="color:#2f8f43;text-decoration:none">← Back to store</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ======== Protected Admin Layout (hidden until signed in) ======== -->
+  <div id="adminLayout" style="display:none">
+
+  <!-- ======== Sidebar ======== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__head">
+      <a href="index.html" class="sidebar__brand">
+        <img src="assets/img/logo.png" alt="Shanmuga Organics" class="sidebar__logo">
+      </a>
+    </div>
+
+    <nav class="sidebar__nav" id="sideNav">
+      <a class="nav-link is-active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-link" data-page="products">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z" />
+          <path d="M7.5 5.2l9 4.6v10.4M21 7.5l-9 4.6" />
+        </svg>
+        <span>Products</span>
+      </a>
+      <a class="nav-link" data-page="categories">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="8" height="8" rx="2" />
+          <rect x="13" y="3" width="8" height="8" rx="2" />
+          <rect x="3" y="13" width="8" height="8" rx="2" />
+          <rect x="13" y="13" width="8" height="8" rx="2" />
+        </svg>
+        <span>Categories</span>
+      </a>
+      <a class="nav-link" data-page="orders">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2.5h12v19l-3-1.8-3 1.8-3-1.8-3 1.8z" />
+          <path d="M9 8h6M9 12h6" />
+        </svg>
+        <span>Orders</span>
+        <span class="nav-badge" id="ordersBadge" style="display:none">0</span>
+      </a>
+      <a class="nav-link" data-page="payments">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>
+        </svg>
+        <span>Payment Gateway</span>
+      </a>
+      <a class="nav-link" data-page="customers">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="8.5" r="3.5" />
+          <path d="M2.8 20a6.4 6.4 0 0112.4 0" />
+          <path d="M16.5 5.4a3.5 3.5 0 010 6.6M18 20h3.3a5.6 5.6 0 00-3.4-5" />
+        </svg>
+        <span>Customers</span>
+      </a>
+      <a class="nav-link" data-page="reviews">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z" />
+        </svg>
+        <span>Reviews</span>
+      </a>
+      <a class="nav-link" data-page="coupons">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.5 12.8l-7.7 7.7-9.3-9.3V3.5h7.7l9.3 9.3z" />
+          <circle cx="8" cy="8" r="1.5" />
+        </svg>
+        <span>Coupons</span>
+      </a>
+      <a class="nav-link" data-page="banners">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 15l5-4 4 3 4-5 5 6" />
+        </svg>
+        <span>Banners</span>
+      </a>
+      <a class="nav-link" data-page="reports">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 20V10M12 20V4M6 20v-6" />
+        </svg>
+        <span>Reports</span>
+      </a>
+      <a class="nav-link" data-page="settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+        </svg>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <!-- Admin Profile at bottom of sidebar -->
+    <div class="sidebar__profile" id="sidebarProfile">
+      <div class="sprofile__card" id="sprofileToggle">
+        <div class="sprofile__av" id="sprofileAv" title="Click to change photo">
+          <span id="sprofileInitial">A</span>
+          <img id="sprofileImg" src="" alt="" style="display:none">
+          <div class="sprofile__av-edit">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+              <path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z" />
+            </svg>
+          </div>
+        </div>
+        <div class="sprofile__info">
+          <span class="sprofile__name" id="sprofileName">Admin</span>
+          <span class="sprofile__role">Store Manager</span>
+        </div>
+        <svg class="sprofile__chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+          stroke-width="2.5">
+          <polyline points="18 15 12 9 6 15" />
+        </svg>
+      </div>
+      <!-- Dropdown menu -->
+      <div class="sprofile__menu" id="sprofileMenu">
+        <button class="sprofile__mi" id="editProfileBtn">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+          Edit Profile
+        </button>
+        <button class="sprofile__mi" id="changeAvatarBtn">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="M3 15l5-4 4 3 4-5 5 6" />
+            <circle cx="8.5" cy="9.5" r="1.5" />
+          </svg>
+          Change Photo
+        </button>
+        <button class="sprofile__mi" id="changePwdBtn">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0110 0v4" />
+          </svg>
+          Change Password
+        </button>
+        <a class="sprofile__mi" href="index.html">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          View Store
+        </a>
+        <div class="sprofile__divider"></div>
+        <button class="sprofile__mi sprofile__mi--logout" id="logoutBtn">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          Log Out
+        </button>
+      </div>
+      <!-- Hidden file input for avatar upload -->
+      <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+    </div>
+  </aside>
+
+  <!-- ======== Main Content ======== -->
+  <div class="main" id="main">
+
+    <!-- Top bar -->
+    <header class="topbar" id="topbar">
+      <button class="topbar__hamburger" id="toggleSidebar" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+      </button>
+      <div class="topbar__left">
+        <h1 class="topbar__title" id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar__right">
+
+        <!-- Date Range Picker -->
+        <div class="tr-datepick" id="datePickWrap">
+          <button class="topbar__date" id="dateRange" aria-label="Date range">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M16 2v4M8 2v4M3 10h18" />
+            </svg>
+            <span id="dateText"></span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+              style="margin-left:2px">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="tr-datepick__panel" id="datePickPanel">
+            <div class="tr-datepick__presets">
+              <button class="tr-preset is-active" data-preset="7">Last 7 days</button>
+              <button class="tr-preset" data-preset="0">Today</button>
+              <button class="tr-preset" data-preset="30">Last 30 days</button>
+              <button class="tr-preset" data-preset="month">This month</button>
+              <button class="tr-preset" data-preset="custom">Custom</button>
+            </div>
+            <div class="tr-datepick__custom" id="dateCustomRow" style="display:none">
+              <label>From <input type="date" id="dateFrom" class="tr-date-in"></label>
+              <label>To <input type="date" id="dateTo" class="tr-date-in"></label>
+              <button class="tr-apply-btn" id="applyCustomDate">Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Bell -->
+        <div class="tr-notif" id="notifWrap">
+          <button class="topbar__icon" id="notifBtn" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round">
+              <path d="M18 16V11a6 6 0 10-12 0v5l-1.5 2.5h15z" />
+              <path d="M9.8 19.5a2.3 2.3 0 004.4 0" />
+            </svg>
+            <span class="topbar__badge" id="notifBadge" style="display:none">0</span>
+          </button>
+          <div class="tr-notif__panel" id="notifPanel">
+            <div class="tr-notif__head">
+              <span class="tr-notif__title">Notifications</span>
+              <button class="tr-notif__markall" id="markAllRead">Mark all read</button>
+            </div>
+            <div class="tr-notif__list" id="notifList">
+              <!-- injected by JS -->
+            </div>
+            <div class="tr-notif__foot">
+              <button class="tr-notif__clear" id="clearAllNotif">Clear all</button>
+              <a class="tr-notif__view" data-page="orders" id="viewAllOrders">View all orders →</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+
+    <!-- Page container -->
+    <div class="page-content" id="pageContent">
+      <!-- Panels injected by JS -->
+    </div>
+
+  </div>
+
+  <!-- ======== Overlay for mobile sidebar ======== -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  </div><!-- /adminLayout -->
+
+  <!-- Live Server opened on frontend/admin.html needs the sibling plugins folder;
+       the dev server and published dist/admin.html serve plugins beside the page. -->
+  <script>
+    window.adminPluginPath = /\/frontend\/admin\.html$/i.test(location.pathname)
+      ? '../plugins/supabase/' : 'plugins/supabase/';
+    document.write('<script src="' + window.adminPluginPath + 'supabase.umd.js"><\/script>');
+    document.write('<script src="' + window.adminPluginPath + 'supabase-client.js?v=6"><\/script>');
+  </script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/admin.js?v=4"></script>
+</body>
+
+</html>

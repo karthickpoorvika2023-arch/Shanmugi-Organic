@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>Account Settings — Shanmuga Organics</title>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .settings-page-head {
+    background: linear-gradient(135deg, var(--green-050) 0%, var(--cream-100) 100%);
+    padding: 32px 0 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .settings-page-head h1 {
+    margin: 0 0 4px 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .settings-page-head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .settings-page-head a.back {
+    color: var(--green-700);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .settings-page-head a.back:hover { text-decoration: underline; }
+
+  .settings-sections {
+    max-width: 760px;
+    margin: 30px auto 60px;
+    padding: 0 20px;
+  }
+
+  .settings-section-card {
+    background: #fff;
+    border-radius: var(--radius-l);
+    padding: 26px 28px;
+    box-shadow: var(--shadow-s);
+    margin-bottom: 22px;
+  }
+
+  .settings-section-card h2 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .settings-section-card .settings-section-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 18px 0;
+  }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .form-textarea { min-height: 100px; resize: vertical; }
+  .form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(47, 143, 67, 0.1);
+  }
+  .form-input:disabled {
+    background: var(--cream-100);
+    cursor: not-allowed;
+  }
+  .form-help {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+  .settings-row:first-of-type { border-top: none; }
+  .settings-row__info h4 { margin: 0 0 2px 0; font-size: 14px; font-weight: 500; color: var(--ink); }
+  .settings-row__info p { margin: 0; font-size: 12px; color: var(--muted); }
+
+  .toggle-switch { position: relative; width: 44px; height: 24px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc; transition: 0.3s; border-radius: 24px;
+  }
+  .toggle-slider:before {
+    position: absolute; content: ""; height: 18px; width: 18px;
+    left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%;
+  }
+  .toggle-switch input:checked + .toggle-slider { background-color: var(--green-600); }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  .password-toggle { position: relative; }
+  .password-toggle .form-input { padding-right: 40px; }
+  .password-toggle-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; cursor: pointer; color: var(--muted); padding: 6px;
+  }
+
+  .danger-zone {
+    background: var(--red-050);
+    border: 1px solid rgba(181, 52, 42, 0.2);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .danger-zone h4 { color: var(--red); margin: 0 0 6px 0; font-size: 14px; }
+  .danger-zone p { font-size: 12px; color: var(--muted); margin: 0 0 12px 0; }
+
+  .btn--danger {
+    background: var(--red); color: #fff; border: none;
+    padding: 8px 16px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s;
+  }
+  .btn--danger:hover { background: #9a2e24; }
+  .btn--danger:disabled { background: #ccc; cursor: not-allowed; }
+
+  .loading-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .spinner {
+    width: 48px; height: 48px; border: 4px solid var(--line);
+    border-top-color: var(--green-600); border-radius: 50%;
+    animation: spinner 0.8s linear infinite; margin: 0 auto 20px;
+  }
+  @keyframes spinner { to { transform: rotate(360deg); } }
+
+  .alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 20px; display: none; }
+  .alert.is-visible { display: block; }
+  .alert--error { background: var(--red-050); color: var(--red); border: 1px solid rgba(181, 52, 42, 0.2); }
+  .alert--success { background: var(--green-050); color: var(--green-800); border: 1px solid rgba(47, 143, 67, 0.2); }
+
+  .btn-loading { position: relative; pointer-events: none; opacity: 0.7; }
+  .btn-loading::after {
+    content: ''; position: absolute; width: 14px; height: 14px;
+    top: 50%; left: 50%; margin-left: -7px; margin-top: -7px;
+    border: 2px solid #fff; border-radius: 50%;
+    border-top-color: transparent; animation: spinner 0.6s linear infinite;
+  }
+
+  /* Profile photo card */
+  .profile-photo-card {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .profile-photo-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex: 0 0 80px;
+    background: var(--green-050);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .profile-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .profile-photo-preview .profile-photo-initials {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--green-600);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .profile-photo-meta {
+    flex: 1;
+    min-width: 220px;
+  }
+  .profile-photo-meta p {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .profile-photo-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 4px 0 12px 0;
+  }
+  .profile-photo-actions .btn--secondary {
+    background: var(--green-050);
+    color: var(--green-800);
+    border: 1px solid rgba(47, 143, 67, 0.2);
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .profile-photo-actions .btn--secondary:hover {
+    background: var(--green-100);
+  }
+  .profile-photo-actions .btn--danger-outline {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(181, 52, 42, 0.3);
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .profile-photo-actions .btn--danger-outline:hover {
+    background: var(--red-050);
+  }
+  .profile-photo-status {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0;
+    min-height: 16px;
+  }
+
+  /* Crop modal */
+  .crop-modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 22, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+  }
+  .crop-modal-backdrop.is-visible { display: flex; }
+  .crop-modal {
+    background: #fff;
+    border-radius: var(--radius-l);
+    width: 100%;
+    max-width: 440px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  }
+  .crop-modal h3 {
+    margin: 0 0 4px 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .crop-modal .crop-modal-sub {
+    margin: 0 0 14px 0;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .crop-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #1a1d1c;
+    border-radius: 12px;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grab;
+  }
+  .crop-stage.is-dragging { cursor: grabbing; }
+  .crop-stage img {
+    position: absolute;
+    top: 0; left: 0;
+    max-width: none;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-drag: none;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+  .crop-circle-mask {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at center, transparent 0 calc(50% - 1.5px),
+                      rgba(0, 0, 0, 0.55) calc(50% - 0.5px) calc(50% + 0.5px),
+                      transparent calc(50% + 1.5px));
+  }
+  .crop-zoom {
+    width: 100%;
+    margin: 14px 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .crop-zoom input[type="range"] {
+    flex: 1;
+    accent-color: var(--green-600);
+  }
+  .crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .crop-error {
+    color: var(--red);
+    font-size: 12.5px;
+    margin: 8px 0 0 0;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body data-page="account-settings">
+
+<div data-shell="header"></div>
+
+<!-- Loading State -->
+<div id="loadingState" class="loading-state">
+  <div class="spinner"></div>
+  <p>Loading your settings...</p>
+</div>
+
+<!-- Account Content -->
+<div id="accountContent" style="display: none;">
+
+  <div class="settings-page-head">
+    <div class="container">
+      <a class="back" href="account.html">← Back to account</a>
+      <h1 style="margin-top:8px">Account settings</h1>
+      <p>Profile, password, notifications, and account controls.</p>
+    </div>
+  </div>
+
+  <div class="settings-sections">
+    <div id="alertBox" class="alert"></div>
+
+    <!-- Profile photo -->
+    <section class="settings-section-card" id="profile-photo">
+      <h2>Profile photo</h2>
+      <p class="settings-section-sub">Shown next to your name on orders and (when enabled) recipes.</p>
+      <div class="profile-photo-card">
+        <div class="profile-photo-preview" id="avatarPreview"></div>
+        <div class="profile-photo-meta">
+          <p>Upload your own photo, or remove it to show your initials.</p>
+          <div class="profile-photo-actions">
+            <button type="button" class="btn--secondary" id="uploadAvatarBtn">Upload a photo</button>
+            <button type="button" class="btn--danger-outline" id="removeAvatarBtn">Remove</button>
+            <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp" style="display:none">
+          </div>
+          <div class="profile-photo-status" id="avatarStatus">No photo — showing your initials</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile -->
+    <section class="settings-section-card">
+      <h2>Profile</h2>
+      <p class="settings-section-sub">Your name and contact details. Used on orders.</p>
+      <form id="profileForm">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="fullName">Full name</label>
+            <input type="text" id="fullName" class="form-input" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone</label>
+            <input type="tel" id="phone" class="form-input" placeholder="+91 9876543210">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input type="email" id="email" class="form-input" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="defaultAddress">Default shipping address</label>
+          <input type="text" id="defaultAddress" class="form-input" placeholder="Street address">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="city">City</label>
+            <input type="text" id="city" class="form-input" placeholder="City">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="state">State</label>
+            <input type="text" id="state" class="form-input" placeholder="State">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pincode">Pincode</label>
+          <input type="text" id="pincode" class="form-input" placeholder="641001">
+        </div>
+        <button type="submit" class="btn btn--primary" id="saveProfileBtn">Save changes</button>
+        <a class="btn btn--secondary" href="account.html" style="margin-left:8px">Cancel</a>
+      </form>
+    </section>
+
+    <!-- Notifications -->
+    <section class="settings-section-card">
+      <h2>Notifications</h2>
+      <p class="settings-section-sub">What we'd like to email you about.</p>
+      <div class="settings-row">
+        <div class="settings-row__info">
+          <h4>Order updates</h4>
+          <p>Status changes and delivery updates for orders you place.</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifyOrders" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row__info">
+          <h4>Promotional emails</h4>
+          <p>New products, offers, and discounts.</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifyPromo">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row__info">
+          <h4>Newsletter</h4>
+          <p>Monthly updates on harvests and recipes.</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifyNewsletter">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Password -->
+    <section class="settings-section-card">
+      <h2>Change password</h2>
+      <p class="settings-section-sub">Pick something at least 8 characters long.</p>
+      <form id="changePasswordForm">
+        <div class="form-group">
+          <label class="form-label" for="currentPassword">Current password</label>
+          <div class="password-toggle">
+            <input type="password" id="currentPassword" class="form-input">
+            <button type="button" class="password-toggle-btn" data-toggle="currentPassword" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newPassword">New password</label>
+          <div class="password-toggle">
+            <input type="password" id="newPassword" class="form-input">
+            <button type="button" class="password-toggle-btn" data-toggle="newPassword" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirmNewPassword">Confirm new password</label>
+          <div class="password-toggle">
+            <input type="password" id="confirmNewPassword" class="form-input">
+            <button type="button" class="password-toggle-btn" data-toggle="confirmNewPassword" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn--primary" id="changePasswordBtn">Update password</button>
+      </form>
+    </section>
+
+    <!-- Security -->
+    <section class="settings-section-card">
+      <h2>Security</h2>
+      <p class="settings-section-sub">Email verification status.</p>
+      <div class="settings-row">
+        <div class="settings-row__info">
+          <h4>Email verification</h4>
+          <p>Confirming your email lets you reset your password.</p>
+        </div>
+        <button type="button" class="btn btn--secondary btn--sm" id="resendVerificationBtn">Resend verification</button>
+      </div>
+    </section>
+
+    <!-- Danger zone -->
+    <section class="settings-section-card">
+      <h2>Danger zone</h2>
+      <p class="settings-section-sub">Irreversible. Be sure.</p>
+      <div class="danger-zone">
+        <h4>Delete account</h4>
+        <p>Once you delete your account, there is no going back. All your data will be permanently removed.</p>
+        <button type="button" class="btn--danger" id="deleteAccountBtn">Delete my account</button>
+      </div>
+    </section>
+
+    <p class="tc small muted"><a class="linkish" href="account.html">← Back to account</a></p>
+  </div>
+</div>
+
+<!-- Crop modal -->
+<div class="crop-modal-backdrop" id="cropModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="cropModalTitle">
+  <div class="crop-modal">
+    <h3 id="cropModalTitle">Crop your photo</h3>
+    <p class="crop-modal-sub">Drag to reposition. Use the slider to zoom. Max file size: 2 MB.</p>
+    <div class="crop-stage" id="cropStage">
+      <img id="cropImage" alt="">
+      <div class="crop-circle-mask"></div>
+    </div>
+    <div class="crop-zoom">
+      <span>Zoom</span>
+      <input type="range" id="cropZoom" min="100" max="400" step="1" value="100" aria-label="Zoom">
+      <span id="cropZoomLabel">1.0×</span>
+    </div>
+    <div class="crop-error" id="cropError"></div>
+    <div class="crop-actions">
+      <button type="button" class="btn btn--secondary" id="cropCancelBtn">Cancel</button>
+      <button type="button" class="btn btn--primary" id="cropSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div data-shell="footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
+<script src="plugins/supabase/supabase-client.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/account-settings.js"></script>
+<script>AccountSettings.initStandalone();</script>
+
+  <script src="plugins/cms/content-cms.js?v=1"></script>
+</body>
+</html>

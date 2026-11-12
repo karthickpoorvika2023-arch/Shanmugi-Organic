@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>Track Your Order — Shanmuga Organics</title>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="track">
+
+<div data-shell="header"></div>
+
+<div class="pagehead">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="index.html">Home</a><span data-ic="chevR"></span><b>Track Order</b>
+    </nav>
+    <h1>Track Your Order</h1>
+    <span class="ta">ஆர்டர் நிலையை அறிய</span>
+    <p>Enter the order number from your confirmation — it looks like <b>SO10482</b>.</p>
+  </div>
+</div>
+
+<section class="sec sec--tight">
+  <div class="container" data-track>
+    <div class="panel" style="padding:20px;max-width:620px">
+      <form class="form">
+        <div class="field">
+          <label>Order number <span class="req">*</span></label>
+          <input data-orderid placeholder="SO10482" aria-label="Order number">
+          <span class="hint">Tip: try the sample order <b>SO10001</b> to see how tracking looks.</span>
+        </div>
+        <button class="btn btn--primary" type="submit">Track Order</button>
+      </form>
+      <div class="mt-14" data-myorders></div>
+    </div>
+    <div class="mt-20" data-trackresult></div>
+  </div>
+</section>
+
+<section class="sec sec--tight">
+  <div class="container cards3">
+    <div class="icard"><span class="icard__ic" data-ic="clock"></span>
+      <h4>Dispatch timing</h4>
+      <p>Orders placed before 2 PM leave the same working day. Sundays and local
+        holidays are packed but not shipped.</p></div>
+    <div class="icard"><span class="icard__ic" data-ic="headset"></span>
+      <h4>Something wrong?</h4>
+      <p>Call <a class="linkish" href="tel:+916380040001">+91 638 004 0001</a> with your order
+        number and we will sort it out.</p></div>
+    <div class="icard"><span class="icard__ic" data-ic="refresh"></span>
+      <h4>Damaged in transit</h4>
+      <p>Send a photo within 48 hours on WhatsApp and we replace or refund — no return shipping.</p></div>
+  </div>
+</section>
+
+<div data-shell="footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/pages.js"></script>
+<script>App.init('');</script>
+  <script src="plugins/cms/content-cms.js?v=1"></script>
+</body>
+</html>

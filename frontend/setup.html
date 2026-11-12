@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>Database setup — Shanmuga Organics</title>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  body { background: var(--cream-100, #faf7f1); }
+  .setup-wrap {
+    max-width: 820px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+  .setup-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 32px 36px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  .setup-card h1 {
+    margin: 0 0 8px 0;
+    font-size: 26px;
+    font-weight: 700;
+  }
+  .setup-card .lead {
+    color: var(--muted, #6b6b6b);
+    margin: 0 0 24px 0;
+    font-size: 15px;
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .status--checking { background: #fff7e0; color: #8a6a00; border: 1px solid #f3d97a; }
+  .status--missing { background: #fdecea; color: #b5342a; border: 1px solid #f5b8b1; }
+  .status--ok      { background: #e8f5ec; color: #1f6f33; border: 1px solid #aedcb8; }
+  .status--err     { background: #fdecea; color: #b5342a; border: 1px solid #f5b8b1; }
+  .status-dot {
+    width: 12px; height: 12px; border-radius: 50%; background: currentColor; flex: 0 0 12px;
+  }
+  .status--checking .status-dot { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  ol.setup-steps {
+    margin: 0 0 24px 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  ol.setup-steps > li {
+    counter-increment: step;
+    position: relative;
+    padding: 12px 0 12px 44px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  ol.setup-steps > li:last-child { border-bottom: none; }
+  ol.setup-steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 12px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--green-700, #1f6f33);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+  }
+  ol.setup-steps code {
+    background: #f3efe7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .sql-box {
+    position: relative;
+    background: #1d1f23;
+    color: #d8dee9;
+    padding: 16px 18px;
+    border-radius: 10px;
+    margin: 12px 0 18px 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    max-height: 320px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--green-700, #1f6f33);
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .copy-btn:hover { background: var(--green-800, #155226); }
+  .copy-btn.copied { background: #2e7d4f; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .btn-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-700, #1f6f33);
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-link:hover { background: var(--green-800, #155226); }
+  .btn-link--ghost {
+    background: #fff;
+    color: var(--ink);
+    border: 1px solid #d6d2c4;
+  }
+  .btn-link--ghost:hover { background: #faf7f1; }
+  .back-link {
+    display: inline-block;
+    margin-top: 18px;
+    color: var(--green-700, #1f6f33);
+    text-decoration: none;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body data-page="setup">
+
+<div data-shell="header"></div>
+
+<main class="setup-wrap">
+  <div class="setup-card">
+    <h1>Database setup</h1>
+    <p class="lead">One-time setup to create the <code>user_profiles</code> table and the <code>bootstrap_user_profiles()</code> function. After this, the site self-heals on its own.</p>
+
+    <div id="status" class="status status--checking">
+      <span class="status-dot"></span>
+      <span id="statusText">Checking database…</span>
+    </div>
+
+    <div id="stepsBlock">
+      <h2 style="font-size:17px;margin:0 0 14px 0;">Run this SQL in Supabase</h2>
+      <ol class="setup-steps">
+        <li>Open the <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">Supabase dashboard</a> for your project.</li>
+        <li>In the left sidebar, click <strong>SQL Editor</strong> → <strong>New query</strong>.</li>
+        <li>Copy the SQL below, paste it into the editor, and click <strong>Run</strong>.</li>
+        <li>Come back here and click <strong>Test again</strong>. If everything is good, you'll see a green ✓ and can return to the site.</li>
+      </ol>
+
+      <div class="sql-box" id="sqlBox"><button type="button" class="copy-btn" id="copyBtn">Copy</button><code id="sqlText">-- Loading…</code></div>
+
+      <div class="actions">
+        <button type="button" class="btn-link" id="testBtn">Test again</button>
+        <a class="btn-link btn-link--ghost" href="https://supabase.com/dashboard" target="_blank" rel="noopener">Open Supabase dashboard</a>
+        <a class="btn-link btn-link--ghost" href="account-settings.html">Back to account settings</a>
+      </div>
+
+      <p style="font-size:12px;color:var(--muted,#6b6b6b);margin-top:18px;">
+        Tip: if you want the full schema (categories, products, orders, etc.), open <code>supabase-schema.sql</code> from the project folder and run the whole file. The block below is the minimum needed for the account features to work.
+      </p>
+    </div>
+
+    <a class="back-link" href="account-settings.html">← Back to account settings</a>
+  </div>
+</main>
+
+<div data-shell="footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
+<script src="plugins/supabase/supabase-client.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // The minimum SQL the user needs to run. This is the entire bootstrap:
+  //   1. Create public.user_profiles table if missing.
+  //   2. Add all expected columns (idempotent).
+  //   3. Enable RLS and create the standard policies.
+  //   4. Create the bootstrap_user_profiles() RPC so the JS can self-heal
+  //      if the table is ever dropped or moved.
+  //   5. Grant EXECUTE to anon + authenticated.
+  //   6. Create the partial unique index on author_slug.
+  //   7. pgrst reload-schema notify so the next request sees the new table.
+  //   8. EXCEPTION handler so a real error is returned to the client
+  //      (instead of the generic "Backend error" 500 from PostgREST).
+  var SQL = [
+    "-- ====== Shanmuga Organics - minimum setup for user_profiles ======",
+    "-- Safe to re-run. Run this once in the Supabase SQL editor.",
+    "",
+    "CREATE OR REPLACE FUNCTION public.bootstrap_user_profiles()",
+    "RETURNS TEXT",
+    "LANGUAGE plpgsql",
+    "SECURITY DEFINER",
+    "SET search_path = public, auth",
+    "AS $$",
+    "BEGIN",
+    "  IF NOT EXISTS (",
+    "    SELECT 1 FROM information_schema.tables",
+    "    WHERE table_schema = 'public' AND table_name = 'user_profiles'",
+    "  ) THEN",
+    "    EXECUTE $tbl$",
+    "      CREATE TABLE public.user_profiles (",
+    "        id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,",
+    "        full_name TEXT,",
+    "        phone TEXT,",
+    "        avatar_url TEXT,",
+    "        default_shipping_address TEXT,",
+    "        default_shipping_city TEXT,",
+    "        default_shipping_state TEXT,",
+    "        default_shipping_pincode TEXT,",
+    "        notify_orders BOOLEAN DEFAULT true,",
+    "        notify_promo BOOLEAN DEFAULT false,",
+    "        newsletter_subscribed BOOLEAN DEFAULT false,",
+    "        is_author BOOLEAN DEFAULT false,",
+    "        is_author_published BOOLEAN DEFAULT false,",
+    "        author_slug TEXT,",
+    "        author_bio TEXT,",
+    "        author_avatar_url TEXT,",
+    "        author_socials JSONB DEFAULT '{}'::jsonb,",
+    "        author_published_at TIMESTAMP WITH TIME ZONE,",
+    "        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),",
+    "        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()",
+    "      )",
+    "    $tbl$;",
+    "    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_user_profiles_id ON public.user_profiles(id)';",
+    "  ELSE",
+    "    EXECUTE $alt$",
+    "      ALTER TABLE public.user_profiles",
+    "        ADD COLUMN IF NOT EXISTS full_name TEXT,",
+    "        ADD COLUMN IF NOT EXISTS phone TEXT,",
+    "        ADD COLUMN IF NOT EXISTS phone_verified_at TIMESTAMP WITH TIME ZONE,",
+    "        ADD COLUMN IF NOT EXISTS avatar_url TEXT,",
+    "        ADD COLUMN IF NOT EXISTS default_shipping_address TEXT,",
+    "        ADD COLUMN IF NOT EXISTS default_shipping_city TEXT,",
+    "        ADD COLUMN IF NOT EXISTS default_shipping_state TEXT,",
+    "        ADD COLUMN IF NOT EXISTS default_shipping_pincode TEXT,",
+    "        ADD COLUMN IF NOT EXISTS notify_orders BOOLEAN DEFAULT true,",
+    "        ADD COLUMN IF NOT EXISTS notify_promo BOOLEAN DEFAULT false,",
+    "        ADD COLUMN IF NOT EXISTS newsletter_subscribed BOOLEAN DEFAULT false,",
+    "        ADD COLUMN IF NOT EXISTS is_author BOOLEAN DEFAULT false,",
+    "        ADD COLUMN IF NOT EXISTS is_author_published BOOLEAN DEFAULT false,",
+    "        ADD COLUMN IF NOT EXISTS author_slug TEXT,",
+    "        ADD COLUMN IF NOT EXISTS author_bio TEXT,",
+    "        ADD COLUMN IF NOT EXISTS author_avatar_url TEXT,",
+    "        ADD COLUMN IF NOT EXISTS author_socials JSONB DEFAULT '{}'::jsonb,",
+    "        ADD COLUMN IF NOT EXISTS author_published_at TIMESTAMP WITH TIME ZONE,",
+    "        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),",
+    "        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()",
+    "    $alt$;",
+    "  END IF;",
+    "",
+    "  EXECUTE 'ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY';",
+    "",
+    "  EXECUTE 'DROP POLICY IF EXISTS \"Users can view their own profile\" ON public.user_profiles';",
+    "  EXECUTE $p$CREATE POLICY \"Users can view their own profile\" ON public.user_profiles",
+    "    FOR SELECT USING (auth.uid() = id)$p$;",
+    "",
+    "  EXECUTE 'DROP POLICY IF EXISTS \"Users can update their own profile\" ON public.user_profiles';",
+    "  EXECUTE $p$CREATE POLICY \"Users can update their own profile\" ON public.user_profiles",
+    "    FOR UPDATE USING (auth.uid() = id)$p$;",
+    "",
+    "  EXECUTE 'DROP POLICY IF EXISTS \"Users can insert their own profile\" ON public.user_profiles';",
+    "  EXECUTE $p$CREATE POLICY \"Users can insert their own profile\" ON public.user_profiles",
+    "    FOR INSERT WITH CHECK (auth.uid() = id)$p$;",
+    "",
+    "  EXECUTE $i$CREATE UNIQUE INDEX IF NOT EXISTS uq_user_profiles_author_slug",
+    "    ON public.user_profiles(author_slug) WHERE author_slug IS NOT NULL$i$;",
+    "",
+    "  PERFORM pg_notify('pgrst', 'reload schema');",
+    "",
+    "  RETURN 'ok';",
+    "EXCEPTION WHEN OTHERS THEN",
+    "  RETURN 'error: ' || SQLERRM;",
+    "END;",
+    "$$;",
+    "",
+    "REVOKE ALL ON FUNCTION public.bootstrap_user_profiles() FROM PUBLIC;",
+    "GRANT EXECUTE ON FUNCTION public.bootstrap_user_profiles() TO anon, authenticated;",
+    "",
+    "SELECT public.bootstrap_user_profiles();"
+  ].join("\n");
+
+  var sqlText = document.getElementById('sqlText');
+  var copyBtn = document.getElementById('copyBtn');
+  var testBtn = document.getElementById('testBtn');
+  var statusEl = document.getElementById('status');
+  var statusTextEl = document.getElementById('statusText');
+  var stepsBlock = document.getElementById('stepsBlock');
+
+  function setStatus(kind, msg) {
+    statusEl.className = 'status status--' + kind;
+    statusTextEl.textContent = msg;
+  }
+
+  function showSteps(show) {
+    stepsBlock.style.display = show ? '' : 'none';
+  }
+
+  async function test() {
+    setStatus('checking', 'Checking database…');
+    showSteps(false);
+    try {
+      // Try a real RPC call. If the function exists, it returns 'ok'.
+      var r = await window.Supabase.ensureUserProfilesTable();
+      if (r && r.ok) {
+        setStatus('ok', 'Database is set up. You can close this page and go back to the site.');
+        showSteps(false);
+        return;
+      }
+      // If the RPC returned but the function reported an error string,
+      // show it (e.g. "error: permission denied for schema auth").
+      if (r && r.error && r.missing !== true) {
+        setStatus('err', 'bootstrap_user_profiles() ran but failed: ' + r.error);
+        showSteps(true);
+        return;
+      }
+      // Function missing — show the steps.
+      setStatus('missing', 'The bootstrap_user_profiles() function is not installed in your database yet.');
+      showSteps(true);
+    } catch (e) {
+      setStatus('err', 'Could not reach the database: ' + (e && e.message ? e.message : String(e)));
+      showSteps(true);
+    }
+  }
+
+  function copySql() {
+    var ok = false;
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = SQL;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch (e) { ok = false; }
+    if (!ok && navigator.clipboard) {
+      navigator.clipboard.writeText(SQL).then(function () { ok = true; });
+    }
+    copyBtn.textContent = ok ? 'Copied ✓' : 'Copy';
+    copyBtn.classList.toggle('copied', ok);
+    setTimeout(function () {
+      copyBtn.textContent = 'Copy';
+      copyBtn.classList.remove('copied');
+    }, 1800);
+  }
+
+  sqlText.textContent = SQL;
+  copyBtn.addEventListener('click', copySql);
+  testBtn.addEventListener('click', test);
+
+  // Run the check as soon as the page loads.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', test);
+  } else {
+    test();
+  }
+})();
+</script>
+
+</body>
+</html>

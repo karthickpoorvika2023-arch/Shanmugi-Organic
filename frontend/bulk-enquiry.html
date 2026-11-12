@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>Bulk / Wholesale Enquiry — Shanmuga Organics</title>
+<meta name="description" content="Request bulk rates and samples for wood-pressed oils, rice, millets, podis and soaps. Trade enquiries answered within one working day.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="enquiry">
+
+<div data-shell="header"></div>
+
+<div class="pagehead">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="index.html">Home</a><span data-ic="chevR"></span>
+      <a href="wholesale.html">Wholesale</a><span data-ic="chevR"></span><b>Bulk Enquiry</b>
+    </nav>
+    <h1>Bulk / Wholesale Enquiry</h1>
+    <span class="ta">மொத்த ஆர்டர் விசாரணை</span>
+    <p>Tell us what you need and how often. You will get a dated rate sheet, and samples if
+      you want to test before committing.</p>
+  </div>
+</div>
+
+<section class="sec sec--tight">
+  <div class="container split">
+    <div class="formcard">
+      <h4>Enquiry details</h4>
+      <span class="ta">விவரங்கள்</span>
+      <form class="form" data-form="enquiry">
+        <div class="form__grid">
+          <div class="field">
+            <label>Business / organisation <span class="req">*</span></label>
+            <input name="biz" data-req="text" placeholder="Sri Krishna Catering">
+            <span class="err">Please enter your business name.</span>
+          </div>
+          <div class="field">
+            <label>Contact person <span class="req">*</span></label>
+            <input name="person" data-req="text" placeholder="Your name">
+            <span class="err">Please enter a contact name.</span>
+          </div>
+        </div>
+        <div class="form__grid">
+          <div class="field">
+            <label>Phone / WhatsApp <span class="req">*</span></label>
+            <input name="phone" data-req="phone" placeholder="98765 43210">
+            <span class="err">Enter a 10-digit Indian mobile number.</span>
+          </div>
+          <div class="field">
+            <label>Email <span class="req">*</span></label>
+            <input name="email" type="email" data-req="email" placeholder="orders@yourbusiness.com">
+            <span class="err">That email does not look right.</span>
+          </div>
+        </div>
+        <div class="form__grid">
+          <div class="field">
+            <label>City <span class="req">*</span></label>
+            <input name="city" data-req="text" placeholder="Coimbatore">
+            <span class="err">Which city are we delivering to?</span>
+          </div>
+          <div class="field">
+            <label>PIN code <span class="req">*</span></label>
+            <input name="pin" data-req="pin" placeholder="641002" maxlength="6">
+            <span class="err">Enter a valid 6-digit PIN code.</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <h4 class="mb-8">What are you buying?</h4>
+        <div class="radiorow">
+          <label class="radio"><input type="checkbox" name="cat" value="oils">
+            <span><b>Wood-pressed oils</b><span>Groundnut, sesame, coconut, mustard · 5 L cans and 15 kg tins</span></span></label>
+          <label class="radio"><input type="checkbox" name="cat" value="rice">
+            <span><b>Traditional rice</b><span>Ponni, mappillai samba, karuppu kavuni, seeraga samba · 25 kg bags</span></span></label>
+          <label class="radio"><input type="checkbox" name="cat" value="millets">
+            <span><b>Millets &amp; flours</b><span>Kambu, thinai, ragi, varagu, samai · 20–25 kg bags</span></span></label>
+          <label class="radio"><input type="checkbox" name="cat" value="podis">
+            <span><b>Podis, powders &amp; health mix</b><span>Idli podi, sambar powder, sathu maavu · 5–10 kg sacks</span></span></label>
+          <label class="radio"><input type="checkbox" name="cat" value="soaps">
+            <span><b>Herbal soaps &amp; hair care</b><span>Multani mitti, neem, turmeric, sandal · cases of 100</span></span></label>
+          <label class="radio"><input type="checkbox" name="cat" value="gifting">
+            <span><b>Gift hampers</b><span>Custom sleeves and logo printing · from 50 boxes</span></span></label>
+        </div>
+
+        <div class="form__grid">
+          <div class="field">
+            <label>Estimated monthly volume <span class="req">*</span></label>
+            <select name="vol" data-req="text">
+              <option value="">Choose a range</option>
+              <option>Under ₹15,000</option>
+              <option>₹15,000 – ₹50,000</option>
+              <option>₹50,000 – ₹1,50,000</option>
+              <option>₹1,50,000 – ₹5,00,000</option>
+              <option>Above ₹5,00,000</option>
+            </select>
+            <span class="err">Pick the closest range.</span>
+          </div>
+          <div class="field">
+            <label>How often? <span class="req">*</span></label>
+            <select name="freq" data-req="text">
+              <option value="">Choose one</option>
+              <option>Weekly</option>
+              <option>Fortnightly</option>
+              <option>Monthly</option>
+              <option>Seasonal / festival only</option>
+              <option>One-time order</option>
+            </select>
+            <span class="err">Tell us the cadence.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Anything else we should know? <span class="req">*</span></label>
+          <textarea name="msg" data-req="text" placeholder="e.g. we need 4 x 15 kg groundnut oil tins every Tuesday before 7 AM, delivered to Gandhipuram, GST invoice required."></textarea>
+          <span class="err">A couple of lines about quantities and timing helps us quote properly.</span>
+        </div>
+
+        <div class="radiorow">
+          <label class="radio"><input type="checkbox" name="samples" checked>
+            <span><b>Send me samples first</b><span>500 ml of any oil or 1 kg of any rice, free once per buyer. Freight at cost.</span></span></label>
+          <label class="radio"><input type="checkbox" name="gstreq">
+            <span><b>I need a GST invoice</b><span>We will ask for your GSTIN when confirming the order.</span></span></label>
+        </div>
+
+        <button class="btn btn--primary btn--lg" type="submit">Submit Enquiry</button>
+        <p class="small muted">Demo storefront — the form validates and confirms in your browser,
+          but nothing is sent to a server.</p>
+      </form>
+    </div>
+
+    <div>
+      <div class="panel" style="padding:20px">
+        <h4 class="mb-8">What happens next</h4>
+        <p class="small muted mb-14">Typical turnaround, honestly stated:</p>
+        <div class="timeline">
+          <div class="tl"><span class="yr">SAME DAY</span><b>We read it and call</b>
+            <p>If it arrives before 5 PM on a working day, someone from the wholesale desk
+              rings you back the same evening.</p></div>
+          <div class="tl"><span class="yr">1–2 DAYS</span><b>Rate sheet by email</b>
+            <p>Slab pricing per item, valid 14 days, freight quoted separately for outside
+              Tamil Nadu.</p></div>
+          <div class="tl"><span class="yr">3–5 DAYS</span><b>Samples reach you</b>
+            <p>Dispatched by courier with the batch date on the label so you can taste against
+              what you buy today.</p></div>
+          <div class="tl"><span class="yr">ONGOING</span><b>Standing order</b>
+            <p>Fixed dispatch day, one monthly invoice, 15-day credit after three clean cycles.</p></div>
+        </div>
+      </div>
+
+      <div class="notice notice--gold mt-20"><span data-ic="alert"></span>
+        <span><b>Minimums, so nobody wastes time:</b> ₹15,000 for a first trade order,
+          50 boxes for custom gifting, and 200 bars for private-label soap. Below that,
+          our <a class="linkish" href="products.html">retail packs</a> will work out cheaper
+          for you than freight on a part load.</span></div>
+
+      <div class="panel mt-20" style="padding:20px">
+        <h4 class="mb-8">Prefer to talk?</h4>
+        <div class="row row--wrap mb-14">
+          <a class="btn btn--dark btn--sm" href="tel:+916380040001"><span data-ic="phone"></span> +91 638 004 0001</a>
+          <a class="btn btn--outline btn--sm" href="https://wa.me/916380040001" target="_blank" rel="noopener"><span data-ic="wa"></span> WhatsApp</a>
+        </div>
+        <p class="small mb-8"><b>Wholesale email</b><br>
+          <a class="linkish" href="mailto:wholesale@shanmugaorganics.in">wholesale@shanmugaorganics.in</a></p>
+        <p class="small mb-8"><b>Desk hours</b><br>Monday – Saturday, 9 AM – 7 PM</p>
+        <p class="small"><b>FSSAI</b> 12421008000341<br><b>GSTIN</b> 33ABCDE1234F1Z5</p>
+        <div class="divider"></div>
+        <a class="linkish small" href="wholesale.html">See the indicative rate card →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-shell="footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/pages.js"></script>
+<script>App.init('wholesale');</script>
+  <script src="plugins/cms/content-cms.js?v=1"></script>
+</body>
+</html>

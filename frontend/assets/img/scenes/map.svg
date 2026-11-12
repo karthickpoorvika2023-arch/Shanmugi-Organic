@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 320" width="560" height="320" role="img">
+<rect width="560" height="320" fill="#eef2e6"/>
+<g stroke="#dbe3cf" stroke-width="2">
+  <path d="M0 0 H560"/><path d="M0 40 H560"/><path d="M0 80 H560"/><path d="M0 120 H560"/><path d="M0 160 H560"/><path d="M0 200 H560"/><path d="M0 240 H560"/><path d="M0 280 H560"/><path d="M0 320 H560"/>
+  <path d="M0 0 V320"/><path d="M40 0 V320"/><path d="M80 0 V320"/><path d="M120 0 V320"/><path d="M160 0 V320"/><path d="M200 0 V320"/><path d="M240 0 V320"/><path d="M280 0 V320"/><path d="M320 0 V320"/><path d="M360 0 V320"/><path d="M400 0 V320"/><path d="M440 0 V320"/><path d="M480 0 V320"/><path d="M520 0 V320"/><path d="M560 0 V320"/>
+</g>
+<path d="M0 180 q140 -40 280 0 t280 -20" stroke="#c9d6b8" stroke-width="16" fill="none"/>
+<path d="M200 0 v320" stroke="#c9d6b8" stroke-width="14" fill="none"/>
+<g>
+  <circle cx="200" cy="180" r="34" fill="#1f6b2e" opacity=".14"/>
+  <path d="M200 152 a18 18 0 0 1 18 18 c0 14 -18 30 -18 30 s-18 -16 -18 -30 a18 18 0 0 1 18 -18 z" fill="#1f6b2e"/>
+  <circle cx="200" cy="170" r="7" fill="#ffffff"/>
+</g>
+<rect x="240" y="150" width="150" height="44" rx="8" fill="#ffffff" stroke="#dfd8c6"/>
+<text x="252" y="170" font-family="Georgia,serif" font-size="12" font-weight="bold" fill="#1f6b2e">Shanmuga Organics</text>
+<text x="252" y="186" font-family="Arial,sans-serif" font-size="10" fill="#6b7a6e">Dharapuram Road, Erode</text></svg>

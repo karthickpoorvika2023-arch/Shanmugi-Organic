@@ -1,0 +1,840 @@
+{
+  "products": [
+    {
+      "slug": "groundnut-oil",
+      "name": "Groundnut Oil",
+      "cat": "cold-pressed-oils",
+      "sizes": [
+        [
+          "500 ml",
+          155
+        ],
+        [
+          "1 L",
+          280
+        ],
+        [
+          "2 L",
+          540
+        ],
+        [
+          "5 L",
+          1310
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "sesame-oil",
+      "name": "Gingelly (Sesame) Oil",
+      "cat": "cold-pressed-oils",
+      "sizes": [
+        [
+          "500 ml",
+          185
+        ],
+        [
+          "1 L",
+          340
+        ],
+        [
+          "2 L",
+          660
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "coconut-oil",
+      "name": "Coconut Oil",
+      "cat": "cold-pressed-oils",
+      "sizes": [
+        [
+          "500 ml",
+          175
+        ],
+        [
+          "1 L",
+          320
+        ],
+        [
+          "2 L",
+          620
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "sunflower-oil",
+      "name": "Sunflower Oil",
+      "cat": "cold-pressed-oils",
+      "sizes": [
+        [
+          "500 ml",
+          145
+        ],
+        [
+          "1 L",
+          260
+        ],
+        [
+          "5 L",
+          1240
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "mustard-oil",
+      "name": "Mustard Oil",
+      "cat": "cold-pressed-oils",
+      "sizes": [
+        [
+          "500 ml",
+          165
+        ],
+        [
+          "1 L",
+          300
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "castor-oil",
+      "name": "Castor Oil",
+      "cat": "cold-pressed-oils",
+      "sizes": [
+        [
+          "200 ml",
+          85
+        ],
+        [
+          "500 ml",
+          180
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "ponni-rice",
+      "name": "Traditional Ponni Rice",
+      "cat": "traditional-rice",
+      "sizes": [
+        [
+          "1 kg",
+          120
+        ],
+        [
+          "5 kg",
+          580
+        ],
+        [
+          "10 kg",
+          1120
+        ],
+        [
+          "25 kg",
+          2740
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "mappillai-samba",
+      "name": "Mappillai Samba Rice",
+      "cat": "traditional-rice",
+      "sizes": [
+        [
+          "1 kg",
+          150
+        ],
+        [
+          "5 kg",
+          730
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "karuppu-kavuni",
+      "name": "Karuppu Kavuni Rice",
+      "cat": "traditional-rice",
+      "sizes": [
+        [
+          "500 g",
+          120
+        ],
+        [
+          "1 kg",
+          220
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "seeraga-samba",
+      "name": "Seeraga Samba Rice",
+      "cat": "traditional-rice",
+      "sizes": [
+        [
+          "1 kg",
+          180
+        ],
+        [
+          "5 kg",
+          870
+        ]
+      ],
+      "stock": false
+    },
+    {
+      "slug": "kichadi-samba",
+      "name": "Kichadi Samba Rice",
+      "cat": "traditional-rice",
+      "sizes": [
+        [
+          "1 kg",
+          140
+        ],
+        [
+          "5 kg",
+          680
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "kambu-millet",
+      "name": "Kambu (Pearl Millet)",
+      "cat": "millets",
+      "sizes": [
+        [
+          "500 g",
+          50
+        ],
+        [
+          "1 kg",
+          90
+        ],
+        [
+          "5 kg",
+          430
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "thinai-millet",
+      "name": "Thinai (Foxtail Millet)",
+      "cat": "millets",
+      "sizes": [
+        [
+          "500 g",
+          60
+        ],
+        [
+          "1 kg",
+          110
+        ],
+        [
+          "5 kg",
+          530
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "ragi-millet",
+      "name": "Ragi (Finger Millet)",
+      "cat": "millets",
+      "sizes": [
+        [
+          "500 g",
+          48
+        ],
+        [
+          "1 kg",
+          85
+        ],
+        [
+          "5 kg",
+          410
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "varagu-millet",
+      "name": "Varagu (Kodo Millet)",
+      "cat": "millets",
+      "sizes": [
+        [
+          "500 g",
+          55
+        ],
+        [
+          "1 kg",
+          100
+        ],
+        [
+          "5 kg",
+          480
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "samai-millet",
+      "name": "Samai (Little Millet)",
+      "cat": "millets",
+      "sizes": [
+        [
+          "500 g",
+          58
+        ],
+        [
+          "1 kg",
+          105
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "millet-mix",
+      "name": "Five Millet Mix",
+      "cat": "millets",
+      "sizes": [
+        [
+          "500 g",
+          72
+        ],
+        [
+          "1 kg",
+          130
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "instant-ragi-malt",
+      "name": "Instant Ragi Malt",
+      "cat": "instant-foods",
+      "sizes": [
+        [
+          "250 g",
+          88
+        ],
+        [
+          "500 g",
+          160
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "millet-dosa-mix",
+      "name": "Millet Dosa Mix",
+      "cat": "instant-foods",
+      "sizes": [
+        [
+          "500 g",
+          140
+        ],
+        [
+          "1 kg",
+          265
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "instant-kanji-mix",
+      "name": "Instant Kanji Mix",
+      "cat": "instant-foods",
+      "sizes": [
+        [
+          "500 g",
+          120
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "health-mix-powder",
+      "name": "Health Mix Powder",
+      "cat": "health-mix",
+      "sizes": [
+        [
+          "250 g",
+          98
+        ],
+        [
+          "500 g",
+          180
+        ],
+        [
+          "1 kg",
+          340
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "sathu-maavu",
+      "name": "Sathu Maavu",
+      "cat": "health-mix",
+      "sizes": [
+        [
+          "250 g",
+          98
+        ],
+        [
+          "500 g",
+          180
+        ],
+        [
+          "1 kg",
+          340
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "badam-health-mix",
+      "name": "Badam Health Mix",
+      "cat": "health-mix",
+      "sizes": [
+        [
+          "200 g",
+          140
+        ],
+        [
+          "400 g",
+          260
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "ragi-flour",
+      "name": "Ragi Flour",
+      "cat": "flour-varieties",
+      "sizes": [
+        [
+          "500 g",
+          55
+        ],
+        [
+          "1 kg",
+          95
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "kambu-flour",
+      "name": "Kambu Flour",
+      "cat": "flour-varieties",
+      "sizes": [
+        [
+          "500 g",
+          52
+        ],
+        [
+          "1 kg",
+          90
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "wheat-flour",
+      "name": "Whole Wheat Atta",
+      "cat": "flour-varieties",
+      "sizes": [
+        [
+          "1 kg",
+          80
+        ],
+        [
+          "5 kg",
+          380
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "rice-flour",
+      "name": "Rice Flour",
+      "cat": "flour-varieties",
+      "sizes": [
+        [
+          "500 g",
+          40
+        ],
+        [
+          "1 kg",
+          70
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "multani-mitti-soap",
+      "name": "Multani Mitti Soap",
+      "cat": "bath-body-care",
+      "sizes": [
+        [
+          "100 g",
+          120
+        ],
+        [
+          "Pack of 3",
+          330
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "neem-soap",
+      "name": "Neem Soap",
+      "cat": "bath-body-care",
+      "sizes": [
+        [
+          "75 g",
+          55
+        ],
+        [
+          "Pack of 3",
+          150
+        ],
+        [
+          "Pack of 6",
+          285
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "turmeric-soap",
+      "name": "Turmeric Soap",
+      "cat": "bath-body-care",
+      "sizes": [
+        [
+          "75 g",
+          60
+        ],
+        [
+          "Pack of 3",
+          165
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "sandal-soap",
+      "name": "Sandal Soap",
+      "cat": "bath-body-care",
+      "sizes": [
+        [
+          "75 g",
+          75
+        ],
+        [
+          "Pack of 3",
+          205
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "herbal-hair-oil",
+      "name": "Herbal Hair Oil",
+      "cat": "bath-body-care",
+      "sizes": [
+        [
+          "100 ml",
+          130
+        ],
+        [
+          "200 ml",
+          240
+        ],
+        [
+          "500 ml",
+          560
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "pickle-combo",
+      "name": "Pickle Combo (3 Jars)",
+      "cat": "pickles-powders",
+      "sizes": [
+        [
+          "3 × 150 g",
+          160
+        ],
+        [
+          "3 × 300 g",
+          305
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "mango-pickle",
+      "name": "Mango Pickle",
+      "cat": "pickles-powders",
+      "sizes": [
+        [
+          "150 g",
+          85
+        ],
+        [
+          "300 g",
+          150
+        ],
+        [
+          "500 g",
+          235
+        ]
+      ],
+      "stock": false
+    },
+    {
+      "slug": "lemon-pickle",
+      "name": "Lemon Pickle",
+      "cat": "pickles-powders",
+      "sizes": [
+        [
+          "150 g",
+          80
+        ],
+        [
+          "300 g",
+          140
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "idli-podi",
+      "name": "Idli Podi",
+      "cat": "pickles-powders",
+      "sizes": [
+        [
+          "250 g",
+          110
+        ],
+        [
+          "500 g",
+          205
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "curry-leaf-podi",
+      "name": "Curry Leaf Podi",
+      "cat": "pickles-powders",
+      "sizes": [
+        [
+          "200 g",
+          120
+        ],
+        [
+          "400 g",
+          225
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "sambar-powder",
+      "name": "Sambar Powder",
+      "cat": "pickles-powders",
+      "sizes": [
+        [
+          "250 g",
+          130
+        ],
+        [
+          "500 g",
+          245
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "cow-ghee",
+      "name": "Pure Cow Ghee",
+      "cat": "ghee-honey",
+      "sizes": [
+        [
+          "250 ml",
+          340
+        ],
+        [
+          "500 ml",
+          650
+        ],
+        [
+          "1 L",
+          1260
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "a2-ghee",
+      "name": "A2 Desi Cow Ghee",
+      "cat": "ghee-honey",
+      "sizes": [
+        [
+          "250 ml",
+          495
+        ],
+        [
+          "500 ml",
+          950
+        ]
+      ],
+      "stock": false
+    },
+    {
+      "slug": "forest-honey",
+      "name": "Wild Forest Honey",
+      "cat": "ghee-honey",
+      "sizes": [
+        [
+          "250 g",
+          200
+        ],
+        [
+          "500 g",
+          380
+        ],
+        [
+          "1 kg",
+          730
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "nattu-sakkarai",
+      "name": "Nattu Sakkarai (Palm Jaggery)",
+      "cat": "ghee-honey",
+      "sizes": [
+        [
+          "500 g",
+          120
+        ],
+        [
+          "1 kg",
+          225
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "hibiscus-hair-powder",
+      "name": "Hibiscus Hair Powder",
+      "cat": "herbs-hair-care",
+      "sizes": [
+        [
+          "100 g",
+          72
+        ],
+        [
+          "200 g",
+          130
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "shikakai-powder",
+      "name": "Shikakai Powder",
+      "cat": "herbs-hair-care",
+      "sizes": [
+        [
+          "100 g",
+          62
+        ],
+        [
+          "200 g",
+          110
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "amla-powder",
+      "name": "Amla Powder",
+      "cat": "herbs-hair-care",
+      "sizes": [
+        [
+          "100 g",
+          68
+        ],
+        [
+          "200 g",
+          120
+        ]
+      ],
+      "stock": true
+    },
+    {
+      "slug": "neem-powder",
+      "name": "Neem Powder",
+      "cat": "herbs-hair-care",
+      "sizes": [
+        [
+          "100 g",
+          58
+        ],
+        [
+          "200 g",
+          100
+        ]
+      ],
+      "stock": true
+    }
+  ],
+  "coupons": {
+    "SHANMUGA10": {
+      "type": "pct",
+      "value": 10,
+      "min": 500,
+      "label": "10% off orders above ₹500"
+    },
+    "FIRST50": {
+      "type": "flat",
+      "value": 50,
+      "min": 400,
+      "label": "₹50 off your first order"
+    },
+    "OIL15": {
+      "type": "pct",
+      "value": 15,
+      "min": 800,
+      "cat": "cold-pressed-oils",
+      "label": "15% off cold pressed oils above ₹800"
+    },
+    "FREESHIP": {
+      "type": "ship",
+      "value": 0,
+      "min": 300,
+      "label": "Free shipping above ₹300"
+    }
+  },
+  "shipping": {
+    "freeShipOver": 999,
+    "shipFlatTN": 60,
+    "shipFlatIN": 90
+  }
+}

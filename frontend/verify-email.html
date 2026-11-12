@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>Email Verification — Shanmuga Organics</title>
+<meta name="description" content="Verify your Shanmuga Organics account email">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .auth-wrapper {
+    min-height: calc(100vh - 34px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, var(--green-050) 0%, var(--cream-100) 100%);
+  }
+
+  .auth-card {
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-l);
+    width: 100%;
+    max-width: 460px;
+    padding: 48px;
+    text-align: center;
+  }
+
+  .auth-card__logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .auth-card__logo img {
+    height: 48px;
+    margin: 0 auto;
+  }
+
+  .auth-card__icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+  }
+
+  .auth-card__title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    margin: 0 0 16px 0;
+  }
+
+  .auth-card__subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 32px 0;
+    line-height: 1.6;
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    text-align: left;
+  }
+
+  .alert.is-visible {
+    display: block;
+  }
+
+  .alert--error {
+    background: var(--red-050);
+    color: var(--red);
+    border: 1px solid rgba(181, 52, 42, 0.2);
+  }
+
+  .alert--success {
+    background: var(--green-050);
+    color: var(--green-800);
+    border: 1px solid rgba(47, 143, 67, 0.2);
+  }
+
+  .alert--info {
+    background: #f0f7fb;
+    color: var(--blue);
+    border: 1px solid rgba(47, 111, 156, 0.2);
+  }
+
+  .form-footer {
+    margin-top: 24px;
+  }
+
+  .form-link {
+    color: var(--green-600);
+    font-weight: 500;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .form-link:hover {
+    color: var(--green-700);
+    text-decoration: underline;
+  }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--line);
+    border-top-color: var(--green-600);
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+    margin: 0 auto 24px;
+  }
+
+  @keyframes spinner {
+    to { transform: rotate(360deg); }
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-group .btn {
+    flex: 1;
+  }
+</style>
+</head>
+<body data-page="verify-email">
+
+<div data-shell="header"></div>
+
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-card__logo">
+      <img src="assets/img/logo.svg" alt="Shanmuga Organics">
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState">
+      <div class="spinner"></div>
+      <h1 class="auth-card__title">Verifying Your Email</h1>
+      <p class="auth-card__subtitle">Please wait while we verify your email address...</p>
+    </div>
+
+    <!-- Success State -->
+    <div id="successState" class="hidden">
+      <div class="auth-card__icon">✅</div>
+      <h1 class="auth-card__title">Email Verified!</h1>
+      <p class="auth-card__subtitle">
+        Your email has been successfully verified. Redirecting to the home page...
+      </p>
+      <div class="btn-group">
+        <a href="./" class="btn btn--primary">Go to Home</a>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden">
+      <div class="auth-card__icon">⚠️</div>
+      <h1 class="auth-card__title">Verification Failed</h1>
+      <div id="alertBox" class="alert alert--error is-visible">
+        The verification link is invalid or has expired.
+      </div>
+      <p class="auth-card__subtitle">
+        Please request a new verification email or contact support if the problem persists.
+      </p>
+      <div class="btn-group">
+        <a href="signup.html" class="btn btn--secondary">Sign Up Again</a>
+        <a href="contact.html" class="btn btn--secondary">Contact Support</a>
+      </div>
+    </div>
+
+    <!-- Already Verified State -->
+    <div id="alreadyVerifiedState" class="hidden">
+      <div class="auth-card__icon">✔️</div>
+      <h1 class="auth-card__title">Already Verified</h1>
+      <p class="auth-card__subtitle">
+        Your email address has already been verified. You can return to the home page.
+      </p>
+      <div class="btn-group">
+        <a href="./" class="btn btn--primary">Go to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div data-shell="footer"></div>
+
+<script src="plugins/supabase/supabase.umd.js"></script>
+<script src="plugins/supabase/supabase-client.js?v=6"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const loadingState = document.getElementById('loadingState');
+  const successState = document.getElementById('successState');
+  const errorState = document.getElementById('errorState');
+  const alreadyVerifiedState = document.getElementById('alreadyVerifiedState');
+  const alertBox = document.getElementById('alertBox');
+  const homeUrl = new URL('./', window.location.href).href;
+
+  function goHome() {
+    window.location.replace(homeUrl);
+  }
+
+  // Show specific state
+  function showState(state) {
+    loadingState.classList.add('hidden');
+    successState.classList.add('hidden');
+    errorState.classList.add('hidden');
+    alreadyVerifiedState.classList.add('hidden');
+
+    if (state === 'success') {
+      successState.classList.remove('hidden');
+    } else if (state === 'error') {
+      errorState.classList.remove('hidden');
+    } else if (state === 'already-verified') {
+      alreadyVerifiedState.classList.remove('hidden');
+    }
+  }
+
+  // Parse URL hash for email verification token
+  async function handleEmailVerification() {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Check for error in URL (from Supabase)
+    const error = urlParams.get('error') || hashParams.get('error');
+    const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
+
+    if (error) {
+      console.error('Verification error:', error, errorDescription);
+      if (alertBox && errorDescription) {
+        alertBox.textContent = decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+      }
+      showState('error');
+      return;
+    }
+
+    // Some custom templates send the token hash to this page instead of using
+    // Supabase's built-in confirmation link. Verify it before going home.
+    const tokenHash = urlParams.get('token_hash');
+    const tokenType = urlParams.get('type');
+    if (tokenHash) {
+      try {
+        const { error: verifyError } = await window.Supabase.verifyEmailTokenHash(tokenHash, tokenType);
+        if (verifyError) throw verifyError;
+        showState('success');
+        goHome();
+      } catch (err) {
+        console.error('Token verification error:', err);
+        if (alertBox) {
+          alertBox.textContent = (err && err.message) || 'This verification link is invalid or has expired.';
+        }
+        showState('error');
+      }
+      return;
+    }
+
+    // Check for access token (successful verification)
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+
+    if (accessToken && (type === 'signup' || type === 'email')) {
+      try {
+        // Set the session with the token
+        const { data, error } = await window.SupabaseClient.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashParams.get('refresh_token')
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        // Keep the verified session so the home page can show the signed-in user.
+        showState('success');
+        goHome();
+
+      } catch (error) {
+        console.error('Session error:', error);
+        if (alertBox) {
+          alertBox.textContent = error.message || 'Failed to verify email';
+        }
+        showState('error');
+      }
+    } else if (accessToken && type === 'recovery') {
+      // Password recovery flow - redirect to reset password page
+      window.location.href = 'reset-password.html' + window.location.hash;
+    } else {
+      // No token found - check if already logged in
+      const isAuth = await window.Supabase.isAuthenticated();
+      if (isAuth) {
+        goHome();
+      } else {
+        if (alertBox) {
+          alertBox.textContent = 'No verification token found. Please click the link in your email.';
+        }
+        showState('error');
+      }
+    }
+  }
+
+  // Run verification on page load
+  handleEmailVerification();
+})();
+</script>
+
+  <script src="plugins/cms/content-cms.js?v=1"></script>
+</body>
+</html>

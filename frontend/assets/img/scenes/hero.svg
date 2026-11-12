@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520" width="760" height="520" role="img">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#eef6e6"/><stop offset="1" stop-color="#f9f4e2"/>
+  </linearGradient>
+  <linearGradient id="oil" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#c98a19"/><stop offset="0.4" stop-color="#eab63c"/><stop offset="1" stop-color="#c98a19"/>
+  </linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#6f4620"/><stop offset="0.45" stop-color="#8a5a2b"/><stop offset="1" stop-color="#5e3b18"/>
+  </linearGradient>
+</defs>
+<rect width="760" height="520" fill="url(#sky)"/>
+<circle cx="150" cy="120" r="150" fill="#ffffff" opacity=".55"/>
+<!-- leaf frame -->
+<g transform="translate(8 60) rotate(-22) scale(1.15)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#63a54f"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(0 150) rotate(12) scale(0.9)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#7bbd6a"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(690 40) rotate(160) scale(1)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#63a54f"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(700 130) rotate(196) scale(0.8)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#8fc97c"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(20 470) rotate(-46) scale(0.85)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#5f9c4a"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(690 462) rotate(220) scale(0.8)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#5f9c4a"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<!-- wooden chekku (cold press) -->
+<g transform="translate(300 92)">
+  <rect x="0" y="0" width="34" height="230" rx="8" fill="url(#wood)"/>
+  <rect x="120" y="0" width="34" height="230" rx="8" fill="url(#wood)"/>
+  <rect x="-14" y="-4" width="182" height="26" rx="8" fill="#5e3b18"/>
+  <rect x="-14" y="188" width="182" height="24" rx="8" fill="#5e3b18"/>
+  <rect x="46" y="26" width="62" height="150" rx="10" fill="#a3703a"/>
+  <rect x="60" y="40" width="34" height="120" rx="8" fill="#6f4620"/>
+  <circle cx="77" cy="100" r="20" fill="#c9a069"/><circle cx="77" cy="100" r="9" fill="#6f4620"/>
+  <path d="M-30 212 h214" stroke="#4a2d11" stroke-width="10" stroke-linecap="round"/>
+</g>
+<!-- oil bottles -->
+<g transform="translate(474 148)">
+  <rect x="-14" y="-30" width="28" height="18" rx="6" fill="#14532d"/>
+  <path d="M-38 6 q0 -20 16 -30 v-6 h44 v6 q16 10 16 30 v128 q0 16 -16 16 h-44 q-16 0 -16 -16 z" fill="url(#oil)"/>
+  <rect x="-30" y="52" width="60" height="52" rx="7" fill="#fbf3dd" stroke="#00000018"/>
+  <rect x="-18" y="70" width="36" height="6" rx="3" fill="#14532d"/>
+  <rect x="-12" y="82" width="24" height="4" rx="2" fill="#14532d" opacity=".55"/>
+</g>
+<g transform="translate(560 176)">
+  <rect x="-12" y="-26" width="24" height="16" rx="5" fill="#1f6b2e"/>
+  <path d="M-32 6 q0 -18 14 -26 v-6 h36 v6 q14 8 14 26 v106 q0 14 -14 14 h-36 q-14 0 -14 -14 z" fill="#eab63c"/>
+  <rect x="-25" y="44" width="50" height="44" rx="6" fill="#fbf3dd" stroke="#00000018"/>
+  <rect x="-15" y="60" width="30" height="5" rx="2.5" fill="#14532d"/>
+</g>
+<g transform="translate(630 200)">
+  <rect x="-11" y="-24" width="22" height="15" rx="5" fill="#14532d"/>
+  <path d="M-28 4 q0 -16 12 -24 v-5 h32 v5 q12 8 12 24 v92 q0 12 -12 12 h-32 q-12 0 -12 -12 z" fill="#d99b2b"/>
+  <rect x="-22" y="38" width="44" height="38" rx="6" fill="#fbf3dd" stroke="#00000018"/>
+  <rect x="-13" y="52" width="26" height="5" rx="2.5" fill="#14532d"/>
+</g>
+<!-- rice sack -->
+<g transform="translate(150 300)">
+  <path d="M-70 26 h140 l-12 22 h-116 z" fill="#cdb480"/>
+  <rect x="-78" y="14" width="156" height="16" rx="6" fill="#14532d"/>
+  <path d="M-84 46 h168 v122 q0 18 -18 18 h-132 q-18 0 -18 -18 z" fill="#e7d9b2"/>
+  <rect x="-56" y="70" width="112" height="60" rx="9" fill="#fffdf6" stroke="#00000014"/>
+  <circle cx="0" cy="90" r="13" fill="none" stroke="#14532d" stroke-width="2.4"/>
+<g transform="translate(-9 90) rotate(-22) scale(0.24)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#14532d"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+  <rect x="-34" y="110" width="68" height="6" rx="3" fill="#14532d"/>
+  <rect x="-44" y="140" width="88" height="40" rx="7" fill="#ffffff" opacity=".8"/>
+  <ellipse cx="-24" cy="160" rx="5" ry="2.75" fill="#e8dcb8" transform="rotate(-18 -24 160)"/><ellipse cx="-4" cy="156" rx="5" ry="2.75" fill="#efe4c6" transform="rotate(-18 -4 156)"/><ellipse cx="16" cy="162" rx="5" ry="2.75" fill="#e8dcb8" transform="rotate(-18 16 162)"/>
+</g>
+<!-- wooden bowl of rice -->
+<g transform="translate(470 400)">
+  <path d="M-92 0 q0 74 92 74 t92 -74 z" fill="#6f4620"/>
+  <path d="M-92 0 q0 66 92 66 t92 -66 z" fill="#8a5a2b"/>
+  <ellipse cx="0" cy="0" rx="92" ry="26" fill="#5e3b18"/>
+  <ellipse cx="0" cy="-4" rx="82" ry="22" fill="#f4efdf"/>
+  <path d="M-46 -14 q46 -26 92 0 q-46 12 -92 0 z" fill="#fbf8ee"/>
+</g>
+<!-- millet bowl -->
+<g transform="translate(636 428)">
+  <path d="M-54 0 q0 44 54 44 t54 -44 z" fill="#6f4620"/>
+  <ellipse cx="0" cy="0" rx="54" ry="15" fill="#5e3b18"/>
+  <ellipse cx="0" cy="-3" rx="47" ry="12" fill="#d9b97e"/>
+</g>
+<!-- ground shadow -->
+<ellipse cx="380" cy="494" rx="330" ry="18" fill="#00000010"/></svg>

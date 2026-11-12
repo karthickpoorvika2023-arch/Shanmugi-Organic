@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1240">
+  <title>Shopping Cart — Shanmuga Organics</title>
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body data-page="cart">
+
+  <div data-shell="header"></div>
+
+  <div class="pagehead">
+    <div class="container">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="index.html">Home</a><span data-ic="chevR"></span><b>Shopping Cart</b>
+      </nav>
+      <h1>Shopping Cart</h1>
+      <span class="ta">உங்கள் வண்டி</span>
+    </div>
+  </div>
+
+  <section class="sec sec--tight">
+    <div class="container" data-cartwrap></div>
+  </section>
+
+  <section class="sec sec--tight" data-rail-wrap>
+    <div class="container">
+      <div class="sec-head">
+        <div>
+          <h2 class="sec-title sec-title--sm">People usually add these too</h2>
+          <p class="sec-sub">இதையும் சேர்த்து வாங்குகிறார்கள்</p>
+        </div>
+      </div>
+      <div class="pgrid pgrid--4" data-rail="bestseller" data-limit="4" data-showcat></div>
+    </div>
+  </section>
+
+  <div data-shell="footer"></div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages.js"></script>
+  <script>App.init('');</script>
+  <script src="plugins/cms/content-cms.js?v=1"></script>
+</body>
+
+</html>

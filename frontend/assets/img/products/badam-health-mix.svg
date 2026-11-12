@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420" width="420" height="420" role="img">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f8f2e4"/>
+  </radialGradient>
+  <linearGradient id="shelf" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#00000012"/><stop offset="1" stop-color="#00000000"/>
+  </linearGradient>
+</defs>
+<rect width="420" height="420" fill="url(#bg)"/>
+<ellipse cx="210" cy="394" rx="151.2" ry="14" fill="#00000010"/>
+<g transform="translate(22 98) rotate(-16) scale(0.62)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#4c9a3f"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(328 112) rotate(166) scale(0.5)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#2f8f43"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#c9a662"/><stop offset="0.34" stop-color="#e8c98f"/><stop offset="0.7" stop-color="#e8c98f"/><stop offset="1" stop-color="#c9a662"/>
+</linearGradient></defs>
+<ellipse cx="210" cy="126" rx="86" ry="22" fill="#a8833f"/>
+<ellipse cx="210" cy="120" rx="86" ry="22" fill="#e8c98f"/>
+<ellipse cx="210" cy="120" rx="60" ry="14" fill="#a8833f" opacity=".45"/>
+<path d="M124 126 v168 q0 26 86 26 t86 -26 v-168 z" fill="url(#tg)"/>
+<rect x="140" y="178" width="140" height="104" rx="10" fill="#fffdf6" stroke="#00000018"/>
+<circle cx="210" cy="210" r="17" fill="none" stroke="#14532d" stroke-width="2.5"/>
+<g transform="translate(198 210) rotate(-22) scale(0.32)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#14532d"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<rect x="162" y="238" width="96" height="8" rx="4" fill="#14532d"/>
+<rect x="174" y="254" width="72" height="5" rx="2.5" fill="#14532d" opacity=".5"/>
+<rect x="186" y="266" width="48" height="5" rx="2.5" fill="#14532d" opacity=".32"/></svg>

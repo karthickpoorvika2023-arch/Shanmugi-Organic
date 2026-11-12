@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>All Products — Shanmuga Organics</title>
+<meta name="description" content="Browse every Shanmuga Organics product — cold pressed oils, traditional rice, millets, flours, health mixes, herbal soaps, pickles, ghee and honey.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="products">
+
+<div data-shell="header"></div>
+
+<div class="pagehead">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="index.html">Home</a><span data-ic="chevR"></span><b data-crumb-current>All Products</b>
+    </nav>
+    <h1 data-page-title>All Products</h1>
+    <span class="ta" data-page-ta>அனைத்து பொருட்கள்</span>
+    <p data-page-desc>Forty-six things we actually make and stock — pressed, milled, ground and packed
+      at our own unit in Erode. Filter by category, price or rating to find what you need.</p>
+  </div>
+</div>
+
+<section class="sec sec--tight">
+  <div class="container shoplayout">
+
+    <!-- ================================================== filters ======== -->
+    <aside class="filters" data-filters>
+      <div class="fbox">
+        <h5>Search in products</h5>
+        <div class="fbox__in">
+          <form data-f-form>
+            <input type="search" data-f-q placeholder="Type a name…" aria-label="Search within products"
+                   style="width:100%;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:6px;font-size:12.5px">
+          </form>
+          <p class="fbox__note mt-8">Try “ghee”, “millet”, “soap” or “podi”.</p>
+        </div>
+      </div>
+
+      <div class="fbox">
+        <h5>Category <button class="fbox__reset" data-clear-all>Clear all</button></h5>
+        <div class="fbox__in" data-f-cats></div>
+      </div>
+
+      <div class="fbox">
+        <h5>Price</h5>
+        <div class="fbox__in">
+          <input class="slider" type="range" min="40" max="1000" step="10" value="1000" data-f-slider aria-label="Maximum price">
+          <div class="range">
+            <input type="number" placeholder="Min" min="0" data-f-min aria-label="Minimum price">
+            <span>—</span>
+            <input type="number" placeholder="Max" min="0" value="1000" data-f-max aria-label="Maximum price">
+          </div>
+          <p class="fbox__note mt-8">Prices shown are for the default pack size.</p>
+        </div>
+      </div>
+
+      <div class="fbox">
+        <h5>Customer rating</h5>
+        <div class="fbox__in">
+          <label class="check"><input type="radio" name="rate" value="4.5" data-f-rating><span>4.5★ &amp; above</span></label>
+          <label class="check"><input type="radio" name="rate" value="4.3" data-f-rating><span>4.3★ &amp; above</span></label>
+          <label class="check"><input type="radio" name="rate" value="4" data-f-rating><span>4.0★ &amp; above</span></label>
+        </div>
+      </div>
+
+      <div class="fbox">
+        <h5>Availability</h5>
+        <div class="fbox__in">
+          <label class="check"><input type="radio" name="stockFilter" value="in" data-f-stock><span>In stock</span></label>
+          <label class="check"><input type="radio" name="stockFilter" value="out" data-f-stock><span>Out of stock</span></label>
+        </div>
+      </div>
+
+      <div class="fbox">
+        <h5>Need a hand?</h5>
+        <div class="fbox__in">
+          <p class="fbox__note">Not sure which oil or rice suits your cooking? Call the shop and
+            we will talk it through.</p>
+          <a class="btn btn--outline btn--sm btn--block mt-8" href="contact.html">Ask us</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===================================================== results ===== -->
+    <div>
+      <div class="toolbar">
+        <span class="toolbar__count" data-count-showing></span>
+        <div class="toolbar__right">
+          <span class="small muted">Show</span>
+          <span class="selectish">
+            <select data-per aria-label="Products per page">
+              <option value="12">12</option>
+              <option value="24">24</option>
+              <option value="48">48</option>
+            </select><span data-ic="chevD"></span>
+          </span>
+          <span class="small muted">Sort by</span>
+          <span class="selectish">
+            <select data-sort aria-label="Sort products">
+              <option value="popular">Popularity</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+              <option value="rating">Customer rating</option>
+              <option value="discount">Biggest discount</option>
+              <option value="new">Newest first</option>
+              <option value="name">Name A–Z</option>
+            </select><span data-ic="chevD"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="activefilters" data-activefilters></div>
+      <div class="pgrid pgrid--3" data-plist></div>
+      <div class="pager" data-pager></div>
+    </div>
+
+  </div>
+</section>
+
+<div data-shell="footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/pages.js"></script>
+<script>App.init('products');</script>
+  <script src="plugins/cms/content-cms.js?v=1"></script>
+</body>
+</html>

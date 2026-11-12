@@ -1,0 +1,24 @@
+{
+  "name": "shanmuga-organics",
+  "version": "1.0.0",
+  "description": "Shanmuga Organics - Cold Pressed Oils, Traditional Rice & Millets",
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "dev:local": "node tools/dev-local.mjs",
+    "local:seed": "node tools/gen-local-seed.mjs",
+    "local:admin": "node tools/create-local-admin.mjs",
+    "test:local": "node tools/local-supabase-smoke.mjs && node tools/local-signin-otp.test.mjs && node tools/local-password-reset.test.mjs",
+    "build": "node tools/gen-payment-catalog.mjs && node tools/gen-assets.mjs && node tools/build-site.mjs",
+    "test": "node tools/local-config.test.mjs && node tools/signup-email.test.mjs && node tools/otp-redirect.test.mjs && node tools/verify-email.test.mjs && node tools/layout.test.mjs && node tools/wishlist.test.mjs && node tools/payment.test.mjs",
+    "test:signup": "node tools/signup-email.test.mjs",
+    "test:layout": "node tools/layout.test.mjs",
+    "test:smoke": "node tools/smoke-cms.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.1"
+  },
+  "devDependencies": {
+    "supabase": "^2.122.0"
+  }
+}

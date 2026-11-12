@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supabase Migration Tool - Shanmuga Organics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 800px;
+    width: 100%;
+    padding: 40px;
+  }
+  h1 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 28px;
+  }
+  .subtitle {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 16px;
+  }
+  .status {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .status-line {
+    padding: 4px 0;
+    line-height: 1.6;
+  }
+  .success { color: #28a745; }
+  .error { color: #dc3545; }
+  .info { color: #17a2b8; }
+  .warning { color: #ffc107; }
+  button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .checklist {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+  }
+  .checklist h3 {
+    color: #856404;
+    margin-bottom: 12px;
+  }
+  .checklist ul {
+    margin-left: 20px;
+  }
+  .checklist li {
+    color: #856404;
+    margin-bottom: 8px;
+  }
+  .progress {
+    background: #e9ecef;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .progress-bar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🚀 Supabase Migration Tool</h1>
+  <p class="subtitle">Migrate your product data to Supabase database</p>
+
+  <div class="checklist">
+    <h3>⚠️ Before You Start:</h3>
+    <ul>
+      <li>Create a Supabase project at <a href="https://supabase.com" target="_blank">supabase.com</a></li>
+      <li>Run the SQL schema from <code>supabase-schema.sql</code></li>
+      <li>Update API keys in <code>plugins/supabase/supabase-client.js</code></li>
+      <li>Make sure all existing data files are loaded</li>
+    </ul>
+  </div>
+
+  <div class="progress" id="progress" style="display: none;">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="status" id="status">
+    <div class="status-line info">Ready to migrate. Click the button below to start.</div>
+  </div>
+
+  <button id="migrateBtn" onclick="startMigration()">Start Migration</button>
+</div>
+
+<!-- Supabase JS Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Your data files -->
+<script src="plugins/supabase/supabase-client.js"></script>
+<script src="assets/js/data.js"></script>
+
+<script>
+let isRunning = false;
+
+function log(message, type = 'info') {
+  const status = document.getElementById('status');
+  const line = document.createElement('div');
+  line.className = `status-line ${type}`;
+  line.textContent = message;
+  status.appendChild(line);
+  status.scrollTop = status.scrollHeight;
+}
+
+function updateProgress(percent) {
+  const progressBar = document.getElementById('progressBar');
+  const progress = document.getElementById('progress');
+  progress.style.display = 'block';
+  progressBar.style.width = percent + '%';
+}
+
+async function startMigration() {
+  if (isRunning) return;
+
+  const btn = document.getElementById('migrateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Migrating...';
+  isRunning = true;
+
+  const status = document.getElementById('status');
+  status.innerHTML = '';
+
+  log('=== Starting Migration ===', 'info');
+  log('');
+
+  // Check Supabase
+  if (!window.SupabaseClient) {
+    log('❌ Supabase client not initialized', 'error');
+    log('Make sure you updated the API keys in supabase-client.js', 'warning');
+    btn.disabled = false;
+    btn.textContent = 'Start Migration';
+    isRunning = false;
+    return;
+  }
+
+  log('✓ Supabase connected', 'success');
+
+  // Check SITE data
+  if (!window.SITE || !window.SITE.products) {
+    log('❌ SITE data not found', 'error');
+    log('Make sure data.js is loaded properly', 'warning');
+    btn.disabled = false;
+    btn.textContent = 'Start Migration';
+    isRunning = false;
+    return;
+  }
+
+  log('✓ Local data loaded', 'success');
+  log('');
+
+  const supabase = window.SupabaseClient;
+  const SITE = window.SITE;
+
+  let totalSteps = (SITE.categories?.length || 0) + (SITE.products?.length || 0);
+  let completedSteps = 0;
+
+  // Migrate Categories
+  log('📁 Migrating Categories...', 'info');
+
+  if (SITE.categories && SITE.categories.length > 0) {
+    for (let i = 0; i < SITE.categories.length; i++) {
+      const cat = SITE.categories[i];
+
+      const categoryData = {
+        name: cat.name,
+        name_tamil: cat.nameTa || null,
+        slug: cat.slug,
+        description: cat.desc || null,
+        icon: cat.icon || null,
+        image_url: cat.img || null,
+        order_index: i + 1
+      };
+
+      const { data, error } = await supabase
+        .from('categories')
+        .upsert(categoryData, { onConflict: 'slug' })
+        .select();
+
+      completedSteps++;
+      updateProgress((completedSteps / totalSteps) * 100);
+
+      if (error) {
+        log(`  ❌ Error: ${cat.name} - ${error.message}`, 'error');
+      } else {
+        log(`  ✓ ${cat.name}`, 'success');
+      }
+    }
+  } else {
+    log('  ⚠️ No categories found', 'warning');
+  }
+
+  log('');
+
+  // Migrate Products
+  log('📦 Migrating Products...', 'info');
+
+  if (SITE.products && SITE.products.length > 0) {
+    for (const product of SITE.products) {
+      const productData = {
+        name: product.name,
+        name_tamil: product.nameTa || null,
+        slug: product.slug,
+        description: product.desc || null,
+        short_description: product.shortDesc || null,
+        category_slug: product.cat || null,
+        price: product.price,
+        original_price: product.oldPrice || null,
+        discount_percentage: product.oldPrice ?
+          Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : null,
+        unit: product.unit || 'ml',
+        stock_quantity: product.stock || 100,
+        sku: product.sku || `SKU-${product.slug.toUpperCase()}`,
+        image_url: product.img || null,
+        images: product.images || null,
+        featured: product.featured || false,
+        bestseller: product.bestseller || false,
+        is_new: product.isNew || false,
+        in_stock: product.inStock !== false,
+        rating: product.rating || 0,
+        reviews_count: product.reviews || 0
+      };
+
+      const { data, error } = await supabase
+        .from('products')
+        .upsert(productData, { onConflict: 'slug' })
+        .select();
+
+      completedSteps++;
+      updateProgress((completedSteps / totalSteps) * 100);
+
+      if (error) {
+        log(`  ❌ Error: ${product.name} - ${error.message}`, 'error');
+      } else {
+        log(`  ✓ ${product.name}`, 'success');
+      }
+
+      // Small delay to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  } else {
+    log('  ⚠️ No products found', 'warning');
+  }
+
+  log('');
+
+  // Verify
+  log('🔍 Verifying migration...', 'info');
+
+  const { data: categories } = await supabase.from('categories').select('*');
+  const { data: products } = await supabase.from('products').select('*');
+
+  log('');
+  log('✅ Migration Complete!', 'success');
+  log(`   Categories: ${categories?.length || 0}`, 'info');
+  log(`   Products: ${products?.length || 0}`, 'info');
+  log('');
+  log('📝 Next Steps:', 'info');
+  log('   1. Open plugins/supabase/supabase-adapter.js', 'info');
+  log('   2. Set USE_SUPABASE = true', 'info');
+  log('   3. Reload your website', 'info');
+
+  btn.textContent = '✓ Migration Complete';
+  btn.style.background = '#28a745';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>My Account — Shanmuga Organics</title>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .account-header {
+    background: linear-gradient(135deg, var(--green-050) 0%, var(--cream-100) 100%);
+    padding: 40px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .account-header__content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .account-header__avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--green-600);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .account-header__info h1 {
+    margin: 0 0 4px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .account-header__email {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 8px 0;
+  }
+
+  .account-header__status {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--green-100);
+    color: var(--green-800);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .account-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .account-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 30px;
+    margin-top: 40px;
+  }
+
+  .account-sidebar {
+    background: #fff;
+    border-radius: var(--radius-l);
+    padding: 20px;
+    box-shadow: var(--shadow-s);
+    height: fit-content;
+  }
+
+  .account-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .account-nav__item {
+    margin: 0;
+  }
+
+  .account-nav__link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--ink);
+    text-decoration: none;
+    border-radius: var(--radius);
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .account-nav__link:hover {
+    background: var(--green-050);
+    color: var(--green-700);
+  }
+
+  .account-nav__link.is-active {
+    background: var(--green-100);
+    color: var(--green-800);
+  }
+
+  .account-nav__icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .account-main {
+    background: #fff;
+    border-radius: var(--radius-l);
+    padding: 32px;
+    box-shadow: var(--shadow-s);
+  }
+
+  .account-section__title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+    color: var(--ink);
+  }
+
+  .profile-form {
+    max-width: 600px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    transition: all 0.2s;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(47, 143, 67, 0.1);
+  }
+
+  .form-input:disabled {
+    background: var(--cream-100);
+    cursor: not-allowed;
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--line);
+    border-top-color: var(--green-600);
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spinner {
+    to { transform: rotate(360deg); }
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+  }
+
+  .alert.is-visible {
+    display: block;
+  }
+
+  .alert--error {
+    background: var(--red-050);
+    color: var(--red);
+    border: 1px solid rgba(181, 52, 42, 0.2);
+  }
+
+  .alert--success {
+    background: var(--green-050);
+    color: var(--green-800);
+    border: 1px solid rgba(47, 143, 67, 0.2);
+  }
+
+  .settings-section {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .settings-section__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+  }
+
+  .settings-row__info {
+    flex: 1;
+  }
+
+  .settings-row__info h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    margin: 0 0 4px 0;
+  }
+
+  .settings-row__info p {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 26px;
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+
+  .toggle-switch input:checked + .toggle-slider {
+    background-color: var(--green-600);
+  }
+
+  .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+  }
+
+  .danger-zone {
+    background: var(--red-050);
+    border: 1px solid rgba(181, 52, 42, 0.2);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .danger-zone h4 {
+    color: var(--red);
+    margin: 0 0 8px 0;
+    font-size: 14px;
+  }
+
+  .danger-zone p {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 12px 0;
+  }
+
+  .btn--danger {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn--danger:hover {
+    background: #9a2e24;
+  }
+
+  .btn--danger:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  .password-toggle {
+    position: relative;
+  }
+
+  .password-toggle .form-input {
+    padding-right: 44px;
+  }
+
+  .password-toggle-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 6px;
+  }
+
+  .password-toggle-btn:hover {
+    color: var(--green-700);
+  }
+
+  .btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  .btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    top: 50%;
+    left: 50%;
+    margin-left: -7px;
+    margin-top: -7px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner 0.6s linear infinite;
+  }
+</style>
+</head>
+<body data-page="account">
+
+<div data-shell="header"></div>
+
+<!-- Loading State -->
+<div id="loadingState" class="loading-state">
+  <div class="spinner"></div>
+  <p>Loading your account...</p>
+</div>
+
+<!-- Account Content -->
+<div id="accountContent" style="display: none;">
+  <div class="account-header">
+    <div class="container">
+      <div class="account-header__content">
+        <div class="account-header__avatar" id="userAvatar">?</div>
+        <div class="account-header__info">
+          <h1 id="userName">Welcome Back!</h1>
+          <p class="account-header__email" id="userEmail">Loading...</p>
+          <span class="account-header__status">✓ Email Verified</span>
+        </div>
+      </div>
+      <div class="account-actions">
+        <button class="btn btn--secondary" onclick="window.location.href='wishlist.html'">View Wishlist</button>
+        <button class="btn btn--secondary" onclick="window.location.href='track-order.html'">Track Orders</button>
+        <a class="btn btn--secondary" href="account-settings.html">Account settings</a>
+        <button class="btn btn--secondary" id="signOutBtn">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="sec">
+    <div class="container">
+      <div class="account-grid">
+        <!-- Sidebar Navigation -->
+        <aside class="account-sidebar">
+          <ul class="account-nav">
+            <li class="account-nav__item">
+              <a href="#profile" class="account-nav__link is-active" data-tab="profile">
+                <span class="account-nav__icon" data-ic="user"></span>
+                Profile Information
+              </a>
+            </li>
+            <li class="account-nav__item">
+              <a href="#orders" class="account-nav__link" data-tab="orders">
+                <span class="account-nav__icon" data-ic="receipt"></span>
+                My Orders
+              </a>
+            </li>
+            <li class="account-nav__item">
+              <a href="#addresses" class="account-nav__link" data-tab="addresses">
+                <span class="account-nav__icon" data-ic="pin"></span>
+                Saved Addresses
+              </a>
+            </li>
+            <li class="account-nav__item">
+              <a href="#settings" class="account-nav__link" data-tab="settings">
+                <span class="account-nav__icon" data-ic="lock"></span>
+                Account Settings
+              </a>
+            </li>
+            <li class="account-nav__item">
+              <a href="wishlist.html" class="account-nav__link">
+                <span class="account-nav__icon" data-ic="heart"></span>
+                Wishlist
+              </a>
+            </li>
+            <li class="account-nav__item">
+              <a href="track-order.html" class="account-nav__link">
+                <span class="account-nav__icon" data-ic="truck"></span>
+                Track Order
+              </a>
+            </li>
+          </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="account-main">
+          <div id="alertBox" class="alert"></div>
+
+          <!-- Profile Tab -->
+          <div id="profileTab" class="account-tab">
+            <h2 class="account-section__title">Profile Information</h2>
+
+            <form id="profileForm" class="profile-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="fullName">Full Name</label>
+                  <input type="text" id="fullName" class="form-input" placeholder="Your full name">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="phone">Phone Number</label>
+                  <input type="tel" id="phone" class="form-input" placeholder="+91 9876543210">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" class="form-input" disabled>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="defaultAddress">Default Shipping Address</label>
+                <input type="text" id="defaultAddress" class="form-input" placeholder="Street address">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="city">City</label>
+                  <input type="text" id="city" class="form-input" placeholder="City">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="state">State</label>
+                  <input type="text" id="state" class="form-input" placeholder="State">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pincode">Pincode</label>
+                <input type="text" id="pincode" class="form-input" placeholder="641001">
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn--primary" id="saveProfileBtn">Save Changes</button>
+                <button type="button" class="btn btn--secondary" onclick="window.location.reload()">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Orders Tab (placeholder) -->
+          <div id="ordersTab" class="account-tab" style="display: none;">
+            <h2 class="account-section__title">My Orders</h2>
+            <p style="color: var(--muted);">Your order history will appear here. You currently have no orders.</p>
+            <a href="products.html" class="btn btn--primary" style="margin-top: 20px;">Start Shopping</a>
+          </div>
+
+          <!-- Addresses Tab (placeholder) -->
+          <div id="addressesTab" class="account-tab" style="display: none;">
+            <h2 class="account-section__title">Saved Addresses</h2>
+            <p style="color: var(--muted);">Your saved addresses will appear here.</p>
+          </div>
+
+          <!-- Settings Tab -->
+          <div id="settingsTab" class="account-tab" style="display: none;">
+            <div class="settings-banner">
+              <span>Want a cleaner view of all your settings?</span>
+              <a class="linkish" href="account-settings.html">Open full settings →</a>
+            </div>
+            <h2 class="account-section__title">Account Settings</h2>
+
+            <!-- Change Password Section -->
+            <div class="settings-section">
+              <h3 class="settings-section__title">Change Password</h3>
+              <form id="changePasswordForm">
+                <div class="form-group">
+                  <label class="form-label" for="currentPassword">Current Password</label>
+                  <div class="password-toggle">
+                    <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password">
+                    <button type="button" class="password-toggle-btn" data-toggle="currentPassword" aria-label="Show password">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="newPassword">New Password</label>
+                  <div class="password-toggle">
+                    <input type="password" id="newPassword" class="form-input" placeholder="Enter new password">
+                    <button type="button" class="password-toggle-btn" data-toggle="newPassword" aria-label="Show password">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="confirmNewPassword">Confirm New Password</label>
+                  <div class="password-toggle">
+                    <input type="password" id="confirmNewPassword" class="form-input" placeholder="Confirm new password">
+                    <button type="button" class="password-toggle-btn" data-toggle="confirmNewPassword" aria-label="Show password">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn--primary" id="changePasswordBtn">Update Password</button>
+              </form>
+            </div>
+
+            <!-- Email Notifications Section -->
+            <div class="settings-section">
+              <h3 class="settings-section__title">Email Notifications</h3>
+              <div class="settings-row">
+                <div class="settings-row__info">
+                  <h4>Order Updates</h4>
+                  <p>Receive emails about your order status and delivery updates</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifyOrders" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row__info">
+                  <h4>Promotional Emails</h4>
+                  <p>Receive emails about new products, offers, and discounts</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifyPromo">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row__info">
+                  <h4>Newsletter</h4>
+                  <p>Monthly updates about harvests and recipes</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifyNewsletter">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Security Section -->
+            <div class="settings-section">
+              <h3 class="settings-section__title">Security</h3>
+              <div class="settings-row">
+                <div class="settings-row__info">
+                  <h4>Email Verification</h4>
+                  <p id="emailVerificationStatus">Your email is verified</p>
+                </div>
+                <span class="btn btn--secondary btn--sm" style="background: var(--green-100); color: var(--green-800);">✓ Verified</span>
+              </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="settings-section">
+              <h3 class="settings-section__title">Danger Zone</h3>
+              <div class="danger-zone">
+                <h4>Delete Account</h4>
+                <p>Once you delete your account, there is no going back. All your data will be permanently removed.</p>
+                <button type="button" class="btn--danger" id="deleteAccountBtn">Delete My Account</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div data-shell="footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
+<script src="plugins/supabase/supabase-client.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/account-settings.js"></script>
+<script>AccountSettings.initTab();</script>
+
+  <script src="plugins/cms/content-cms.js?v=1"></script>
+</body>
+</html>

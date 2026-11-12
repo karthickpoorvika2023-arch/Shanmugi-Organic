@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OTP Verification — Shanmuga Organics</title>
+<meta name="description" content="Enter the one-time password sent to your email to activate your Shanmuga Organics account">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  /* OTP verification — reference layout, Shanmuga Organics green brand.
+     All colours come from the shared tokens in style.css (--green-…). */
+
+  /* ---- Card shell (same as the other auth pages) ---- */
+  .auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, var(--green-050) 0%, var(--cream-100) 100%);
+  }
+
+  .auth-card {
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-l);
+    width: 100%;
+    max-width: 500px;
+    padding: 30px 38px 34px;
+  }
+
+  .auth-card__logo {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .auth-card__logo img {
+    height: 46px;
+    margin: 0 auto;
+  }
+
+  /* ---- Heading + copy ---- */
+  .otp-title {
+    font-family: var(--font-display);
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--green-900);
+    margin: 0 0 8px 0;
+  }
+
+  .otp-sub {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 16px 0;
+  }
+
+  .otp-sub strong {
+    color: var(--green-700);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  /* ---- Alerts ---- */
+  .alert {
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  .alert.is-visible {
+    display: block;
+  }
+
+  .alert--error {
+    background: var(--red-050);
+    color: var(--red);
+    border: 1px solid rgba(181, 52, 42, 0.2);
+  }
+
+  .alert--note {
+    background: var(--gold-100);
+    color: var(--gold-700);
+    border: 1px solid rgba(200, 135, 31, 0.28);
+  }
+
+  .alert--success {
+    background: var(--green-050);
+    color: var(--green-800);
+    border: 1px solid rgba(47, 143, 67, 0.2);
+  }
+
+  /* ---- OTP boxes ----
+     Flex-fill so 4, 5 or 6 boxes always fit the card width (no overflow). */
+  .otp-boxes {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .otp-input {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 72px;
+    height: 56px;
+    padding: 0;
+    text-align: center;
+    font-family: var(--font-en);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--green-900);
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+
+  .otp-input:hover {
+    border-color: var(--green-300);
+  }
+
+  .otp-input:focus {
+    outline: none;
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(47, 143, 67, 0.12);
+  }
+
+  .otp-input.is-filled {
+    border-color: var(--green-500);
+    background: var(--green-050);
+  }
+
+  .otp-input.error {
+    border-color: var(--red);
+  }
+
+  .otp-input:disabled {
+    background: var(--cream-100);
+    color: var(--muted-2);
+  }
+
+  /* ---- Remaining time + resend row ---- */
+  .otp-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+
+  .otp-timer b {
+    color: var(--green-800);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .otp-resend {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-700);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
+  .otp-resend:hover {
+    color: var(--green-900);
+  }
+
+  .otp-resend[disabled] {
+    color: var(--muted-2);
+    text-decoration: none;
+    cursor: not-allowed;
+  }
+
+  /* ---- Actions ---- */
+  .otp-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .otp-actions .btn {
+    width: 100%;
+  }
+
+  /* Keep hidden actions hidden even with the shared button styles. */
+  .otp-actions .btn[hidden] {
+    display: none;
+  }
+
+  .otp-actions .btn[disabled]:not(.btn-loading) {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  .btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spinner 0.6s linear infinite;
+  }
+
+  @keyframes spinner {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body data-page="verify-otp">
+
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-card__logo">
+      <img src="assets/img/logo.png" alt="Shanmuga Organics">
+    </div>
+
+    <h1 class="otp-title">OTP verification</h1>
+    <p class="otp-sub" id="otpSub">
+      Enter the code for <strong id="otpTarget">your registered email</strong>.
+    </p>
+    <p class="otp-sub" id="localOtpHint" hidden>
+      Local Docker testing: the code is captured in <a href="http://127.0.0.1:54324" target="_blank" rel="noopener noreferrer">Mailpit's local inbox</a>, not delivered to your real email inbox. Find the latest message for this address.
+    </p>
+
+    <div id="alertBox" class="alert"></div>
+
+    <form id="otpForm" autocomplete="off" novalidate>
+      <div class="otp-boxes" id="otpBoxes" data-cms-skip></div>
+
+      <div class="otp-meta">
+        <span class="otp-timer">Remaining time: <b id="otpTimer">01:00s</b></span>
+        <span class="otp-resend-wrap">
+          Didn't get the code?
+          <button type="button" class="otp-resend" id="resendBtn" disabled>Resend</button>
+        </span>
+      </div>
+
+      <div class="otp-actions">
+        <button type="submit" class="btn btn--primary btn--pill btn--lg btn--block" id="verifyBtn" disabled>Verify</button>
+        <button type="button" class="btn btn--outline btn--pill btn--lg btn--block" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="plugins/supabase/supabase.umd.js"></script>
+<script src="plugins/supabase/supabase-client.js?v=6"></script>
+<script id="local-otp-mailpit-hint">
+  // Show this advice only for the local Docker preview, never on the published site.
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(location.origin) &&
+      /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(window.__soSupabaseConfig?.url || '')) {
+    document.getElementById('localOtpHint').hidden = false;
+  }
+</script>
+<script>
+(function () {
+  'use strict';
+
+  /* Keep in sync with this project's Supabase Auth mailer_otp_length (6). */
+  const OTP_LENGTH = 6;
+  const RESEND_SECONDS = 60;
+  const PENDING_EMAIL_KEY = 'so_pending_signup_email';
+  const params = new URLSearchParams(window.location.search);
+  const signinRequested = params.get('mode') === 'signin';
+  const recoveryMode = params.get('mode') === 'recovery';
+  const localAuth = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(window.location.origin) &&
+    /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(window.__soSupabaseConfig?.url || '');
+  const signinMode = signinRequested && localAuth;
+  const pendingKey = recoveryMode ? 'so_pending_recovery_email' : signinMode ? 'so_pending_signin_email' : PENDING_EMAIL_KEY;
+
+  const boxesWrap = document.getElementById('otpBoxes');
+  const timerEl = document.getElementById('otpTimer');
+  const resendBtn = document.getElementById('resendBtn');
+  const form = document.getElementById('otpForm');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const alertBox = document.getElementById('alertBox');
+  const targetEl = document.getElementById('otpTarget');
+  const subEl = document.getElementById('otpSub');
+
+  const boxCount = OTP_LENGTH;
+
+  // Where the OTP was sent. Comes in on the query string from signup.html and
+  // is mirrored in sessionStorage, so a page refresh keeps working.
+  let email = (params.get('email') || '').trim();
+  try {
+    const pending = (sessionStorage.getItem(pendingKey) || '').trim();
+    email = (signinMode || recoveryMode) ? (pending && (!email || pending.toLowerCase() === email.toLowerCase()) ? pending : '')
+      : (email || pending);
+  } catch (e) { if (signinMode || recoveryMode) email = ''; }
+
+  // Signup OTP creates a Supabase session; on success return to the store home.
+  const homeUrl = new URL('./', window.location.href).href;
+
+  const boxes = [];
+  let timerId = null;
+  let remaining = RESEND_SECONDS;
+  let verifying = false;
+
+  // Keep Verify clickable only when every box holds a digit. This avoids
+  // wasted verify attempts (each failure is another API call) while the
+  // shopper is still typing, especially during a rate-limit wait.
+  // NOTE: disabled boxes must NOT count as "complete" (limited-entry state
+  // leaves them enabled, but this guard keeps us safe if that changes).
+  function syncVerifyButton() {
+    if (!verifyBtn || verifyBtn.textContent === 'Verified') return;
+    const ready = boxes.length === boxCount
+      && boxes.every(function (b) { return !b.disabled && /^\d$/.test(b.value); });
+    verifyBtn.disabled = !ready;
+  }
+
+  /* -------------------------------------------------------------- alerts -- */
+  function showAlert(message, type) {
+    alertBox.textContent = message;
+    alertBox.className = 'alert alert--' + (type || 'error') + ' is-visible';
+    alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function hideAlert() {
+    alertBox.className = 'alert';
+  }
+
+  /* ----------------------------------------------------------- otp boxes -- */
+  function buildBoxes() {
+    for (let i = 0; i < boxCount; i++) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'otp-input';
+      input.inputMode = 'numeric';
+      input.maxLength = 1;
+      input.autocomplete = i === 0 ? 'one-time-code' : 'off';
+      input.setAttribute('aria-label', 'OTP digit ' + (i + 1) + ' of ' + boxCount);
+      input.addEventListener('input', onInput);
+      input.addEventListener('keydown', onKeyDown);
+      boxesWrap.appendChild(input);
+      boxes.push(input);
+    }
+    boxesWrap.addEventListener('paste', onPaste);
+  }
+
+  function clearBoxError() {
+    boxes.forEach(function (b) { b.classList.remove('error'); });
+  }
+
+  function getCode() {
+    return boxes.map(function (b) { return b.value; }).join('');
+  }
+
+  function clearBoxes() {
+    boxes.forEach(function (b) {
+      b.value = '';
+      b.disabled = false;
+      b.classList.remove('is-filled', 'error');
+    });
+    syncVerifyButton();
+  }
+
+  function markBoxError() {
+    boxes.forEach(function (b) { b.classList.add('error'); });
+    const empty = boxes.find(function (b) { return !b.value; }) || boxes[0];
+    empty.focus();
+    empty.select();
+  }
+
+  function onInput(e) {
+    const el = e.target;
+    const idx = boxes.indexOf(el);
+    const digits = el.value.replace(/\D/g, '');
+    el.value = digits.slice(-1);
+    el.classList.toggle('is-filled', !!el.value);
+    clearBoxError();
+    syncVerifyButton();
+    if (el.value && idx < boxCount - 1) boxes[idx + 1].focus();
+  }
+
+  function onKeyDown(e) {
+    const el = e.target;
+    const idx = boxes.indexOf(el);
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      clearBoxError();
+      if (el.value) {
+        el.value = '';
+        el.classList.remove('is-filled');
+      } else if (idx > 0) {
+        boxes[idx - 1].value = '';
+        boxes[idx - 1].classList.remove('is-filled');
+        boxes[idx - 1].focus();
+      }
+      syncVerifyButton();
+      return;
+    }
+    if (e.key === 'Delete') {
+      e.preventDefault();
+      el.value = '';
+      el.classList.remove('is-filled');
+      syncVerifyButton();
+      return;
+    }
+    if (e.key === 'ArrowLeft' && idx > 0) {
+      e.preventDefault();
+      boxes[idx - 1].focus();
+      return;
+    }
+    if (e.key === 'ArrowRight' && idx < boxCount - 1) {
+      e.preventDefault();
+      boxes[idx + 1].focus();
+    }
+  }
+
+  function fillFrom(start, digits) {
+    clearBoxError();
+    for (let i = 0; i < digits.length && start + i < boxCount; i++) {
+      boxes[start + i].value = digits[i];
+      boxes[start + i].classList.add('is-filled');
+    }
+    syncVerifyButton();
+  }
+
+  function onPaste(e) {
+    const clip = e.clipboardData || window.clipboardData;
+    if (!clip) return;
+    const digits = (clip.getData('text') || '').replace(/\D/g, '');
+    if (!digits) return;
+    e.preventDefault();
+    const start = Math.max(0, boxes.indexOf(document.activeElement));
+    fillFrom(start, digits);
+    boxes[Math.min(start + digits.length, boxCount - 1)].focus();
+    if (getCode().length === boxCount) verify();
+  }
+
+  /* ----------------------------------------------------------- countdown -- */
+  function paintTimer() {
+    const total = Math.max(0, remaining);
+    const mm = String(Math.floor(total / 60)).padStart(2, '0');
+    const ss = String(total % 60).padStart(2, '0');
+    timerEl.textContent = mm + ':' + ss + 's';
+  }
+
+  function startTimer() {
+    window.clearInterval(timerId);
+    remaining = RESEND_SECONDS;
+    resendBtn.disabled = true;
+    paintTimer();
+    timerId = window.setInterval(function () {
+      remaining -= 1;
+      paintTimer();
+      if (remaining <= 0) {
+        window.clearInterval(timerId);
+        timerId = null;
+        resendBtn.disabled = signinMode;
+        if (!alertBox.classList.contains('is-visible')) {
+          showAlert('No email code? Check Inbox or Spam, then tap Resend.', 'note');
+        }
+      }
+    }, 1000);
+  }
+  /* -------------------------------------------------------------- verify -- */
+  function friendlyError(err) {
+    const msg = (err && err.message) ? err.message : 'Something went wrong. Please try again.';
+    if (/expired|invalid|incorrect|token/i.test(msg)) {
+      return 'Invalid or expired OTP. Please check the code, or tap Resend for a new one.';
+    }
+    if (/rate|too many|security/i.test(msg)) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+    return msg;
+  }
+
+  async function verify() {
+    if (verifying) return;
+    hideAlert();
+
+
+    if (!email) {
+      showAlert('We could not find the email address for this verification. Please start again.');
+      return;
+    }
+
+    const code = getCode();
+    if (code.length !== boxCount) {
+      markBoxError();
+      showAlert('Please enter the complete ' + boxCount + '-digit OTP sent to ' + email + '.');
+      return;
+    }
+
+    verifying = true;
+    verifyBtn.classList.add('btn-loading');
+    verifyBtn.textContent = '';
+    verifyBtn.disabled = true;
+
+    try {
+      const result = await (recoveryMode
+        ? window.SupabaseClient.auth.verifyOtp({ email: email, token: code, type: 'recovery' })
+        : signinMode ? window.SupabaseClient.auth.verifyOtp({ email: email, token: code, type: 'email' })
+          : window.Supabase.verifySignupOtp(email, code));
+      if (!result || result.error) throw (result && result.error) || new Error('Verification failed. Please try again.');
+      if (!result.data || !result.data.session || !result.data.user ||
+          result.data.user.email?.toLowerCase() !== email.toLowerCase()) {
+        throw new Error('Verification did not create a session for this email. Please try again.');
+      }
+
+      window.clearInterval(timerId);
+      try { sessionStorage.removeItem(pendingKey); } catch (e) { /* ignore */ }
+      if (recoveryMode) {
+        try { sessionStorage.setItem('so_verified_recovery_email', email); } catch (e) { /* private mode */ }
+      }
+
+      boxes.forEach(function (b) { b.disabled = true; });
+      verifyBtn.classList.remove('btn-loading');
+      verifyBtn.textContent = 'Verified';
+      showAlert(recoveryMode ? 'OTP verified! Choose your new password.' : 'OTP verified successfully! Opening the home page...', 'success');
+      window.location.href = recoveryMode ? 'reset-password.html' : homeUrl;
+    } catch (err) {
+      console.error('OTP verification failed:', err);
+      markBoxError();
+      showAlert(friendlyError(err));
+      verifyBtn.classList.remove('btn-loading');
+      verifyBtn.textContent = 'Verify';
+      syncVerifyButton();
+      resendBtn.disabled = remaining > 0;
+    } finally {
+      verifying = false;
+    }
+  }
+
+  /* -------------------------------------------------------------- resend -- */
+  async function resend() {
+    if (resendBtn.disabled || !email) return;
+    alertBox.className = 'alert';
+    resendBtn.disabled = true;
+    resendBtn.textContent = 'Sending…';
+    try {
+      const { error } = await (recoveryMode
+        ? window.Supabase.resetPassword(email)
+        : window.Supabase.resendVerification(email));
+      if (error) throw error;
+      clearBoxes();
+      boxes[0].focus();
+      startTimer();
+      showAlert('A new ' + (recoveryMode ? 'password reset' : 'confirmation') + ' code has been sent to ' + email + '.', 'success');
+    } catch (err) {
+      console.error('Resend email failed:', err);
+      showAlert('Could not resend the code: ' + ((err && err.message) || 'Please try again later.'));
+      resendBtn.disabled = false;
+    } finally {
+      resendBtn.textContent = 'Resend';
+    }
+  }
+  /* ----------------------------------------------------------- bootstrap -- */
+  function init() {
+    buildBoxes();
+
+    if ((signinRequested && !signinMode) || (recoveryMode && !localAuth)) {
+      email = '';
+      try { sessionStorage.removeItem(pendingKey); } catch (e) { /* ignore */ }
+    }
+
+    if (!email) {
+      remaining = 0;
+      paintTimer();
+      boxes.forEach(function (b) { b.disabled = true; });
+      verifyBtn.disabled = true;
+      showAlert(recoveryMode ? 'No pending password reset found. Please request a new reset code.'
+        : signinMode ? 'No pending sign-in found. Please return to Sign In and enter your password again.'
+        : 'No email address found for this verification. Please sign up again.');
+    } else {
+      if (signinMode || recoveryMode) {
+        subEl.firstChild.textContent = recoveryMode ? 'Enter the password reset code for ' : 'Enter the sign-in code for ';
+      }
+      targetEl.textContent = email;
+      startTimer();
+      showAlert(recoveryMode ? 'Check local Mailpit for your password reset code; tap Resend if needed.'
+        : signinMode ? 'Check local Mailpit for your sign-in code. To get a new code, return to Sign In and enter your password again.'
+        : 'Check Inbox or Spam for your email code; tap Resend if needed.', 'note');
+      clearBoxes();
+      if (boxes[0]) boxes[0].focus();
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      verify();
+    });
+
+    if (signinMode) {
+      resendBtn.hidden = true;
+      resendBtn.disabled = true;
+    } else {
+      resendBtn.addEventListener('click', resend);
+    }
+
+    cancelBtn.addEventListener('click', function () {
+      // Keep the unconfirmed account available for a later resend.
+      if (signinMode || recoveryMode) {
+        try { sessionStorage.removeItem(pendingKey); } catch (e) { /* ignore */ }
+      }
+      window.location.href = recoveryMode ? 'forgot-password.html' : 'signin.html?email=' + encodeURIComponent(email);
+    });
+
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>

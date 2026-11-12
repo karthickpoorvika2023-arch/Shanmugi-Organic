@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420" width="420" height="420" role="img">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f6f2e6"/>
+  </radialGradient>
+  <linearGradient id="shelf" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#00000012"/><stop offset="1" stop-color="#00000000"/>
+  </linearGradient>
+</defs>
+<rect width="420" height="420" fill="url(#bg)"/>
+<ellipse cx="210" cy="394" rx="151.2" ry="14" fill="#00000010"/>
+<g transform="translate(18 104) rotate(-12) scale(0.66)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#4c9a3f"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(324 304) rotate(160) scale(0.6)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#2f8f43"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+<g transform="translate(112 216) rotate(-6) scale(1.02)">
+  <path d="M0 26 q0 -14 14 -14 h150 q14 0 14 14 v58 q0 14 -14 14 h-150 q-14 0 -14 -14 z" fill="#ac8d5e"/>
+  <path d="M0 20 q0 -14 14 -14 h150 q14 0 14 14 v46 q0 14 -14 14 h-150 q-14 0 -14 -14 z" fill="#cdb083"/>
+  <ellipse cx="90" cy="40" rx="46" ry="20" fill="none" stroke="#5e3b18" stroke-width="3" opacity=".55"/>
+<g transform="translate(70 40) rotate(-20) scale(0.24)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#5e3b18"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+  <rect x="46" y="54" width="88" height="5" rx="2.5" fill="#5e3b18" opacity=".5"/>
+</g>
+<g transform="translate(96 158) rotate(4) scale(0.94)">
+  <path d="M0 26 q0 -14 14 -14 h150 q14 0 14 14 v58 q0 14 -14 14 h-150 q-14 0 -14 -14 z" fill="#ac8d5e"/>
+  <path d="M0 20 q0 -14 14 -14 h150 q14 0 14 14 v46 q0 14 -14 14 h-150 q-14 0 -14 -14 z" fill="#cdb083"/>
+  <ellipse cx="90" cy="40" rx="46" ry="20" fill="none" stroke="#5e3b18" stroke-width="3" opacity=".55"/>
+<g transform="translate(70 40) rotate(-20) scale(0.24)">
+  <path d="M0 0 C 26 -20 62 -14 74 6 C 52 30 18 26 0 0 Z" fill="#5e3b18"/>
+  <path d="M2 2 C 24 6 50 10 70 8" stroke="#ffffff66" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</g>
+  <rect x="46" y="54" width="88" height="5" rx="2.5" fill="#5e3b18" opacity=".5"/>
+</g>
+<ellipse cx="210" cy="378" rx="120" ry="16" fill="#00000010"/></svg>
