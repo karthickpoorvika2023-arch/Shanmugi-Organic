@@ -1,0 +1,69 @@
+name: Validate and package recovery fix
+on:
+  push:
+    paths:
+      - .github/workflows/recovery-build.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply the hosted OTP recovery correction
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          page = Path('frontend/forgot-password.html')
+          text = page.read_text(encoding='utf-8')
+          begin = text.index('    <!-- Hosted project still uses its existing recovery link until configured separately. -->')
+          end = text.index('\n\n  </div>', begin)
+          text = text[:begin] + text[end:]
+          text = text.replace("  const successMessage = document.getElementById('successMessage');\n", '')
+          text = text.replace("  const requestForm = document.getElementById('requestForm');\n", '')
+          text, ui_count = re.subn(r"  if \(!isLocal\) \{\n    document\.querySelector\([\s\S]*?submitBtn\.textContent = 'Send Reset Link';\n  \}\n", '', text)
+          assert ui_count == 1, f'Expected one hosted reset-link UI, got {ui_count}'
+          pattern = (r"if \(isLocal\) \{\s*try \{ sessionStorage\.setItem\('so_pending_recovery_email', email\); \} catch \(e\) \{ /\* private mode \*/ \}\s*"
+                     r"window\.location\.href = 'verify-otp\.html\?mode=recovery&email=' \+ encodeURIComponent\(email\);\s*\} else \{\s*"
+                     r"requestForm\.classList\.add\('hidden'\);\s*successMessage\.classList\.remove\('hidden'\);\s*\}")
+          text, redirects = re.subn(pattern,
+              "try { sessionStorage.setItem('so_pending_recovery_email', email); } catch (e) { /* private mode */ }\n      window.location.href = 'verify-otp.html?mode=recovery&email=' + encodeURIComponent(email);", text)
+          assert redirects == 2, f'Expected two local-only redirect branches, got {redirects}'
+          old = "submitBtn.textContent = isLocal ? 'Send Reset Code' : 'Send Reset Link';"
+          assert text.count(old) == 1
+          text = text.replace(old, "submitBtn.textContent = 'Send Reset Code';")
+          page.write_text(text, encoding='utf-8')
+
+          page = Path('frontend/verify-otp.html')
+          text = page.read_text(encoding='utf-8')
+          old = '(signinRequested && !signinMode) || (recoveryMode && !localAuth)'
+          assert text.count(old) == 1
+          text = text.replace(old, 'signinRequested && !signinMode')
+          old = "recoveryMode ? 'Check local Mailpit for your password reset code; tap Resend if needed.'"
+          assert text.count(old) == 1
+          text = text.replace(old, "recoveryMode ? (localAuth ? 'Check local Mailpit for your password reset code; tap Resend if needed.'\n        : 'Check Inbox or Spam for your password reset code; tap Resend if needed.')")
+          page.write_text(text, encoding='utf-8')
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: netlify-dist-recovery-fix
+          path: dist/
+      - name: Commit validated source changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/forgot-password.html frontend/verify-otp.html
+          git commit -m 'Fix hosted recovery OTP redirect'
+          git push
