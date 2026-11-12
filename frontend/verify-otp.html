@@ -578,7 +578,7 @@
   function init() {
     buildBoxes();
 
-    if ((signinRequested && !signinMode) || (recoveryMode && !localAuth)) {
+    if (signinRequested && !signinMode) {
       email = '';
       try { sessionStorage.removeItem(pendingKey); } catch (e) { /* ignore */ }
     }
@@ -597,7 +597,8 @@
       }
       targetEl.textContent = email;
       startTimer();
-      showAlert(recoveryMode ? 'Check local Mailpit for your password reset code; tap Resend if needed.'
+      showAlert(recoveryMode ? (localAuth ? 'Check local Mailpit for your password reset code; tap Resend if needed.'
+        : 'Check Inbox or Spam for your password reset code; tap Resend if needed.')
         : signinMode ? 'Check local Mailpit for your sign-in code. To get a new code, return to Sign In and enter your password again.'
         : 'Check Inbox or Spam for your email code; tap Resend if needed.', 'note');
       clearBoxes();
