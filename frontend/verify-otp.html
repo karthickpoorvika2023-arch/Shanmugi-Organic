@@ -371,30 +371,67 @@ const pending = (
 
 
 window.addEventListener("DOMContentLoaded", function () {
+  
+function ensureOtpBoxesVisible() {
   if (!boxesWrap) {
     console.error("OTP container not found");
     return;
   }
 
-  if (boxesWrap.querySelectorAll(".otp-input").length === 0) {
+  if (
+    boxesWrap.querySelectorAll(".otp-input").length === 0
+  ) {
     buildBoxes();
   }
 
-  boxesWrap.style.display = "grid";
-  boxesWrap.style.gridTemplateColumns =
-    "repeat(6, minmax(0, 1fr))";
-  boxesWrap.style.gap = "8px";
-  boxesWrap.style.width = "100%";
+  boxesWrap.hidden = false;
 
-  boxesWrap.querySelectorAll(".otp-input").forEach((input) => {
-    input.style.display = "block";
-    input.style.width = "100%";
-    input.style.minWidth = "0";
-    input.style.boxSizing = "border-box";
-    input.style.visibility = "visible";
-    input.style.opacity = "1";
-  });
-});
+  boxesWrap.style.setProperty(
+    "display", "grid", "important"
+  );
+
+  boxesWrap.style.setProperty(
+    "grid-template-columns",
+    "repeat(6, minmax(0, 1fr))"
+  );
+
+  boxesWrap.style.setProperty("gap", "8px");
+  boxesWrap.style.setProperty("width", "100%");
+
+  boxesWrap.querySelectorAll(".otp-input").forEach(
+    function (input) {
+      input.hidden = false;
+      input.style.setProperty(
+        "display", "block", "important"
+      );
+      input.style.setProperty(
+        "visibility", "visible", "important"
+      );
+      input.style.setProperty(
+        "opacity", "1", "important"
+      );
+      input.style.width = "100%";
+      input.style.minWidth = "0";
+      input.style.boxSizing = "border-box";
+    }
+  );
+
+  console.log(
+    "OTP boxes:",
+    boxesWrap.querySelectorAll(".otp-input").length
+  );
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    ensureOtpBoxesVisible,
+    { once: true }
+  );
+} else {
+  ensureOtpBoxesVisible();
+}
+
 
 
   function clearBoxError() {
