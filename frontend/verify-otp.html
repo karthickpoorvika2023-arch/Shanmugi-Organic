@@ -100,14 +100,15 @@
   /* ---- OTP boxes ----
      Flex-fill so 4, 5 or 6 boxes always fit the card width (no overflow). */
   .otp-boxes {
-    display: flex;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 12px;
+    width: 100%;
   }
 
   .otp-input {
-    flex: 1 1 0;
+    width: 100%;
     min-width: 0;
     max-width: 72px;
     height: 56px;
@@ -292,7 +293,7 @@
   const recoveryMode = params.get('mode') === 'recovery';
   const localAuth = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(window.location.origin) &&
     /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(window.__soSupabaseConfig?.url || '');
-  const signinMode = signinRequested && localAuth;
+  const signinMode = signinRequested; // Support published Netlify/GitHub login OTP as well as localhost
   const pendingKey = recoveryMode ? 'so_pending_recovery_email' : signinMode ? 'so_pending_signin_email' : PENDING_EMAIL_KEY;
 
   const boxesWrap = document.getElementById('otpBoxes');
@@ -307,18 +308,19 @@
 
   const boxCount = OTP_LENGTH;
 
-  // Where the OTP was sent. Comes in on the query string from signup.html and
-  // is mirrored in sessionStorage, so a page refresh keeps working.
-  let email = (params.get('email') || '').trim();
+  // Pick the pending email for the current verification mode.
+  // Sign-in / password recovery should only proceed with a matching
+  // email stored by the corresponding start step in this browser tab.
+  const requestedEmail = (params.get('email') || '').trim().toLowerCase();
+  let pendingEmail = '';
   try {
-    
-
-const pending = (
-  sessionStorage.getItem(
-    signInMode ? "so_pending_signin_email" : pendingKey
-  ) || ""
-).trim();
-
+    pendingEmail = (sessionStorage.getItem(pendingKey) || '').trim().toLowerCase();
+  } catch (err) {
+    // In private browsing, storage may be unavailable.
+  }
+  let email = (signinMode || recoveryMode)
+    ? (pendingEmail && (!requestedEmail || requestedEmail === pendingEmail) ? pendingEmail : '')
+    : (requestedEmail || pendingEmail);
 
   // Signup OTP creates a Supabase session; on success return to the store home.
   const homeUrl = new URL('./', window.location.href).href;
@@ -350,84 +352,33 @@ const pending = (
   function hideAlert() {
     alertBox.className = 'alert';
   }
-function buildBoxes() {
-  // Existing 6 OTP inputs creation code
-}
-
-function initializeOtpBoxes() {
-  // Existing OTP inputs display code
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    initializeOtpBoxes,
-    { once: true }
-  );
-} else {
-  initializeOtpBoxes();
-}
-
-function clearBoxError() {
-  // Existing error handling code
-}
-
-
-  if (
-    boxesWrap.querySelectorAll(".otp-input").length === 0
-  ) {
-    buildBoxes();
-  }
-
-  boxesWrap.hidden = false;
-
-  boxesWrap.style.setProperty(
-    "display", "grid", "important"
-  );
-
-  boxesWrap.style.setProperty(
-    "grid-template-columns",
-    "repeat(6, minmax(0, 1fr))"
-  );
-    {
-  boxesWrap.style.setProperty("gap", "8px");
-  boxesWrap.style.setProperty("width", "100%");
-
-  boxesWrap.querySelectorAll(".otp-input").forEach(
-    function (input) {
-      input.hidden = false;
-      input.style.setProperty(
-        "display", "block", "important"
-      );
-      input.style.setProperty(
-        "visibility", "visible", "important"
-      );
-      input.style.setProperty(
-        "opacity", "1", "important"
-      );
-      input.style.width = "100%";
-      input.style.minWidth = "0";
-      input.style.boxSizing = "border-box";
+  /* ------------------------- OTP input fields (single initializer) -- */
+  function buildBoxes() {
+    if (!boxesWrap) {
+      console.error('OTP container missing');
+      return;
     }
-  );
 
-  console.log(
-    "OTP boxes:",
-    boxesWrap.querySelectorAll(".otp-input").length
-  );
-}
+    boxesWrap.replaceChildren();
+    boxes.length = 0;
+    boxesWrap.hidden = false;
 
-if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    ensureOtpBoxesVisible,
-    { once: true }
-  );
-} else {
-  ensureOtpBoxesVisible();
-}
+    for (let i = 0; i < boxCount; i++) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'otp-input';
+      input.inputMode = 'numeric';
+      input.maxLength = 1;
+      input.autocomplete = i === 0 ? 'one-time-code' : 'off';
+      input.setAttribute('aria-label', 'OTP digit ' + (i + 1) + ' of ' + boxCount);
+      input.addEventListener('input', onInput);
+      input.addEventListener('keydown', onKeyDown);
+      boxesWrap.appendChild(input);
+      boxes.push(input);
+    }
 
-
+    boxesWrap.addEventListener('paste', onPaste);
+  }
 
   function clearBoxError() {
     boxes.forEach(function (b) { b.classList.remove('error'); });
@@ -602,8 +553,8 @@ if (document.readyState === "loading") {
       verifyBtn.textContent = 'Verified';
       showAlert(recoveryMode ? 'OTP verified! Choose your new password.' : 'OTP verified successfully! Opening the home page...', 'success');
       window.location.href = recoveryMode
-  ? "reset-password.html"
-  : (signInMode ? "index.html" : homeUrl);
+        ? 'reset-password.html'
+        : (signinMode ? 'index.html' : homeUrl);
     } catch (err) {
       console.error('OTP verification failed:', err);
       markBoxError();
@@ -644,11 +595,6 @@ if (document.readyState === "loading") {
   function init() {
     buildBoxes();
 
-    if (signinRequested && !signinMode) {
-      email = '';
-      try { sessionStorage.removeItem(pendingKey); } catch (e) { /* ignore */ }
-    }
-
     if (!email) {
       remaining = 0;
       paintTimer();
@@ -665,7 +611,7 @@ if (document.readyState === "loading") {
       startTimer();
       showAlert(recoveryMode ? (localAuth ? 'Check local Mailpit for your password reset code; tap Resend if needed.'
         : 'Check Inbox or Spam for your password reset code; tap Resend if needed.')
-        : signinMode ? 'Check local Mailpit for your sign-in code. To get a new code, return to Sign In and enter your password again.'
+        : signinMode ? (localAuth ? 'Check local Mailpit for your sign-in code. To get a new code, return to Sign In.' : 'Check Inbox or Spam for your sign-in code. For a new code, return to Sign In.')
         : 'Check Inbox or Spam for your email code; tap Resend if needed.', 'note');
       clearBoxes();
       if (boxes[0]) boxes[0].focus();
