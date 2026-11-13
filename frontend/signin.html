@@ -411,6 +411,31 @@
         window.location.href = 'verify-otp.html?mode=signin&email=' + encodeURIComponent(email);
         return;
       }
+if (window.location.hostname === "shanmugaorganics.netlify.app") {
+  const response = await fetch(
+    "/.netlify/functions/signin-otp-start",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || "Could not send OTP");
+  }
+
+  sessionStorage.setItem("so_pending_signin_email", email);
+
+  window.location.href =
+    "verify-otp.html?mode=signin&email=" +
+    encodeURIComponent(email);
+
+  return;
+}
+
       const { error } = await window.Supabase.signIn(email, password);
 
       if (error) {
