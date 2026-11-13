@@ -351,32 +351,45 @@ const pending = (
     alertBox.className = 'alert';
   }
 
-  /* ----------------------------------------------------------- otp boxes -- */
-  function buildBoxes() {
-    for (let i = 0; i < boxCount; i++) {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'otp-input';
-      input.inputMode = 'numeric';
-      input.maxLength = 1;
-      input.autocomplete = i === 0 ? 'one-time-code' : 'off';
-      input.setAttribute('aria-label', 'OTP digit ' + (i + 1) + ' of ' + boxCount);
-      input.addEventListener('input', onInput);
-      input.addEventListener('keydown', onKeyDown);
-      boxesWrap.appendChild(input);
-      boxes.push(input);
-    }
-    boxesWrap.addEventListener('paste', onPaste);
-  }
-
-
-window.addEventListener("DOMContentLoaded", function () {
-  
-function ensureOtpBoxesVisible() {
+function initializeOtpBoxes() {
   if (!boxesWrap) {
-    console.error("OTP container not found");
+    console.error("OTP container missing");
     return;
   }
+
+  if (boxesWrap.querySelectorAll(".otp-input").length === 0) {
+    buildBoxes();
+  }
+
+  boxesWrap.hidden = false;
+
+  boxesWrap.style.setProperty(
+    "display", "grid", "important"
+  );
+
+  boxesWrap.style.gridTemplateColumns =
+    "repeat(6, minmax(0, 1fr))";
+
+  boxesWrap.style.gap = "8px";
+  boxesWrap.style.width = "100%";
+
+  console.log(
+    "OTP input count:",
+    boxesWrap.querySelectorAll(".otp-input").length
+  );
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeOtpBoxes,
+    { once: true }
+  );
+} else {
+  initializeOtpBoxes();
+}
+
+  /* ----------------------------------------------------------- otp boxes -- */
 
   if (
     boxesWrap.querySelectorAll(".otp-input").length === 0
