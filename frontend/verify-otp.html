@@ -188,51 +188,6 @@
     cursor: not-allowed;
   }
 
-  /* Password is requested again before the Netlify sign-in endpoint can resend. */
-  .signin-resend-panel {
-    margin: -1px 0 18px;
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--cream-100);
-  }
-  .signin-resend-panel[hidden] { display: none !important; }
-  .signin-resend-panel label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: var(--green-900);
-  }
-  .signin-resend-panel input {
-    width: 100%;
-    min-height: 45px;
-    box-sizing: border-box;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-    font: inherit;
-    margin-bottom: 10px;
-  }
-  .signin-resend-panel input:focus {
-    outline: 2px solid var(--green-500);
-    outline-offset: 1px;
-  }
-  .signin-resend-panel .resend-action {
-    border: 0;
-    border-radius: var(--radius);
-    background: var(--green-700);
-    color: #fff;
-    padding: 11px 16px;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-  }
-  .signin-resend-panel .resend-action:disabled { opacity: 0.55; cursor: wait; }
-  .signin-resend-panel p { font-size: 12px; color: var(--muted); margin: 9px 0 0; }
-
   /* ---- Actions ---- */
   .otp-actions {
     display: grid;
@@ -308,14 +263,6 @@
         </span>
       </div>
 
-      <div id="signinResendPanel" class="signin-resend-panel" hidden>
-        <label for="signinResendPassword">Confirm your password to resend OTP</label>
-        <input id="signinResendPassword" type="password"
-               autocomplete="current-password" placeholder="Enter your password" />
-        <button id="signinResendConfirm" class="resend-action" type="button">Send new OTP</button>
-        <p>We check your password again before sending a fresh sign-in code. Your password is not saved on this page.</p>
-      </div>
-
       <div class="otp-actions">
         <button type="submit" class="btn btn--primary btn--pill btn--lg btn--block" id="verifyBtn" disabled>Verify</button>
         <button type="button" class="btn btn--outline btn--pill btn--lg btn--block" id="cancelBtn">Cancel</button>
@@ -352,9 +299,6 @@
   const boxesWrap = document.getElementById('otpBoxes');
   const timerEl = document.getElementById('otpTimer');
   const resendBtn = document.getElementById('resendBtn');
-  const signinResendPanel = document.getElementById('signinResendPanel');
-  const signinResendPassword = document.getElementById('signinResendPassword');
-  const signinResendConfirm = document.getElementById('signinResendConfirm');
   const form = document.getElementById('otpForm');
   const verifyBtn = document.getElementById('verifyBtn');
   const cancelBtn = document.getElementById('cancelBtn');
@@ -647,57 +591,37 @@
       resendBtn.textContent = 'Resend OTP';
     }
   }
-  // Sign-in resend: repeat the existing PASSWORD-VERIFIED server flow.
-  // Do NOT call Supabase signInWithOtp directly here: it would skip the
-  // password-check step this website expects before sending an OTP.
+  // Sign-in resend: request a new Supabase Email OTP without asking for
+  // the password again. This is an email-OTP authentication factor, not
+  // a password-gated MFA challenge; enforce true MFA separately if required.
   async function resendSignInOtp() {
-    if (!signinMode || !email || remaining > 0 || resendBtn.disabled) return;
-
-    const password = signinResendPassword.value;
-    if (!password) {
-      showAlert('Enter your account password to request a new sign-in OTP.');
-      signinResendPassword.focus();
-      return;
-    }
+    if (!signinMode || !email || remaining > 0 || resendBtn.disabled || verifying) return;
 
     resendBtn.disabled = true;
-    signinResendConfirm.disabled = true;
-    signinResendConfirm.textContent = 'Sending…';
+    resendBtn.textContent = 'Sending…';
+    hideAlert();
+
     try {
-      // Existing local Docker endpoint or the Netlify Function deployed
-      // earlier for production. The endpoint validates password + email.
-      const isNetlify = window.location.hostname.endsWith('.netlify.app');
-      const endpoint = localAuth
-        ? '/_local/signin-otp/start'
-        : isNetlify ? '/.netlify/functions/signin-otp-start' : null;
-      if (!endpoint) {
-        throw new Error('Resend is not configured for this host. Please return to Sign In.');
+      const auth = window.SupabaseClient && window.SupabaseClient.auth;
+      if (!auth || typeof auth.signInWithOtp !== 'function') {
+        throw new Error('OTP service is unavailable. Refresh the page and try again.');
       }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
-        body: JSON.stringify({ email: email, password: password })
+      const { error } = await auth.signInWithOtp({
+        email: email,
+        options: { shouldCreateUser: false }
       });
-      const result = await response.json().catch(function () { return {}; });
-      if (!response.ok || !result.sent) {
-        throw new Error(result.error || 'Could not send a new OTP.');
-      }
+      if (error) throw error;
 
-      signinResendPanel.hidden = true;
       clearBoxes();
       startTimer();
       if (boxes[0]) boxes[0].focus();
-      showAlert('A fresh sign-in code was sent. Check your Inbox or Spam.', 'success');
+      showAlert('A new sign-in OTP has been requested. Check Inbox or Spam.', 'success');
     } catch (err) {
       console.error('Sign-in OTP resend failed:', err);
-      showAlert('Could not resend OTP: ' + ((err && err.message) || 'Please try later.'));
+      showAlert('Could not resend OTP: ' + friendlyError(err), 'error');
       resendBtn.disabled = remaining > 0;
     } finally {
-      signinResendPassword.value = '';
-      signinResendConfirm.disabled = false;
-      signinResendConfirm.textContent = 'Send new OTP';
+      resendBtn.textContent = 'Resend OTP';
     }
   }
 
@@ -735,19 +659,8 @@
     resendBtn.hidden = false;
     resendBtn.addEventListener('click', function () {
       if (resendBtn.disabled || remaining > 0 || !email) return;
-      if (signinMode) {
-        signinResendPanel.hidden = !signinResendPanel.hidden;
-        if (!signinResendPanel.hidden) signinResendPassword.focus();
-      } else {
-        resend();
-      }
-    });
-    signinResendConfirm.addEventListener('click', resendSignInOtp);
-    signinResendPassword.addEventListener('keydown', function (event) {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        resendSignInOtp();
-      }
+      if (signinMode) resendSignInOtp();
+      else resend();
     });
 
     cancelBtn.addEventListener('click', function () {
