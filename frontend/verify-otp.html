@@ -537,7 +537,9 @@
       verifyBtn.classList.remove('btn-loading');
       verifyBtn.textContent = 'Verified';
       showAlert(recoveryMode ? 'OTP verified! Choose your new password.' : 'OTP verified successfully! Opening the home page...', 'success');
-      window.location.href = recoveryMode ? 'reset-password.html' : homeUrl;
+      window.location.href = recoveryMode
+  ? "reset-password.html"
+  : (signInMode ? "index.html" : homeUrl);
     } catch (err) {
       console.error('OTP verification failed:', err);
       markBoxError();
