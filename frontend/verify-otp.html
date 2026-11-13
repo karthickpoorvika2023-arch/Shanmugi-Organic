@@ -369,6 +369,13 @@ const pending = (
     boxesWrap.addEventListener('paste', onPaste);
   }
 
+if (
+  boxesWrap &&
+  boxesWrap.querySelectorAll(".otp-input").length === 0
+) {
+  buildBoxes();
+}
+
   function clearBoxError() {
     boxes.forEach(function (b) { b.classList.remove('error'); });
   }
