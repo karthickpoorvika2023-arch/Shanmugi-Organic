@@ -311,9 +311,12 @@
   // is mirrored in sessionStorage, so a page refresh keeps working.
   let email = (params.get('email') || '').trim();
   try {
-    const pending = (sessionStorage.getItem(pendingKey) || '').trim();
-    email = (signinMode || recoveryMode) ? (pending && (!email || pending.toLowerCase() === email.toLowerCase()) ? pending : '')
-      : (email || pending);
+    
+const pending = (
+  sessionStorage.getItem(
+    signInMode ? "so_pending_signin_email" : pendingKey
+  ) || ""
+).trim();
   } catch (e) { if (signinMode || recoveryMode) email = ''; }
 
   // Signup OTP creates a Supabase session; on success return to the store home.
