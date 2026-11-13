@@ -369,12 +369,33 @@ const pending = (
     boxesWrap.addEventListener('paste', onPaste);
   }
 
-if (
-  boxesWrap &&
-  boxesWrap.querySelectorAll(".otp-input").length === 0
-) {
-  buildBoxes();
-}
+
+window.addEventListener("DOMContentLoaded", function () {
+  if (!boxesWrap) {
+    console.error("OTP container not found");
+    return;
+  }
+
+  if (boxesWrap.querySelectorAll(".otp-input").length === 0) {
+    buildBoxes();
+  }
+
+  boxesWrap.style.display = "grid";
+  boxesWrap.style.gridTemplateColumns =
+    "repeat(6, minmax(0, 1fr))";
+  boxesWrap.style.gap = "8px";
+  boxesWrap.style.width = "100%";
+
+  boxesWrap.querySelectorAll(".otp-input").forEach((input) => {
+    input.style.display = "block";
+    input.style.width = "100%";
+    input.style.minWidth = "0";
+    input.style.boxSizing = "border-box";
+    input.style.visibility = "visible";
+    input.style.opacity = "1";
+  });
+});
+
 
   function clearBoxError() {
     boxes.forEach(function (b) { b.classList.remove('error'); });
