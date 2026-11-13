@@ -312,12 +312,13 @@
   let email = (params.get('email') || '').trim();
   try {
     
+
 const pending = (
   sessionStorage.getItem(
     signInMode ? "so_pending_signin_email" : pendingKey
   ) || ""
 ).trim();
-  } catch (e) { if (signinMode || recoveryMode) email = ''; }
+
 
   // Signup OTP creates a Supabase session; on success return to the store home.
   const homeUrl = new URL('./', window.location.href).href;
