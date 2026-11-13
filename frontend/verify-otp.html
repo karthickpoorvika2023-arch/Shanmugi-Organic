@@ -188,6 +188,51 @@
     cursor: not-allowed;
   }
 
+  /* Password is requested again before the Netlify sign-in endpoint can resend. */
+  .signin-resend-panel {
+    margin: -1px 0 18px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--cream-100);
+  }
+  .signin-resend-panel[hidden] { display: none !important; }
+  .signin-resend-panel label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--green-900);
+  }
+  .signin-resend-panel input {
+    width: 100%;
+    min-height: 45px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    font: inherit;
+    margin-bottom: 10px;
+  }
+  .signin-resend-panel input:focus {
+    outline: 2px solid var(--green-500);
+    outline-offset: 1px;
+  }
+  .signin-resend-panel .resend-action {
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--green-700);
+    color: #fff;
+    padding: 11px 16px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+  }
+  .signin-resend-panel .resend-action:disabled { opacity: 0.55; cursor: wait; }
+  .signin-resend-panel p { font-size: 12px; color: var(--muted); margin: 9px 0 0; }
+
   /* ---- Actions ---- */
   .otp-actions {
     display: grid;
@@ -256,11 +301,19 @@
       <div class="otp-boxes" id="otpBoxes" data-cms-skip></div>
 
       <div class="otp-meta">
-        <span class="otp-timer">Remaining time: <b id="otpTimer">01:00s</b></span>
+        <span class="otp-timer">Resend available in: <b id="otpTimer">01:00s</b></span>
         <span class="otp-resend-wrap">
           Didn't get the code?
-          <button type="button" class="otp-resend" id="resendBtn" disabled>Resend</button>
+          <button type="button" class="otp-resend" id="resendBtn" disabled>Resend OTP</button>
         </span>
+      </div>
+
+      <div id="signinResendPanel" class="signin-resend-panel" hidden>
+        <label for="signinResendPassword">Confirm your password to resend OTP</label>
+        <input id="signinResendPassword" type="password"
+               autocomplete="current-password" placeholder="Enter your password" />
+        <button id="signinResendConfirm" class="resend-action" type="button">Send new OTP</button>
+        <p>We check your password again before sending a fresh sign-in code. Your password is not saved on this page.</p>
       </div>
 
       <div class="otp-actions">
@@ -299,6 +352,9 @@
   const boxesWrap = document.getElementById('otpBoxes');
   const timerEl = document.getElementById('otpTimer');
   const resendBtn = document.getElementById('resendBtn');
+  const signinResendPanel = document.getElementById('signinResendPanel');
+  const signinResendPassword = document.getElementById('signinResendPassword');
+  const signinResendConfirm = document.getElementById('signinResendConfirm');
   const form = document.getElementById('otpForm');
   const verifyBtn = document.getElementById('verifyBtn');
   const cancelBtn = document.getElementById('cancelBtn');
@@ -490,9 +546,9 @@
       if (remaining <= 0) {
         window.clearInterval(timerId);
         timerId = null;
-        resendBtn.disabled = signinMode;
+        resendBtn.disabled = false;
         if (!alertBox.classList.contains('is-visible')) {
-          showAlert('No email code? Check Inbox or Spam, then tap Resend.', 'note');
+          showAlert('Need another email code? Tap Resend OTP.', 'note');
         }
       }
     }, 1000);
@@ -588,9 +644,63 @@
       showAlert('Could not resend the code: ' + ((err && err.message) || 'Please try again later.'));
       resendBtn.disabled = false;
     } finally {
-      resendBtn.textContent = 'Resend';
+      resendBtn.textContent = 'Resend OTP';
     }
   }
+  // Sign-in resend: repeat the existing PASSWORD-VERIFIED server flow.
+  // Do NOT call Supabase signInWithOtp directly here: it would skip the
+  // password-check step this website expects before sending an OTP.
+  async function resendSignInOtp() {
+    if (!signinMode || !email || remaining > 0 || resendBtn.disabled) return;
+
+    const password = signinResendPassword.value;
+    if (!password) {
+      showAlert('Enter your account password to request a new sign-in OTP.');
+      signinResendPassword.focus();
+      return;
+    }
+
+    resendBtn.disabled = true;
+    signinResendConfirm.disabled = true;
+    signinResendConfirm.textContent = 'Sending…';
+    try {
+      // Existing local Docker endpoint or the Netlify Function deployed
+      // earlier for production. The endpoint validates password + email.
+      const isNetlify = window.location.hostname.endsWith('.netlify.app');
+      const endpoint = localAuth
+        ? '/_local/signin-otp/start'
+        : isNetlify ? '/.netlify/functions/signin-otp-start' : null;
+      if (!endpoint) {
+        throw new Error('Resend is not configured for this host. Please return to Sign In.');
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ email: email, password: password })
+      });
+      const result = await response.json().catch(function () { return {}; });
+      if (!response.ok || !result.sent) {
+        throw new Error(result.error || 'Could not send a new OTP.');
+      }
+
+      signinResendPanel.hidden = true;
+      clearBoxes();
+      startTimer();
+      if (boxes[0]) boxes[0].focus();
+      showAlert('A fresh sign-in code was sent. Check your Inbox or Spam.', 'success');
+    } catch (err) {
+      console.error('Sign-in OTP resend failed:', err);
+      showAlert('Could not resend OTP: ' + ((err && err.message) || 'Please try later.'));
+      resendBtn.disabled = remaining > 0;
+    } finally {
+      signinResendPassword.value = '';
+      signinResendConfirm.disabled = false;
+      signinResendConfirm.textContent = 'Send new OTP';
+    }
+  }
+
   /* ----------------------------------------------------------- bootstrap -- */
   function init() {
     buildBoxes();
@@ -611,7 +721,7 @@
       startTimer();
       showAlert(recoveryMode ? (localAuth ? 'Check local Mailpit for your password reset code; tap Resend if needed.'
         : 'Check Inbox or Spam for your password reset code; tap Resend if needed.')
-        : signinMode ? (localAuth ? 'Check local Mailpit for your sign-in code. To get a new code, return to Sign In.' : 'Check Inbox or Spam for your sign-in code. For a new code, return to Sign In.')
+        : signinMode ? (localAuth ? 'Check local Mailpit for the sign-in code; Resend OTP becomes available after 60 seconds.' : 'Check Inbox or Spam for your sign-in code. Resend OTP becomes available after 60 seconds.')
         : 'Check Inbox or Spam for your email code; tap Resend if needed.', 'note');
       clearBoxes();
       if (boxes[0]) boxes[0].focus();
@@ -622,12 +732,23 @@
       verify();
     });
 
-    if (signinMode) {
-      resendBtn.hidden = true;
-      resendBtn.disabled = true;
-    } else {
-      resendBtn.addEventListener('click', resend);
-    }
+    resendBtn.hidden = false;
+    resendBtn.addEventListener('click', function () {
+      if (resendBtn.disabled || remaining > 0 || !email) return;
+      if (signinMode) {
+        signinResendPanel.hidden = !signinResendPanel.hidden;
+        if (!signinResendPanel.hidden) signinResendPassword.focus();
+      } else {
+        resend();
+      }
+    });
+    signinResendConfirm.addEventListener('click', resendSignInOtp);
+    signinResendPassword.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        resendSignInOtp();
+      }
+    });
 
     cancelBtn.addEventListener('click', function () {
       // Keep the unconfirmed account available for a later resend.
