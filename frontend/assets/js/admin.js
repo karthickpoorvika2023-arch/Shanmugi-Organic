@@ -1407,13 +1407,27 @@
     return msg;
   }
 
-  /* Category edits are local-only until an approved backend writer exists. */
-  function upsertCategoryToSupabase(c) {
-    toast('⚠️ Category saved locally only. Supabase sync requires an approved-admin backend.', 'warn');
+  /* Category writes are backend-only. Browser localStorage is never proof of a save. */
+  function upsertCategoryToSupabase(c, originalSlug) {
+    return demoAdminRequest('admin-category-upsert', {
+      category: { slug: c.slug, name: c.name, ta: c.ta, blurb: c.blurb, img: c.img },
+      originalSlug: originalSlug || null
+    });
   }
-  /* Local category removal does not change the Supabase catalog. */
   function deleteCategoryFromSupabase(slug) {
-    toast('⚠️ Category removed locally only. Supabase sync requires an approved-admin backend.', 'warn');
+    return demoAdminRequest('admin-category-delete', { slug: slug });
+  }
+  function fetchCategoriesFromSupabase() {
+    return demoAdminRequest('admin-categories', {}).then(function (res) {
+      if (!Array.isArray(res.categories)) throw new Error('Invalid categories response from backend');
+      return res.categories.map(function (r) {
+        return {
+          id: r.id, slug: r.slug, name: r.name || '', ta: r.name_tamil || '',
+          blurb: r.description || '', img: r.image_url || '', icon: r.icon || '',
+          order_index: r.order_index || 0
+        };
+      });
+    });
   }
   /* Legacy RLS fix SQL is deliberately not offered to admins. */
   var _rlsFixShown = false;
@@ -1662,29 +1676,25 @@
 
   function getCategoryFormHTML(c) {
     c = c || {};
-    var hasImg = c.img && c.img.length > 0;
-    var previewStyle = hasImg ? 'display:block' : 'display:none';
-    var dropzoneHidden = hasImg ? ' style="display:none"' : '';
-    return '<div class="form-group"><label>Category Name *</label><input class="form-control" id="catName" placeholder="e.g. Spices" value="' + (c.name || '') + '"></div>' +
-      '<div class="form-group"><label>Tamil Name</label><input class="form-control" id="catTa" placeholder="e.g. மசாலா பொருட்கள்" value="' + (c.ta || '') + '"></div>' +
-      '<div class="form-group"><label>Description</label><textarea class="form-control" id="catDesc" placeholder="Brief description...">' + (c.blurb || '') + '</textarea></div>' +
-      /* Image upload */
+    var hasImg = !!c.img;
+    var imgStyle = hasImg ? 'display:none;' : '';
+    var previewStyle = hasImg ? 'display:block;' : 'display:none;';
+    return '<div class="form-group"><label>Category Name *</label><input class="form-control" id="catName" maxlength="120" placeholder="e.g. Spices" value="' + escHtml(c.name || '') + '"></div>' +
+      '<div class="form-group"><label>Tamil Name</label><input class="form-control" id="catTa" maxlength="150" placeholder="e.g. மசாலா பொருட்கள்" value="' + escHtml(c.ta || '') + '"></div>' +
+      '<div class="form-group"><label>Description</label><textarea class="form-control" id="catDesc" maxlength="2000" placeholder="Brief description...">' + escHtml(c.blurb || '') + '</textarea></div>' +
       '<div class="form-group"><label>Category Image</label>' +
-      '<input type="hidden" id="catImg" value="' + (c.img || '') + '">' +
+      '<input type="hidden" id="catImg" value="' + escHtml(c.img || '') + '">' +
       '<input type="file" id="catImgFile" accept="image/*" style="display:none">' +
-      '<div id="catImgDropzone"' + dropzoneHidden + ' style="border:2px dashed #ccd5cc;border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s">' +
-      '<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#92a096" stroke-width="1.5" style="margin:0 auto 8px;display:block"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-4 4 3 4-5 5 6"/><circle cx="8.5" cy="9.5" r="1.5"/></svg>' +
+      '<div id="catImgDropzone" style="' + imgStyle + 'border:2px dashed #ccd5cc;border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s">' +
       '<div style="font-size:13px;font-weight:600;color:#3f5045">Click to upload or drag &amp; drop</div>' +
       '<div style="font-size:11px;color:#92a096;margin-top:4px">PNG / JPG / WebP up to 5MB · best 800×600 px</div>' +
       '</div>' +
-      '<div id="catImgPreview" style="' + previewStyle + ';position:relative;border-radius:10px;overflow:hidden;border:1px solid #e2e8e0;margin-top:6px">' +
-      '<img id="catImgThumb" src="' + (c.img || '') + '" style="width:100%;height:180px;object-fit:cover;display:block" alt="Preview">' +
+      '<div id="catImgPreview" style="' + previewStyle + 'position:relative;border-radius:10px;overflow:hidden;border:1px solid #e2e8e0;margin-top:6px">' +
+      '<img id="catImgThumb" src="' + escHtml(c.img || '') + '" style="width:100%;height:180px;object-fit:cover;display:block" alt="Preview">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f9f6">' +
       '<span id="catImgInfo" style="font-size:11px;color:#6f7d72">Image loaded</span>' +
       '<button type="button" id="catImgRemove" style="font-size:11px;font-weight:600;color:#dc3545;background:none;border:none;cursor:pointer;padding:2px 6px">✕ Remove</button>' +
-      '</div>' +
-      '</div>' +
-      '</div>';
+      '</div></div></div>';
   }
 
   function initCategoryImageUpload(modal) {
@@ -1751,150 +1761,117 @@
       preview.style.display = 'none'; dropzone.style.display = '';
     });
   }
+  var categoriesRequestId = 0;
   function renderCategories() {
-    var cats = SITE ? SITE.categories : [];
+    var requestId = ++categoriesRequestId;
+    content.innerHTML = '<p role="status">Loading categories from Supabase…</p>';
+    fetchCategoriesFromSupabase().then(function (cats) {
+      if (requestId !== categoriesRequestId || pageTitle.textContent !== 'Categories') return;
+      // The database is the source of truth in this admin page. Keep existing
+      // browser-only changes in localStorage for manual recovery; never auto-push them.
+      if (SITE) SITE.categories = cats;
+      renderCategoriesWithData(cats);
+    }).catch(function (error) {
+      if (requestId !== categoriesRequestId || pageTitle.textContent !== 'Categories') return;
+      content.innerHTML = '<div role="alert" style="padding:18px;background:#fff4f0;border:1px solid #f6b6a9;border-radius:9px">' +
+        '<h3>Could not load categories from Supabase</h3><p>' + escHtml(error.message || String(error)) + '</p>' +
+        '<p>Changes are disabled until the approved-admin backend is available. No data was modified.</p>' +
+        '<button id="retryCatsBtn" class="btn-sm">Retry</button></div>';
+      $('#retryCatsBtn').addEventListener('click', renderCategories);
+    });
+  }
+
+  function categoryPayload(modal, originalSlug) {
+    var name = modal.querySelector('#catName').value.trim();
+    var ta = modal.querySelector('#catTa').value.trim();
+    var desc = modal.querySelector('#catDesc').value.trim();
+    var img = modal.querySelector('#catImg').value || '';
+    if (!name) { toast('Category name is required', 'error'); return null; }
+    var slug = originalSlug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
+    if (!slug) { toast('Use an English category name or a valid slug.', 'error'); return null; }
+    return { name: name, ta: ta, blurb: desc, img: img, slug: slug };
+  }
+
+  // openModal is synchronous: returning false keeps the dialog on screen until
+  // the async backend confirms a change. Do NOT close or update UI on failure.
+  function categorySaveInModal(modal, request, successText) {
+    var button = modal.querySelector('[data-save]');
+    if (button.disabled) return false;
+    button.disabled = true;
+    var label = button.textContent;
+    button.textContent = 'Saving…';
+    request.then(function () {
+      if (modal.parentNode) modal.remove();
+      toast(successText);
+      if (pageTitle.textContent === 'Categories') renderCategories();
+    }).catch(function (error) {
+      toast('Supabase save failed: ' + (error.message || String(error)), 'error');
+      button.disabled = false;
+      button.textContent = label;
+    });
+    return false;
+  }
+
+  function renderCategoriesWithData(cats) {
+    var products = (SITE && SITE.products) || [];
     content.innerHTML =
       '<div class="page-toolbar">' +
-      '<h3 style="font-size:15px;font-weight:600">Manage ' + cats.length + ' categories</h3>' +
-      '<button class="btn-sm" id="syncCatsBtn" disabled title="Requires an approved server-side catalog writer">☁️ Sync unavailable</button>' +
+      '<h3 style="font-size:15px;font-weight:600">Manage ' + cats.length + ' categories (Supabase)</h3>' +
+      '<button class="btn-sm" id="refreshCatsBtn">↻ Refresh</button>' +
       '<button class="btn-sm btn-sm--primary" id="addCatBtn">+ Add Category</button>' +
       '</div>' +
-      '<p role="status" class="small muted">Category edits are local to this browser only. Supabase sync is disabled until an approved-admin backend is staged and tested.</p>' +
+      '<p role="status" class="small muted">Connected to the approved-admin backend. Category changes are saved to Supabase, not only this browser. Unsynced older local edits are not automatically uploaded.</p>' +
       '<div class="card"><div class="card__body" style="padding:0;overflow-x:auto">' +
-      '<table class="admin-table"><thead><tr><th>#</th><th>Image</th><th>Category</th><th>Tamil Name</th><th>Slug</th><th>Products</th><th>Actions</th></tr></thead>' +
+      '<table class="admin-table"><thead><tr><th>#</th><th>Image</th><th>Category</th><th>Tamil Name</th><th>Slug</th><th>Products*</th><th>Actions</th></tr></thead>' +
       '<tbody>' + cats.map(function (c, i) {
-        var count = SITE.products.filter(function (p) { return p.cat === c.slug; }).length;
+        var count = products.filter(function (p) { return p.cat === c.slug; }).length;
         var imgCell = c.img
-          ? '<img src="' + c.img + '" alt="' + c.name + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #e2e8e0;display:block">'
-          : '<div style="width:40px;height:40px;border-radius:8px;background:#f0f4ee;border:1px solid #e2e8e0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#b0bdb4" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-4 4 3 4-5 5 6"/><circle cx="8.5" cy="9.5" r="1.5"/></svg></div>';
-        return '<tr><td>' + (i + 1) + '</td><td>' + imgCell + '</td><td><b>' + c.name + '</b></td><td>' + c.ta + '</td><td><code>' + c.slug + '</code></td><td>' + count + '</td>' +
-          '<td><button class="btn-sm" data-edit-cat="' + c.slug + '">✏️ Edit</button> <button class="btn-sm btn-sm--danger" data-delete-cat="' + c.slug + '">🗑️</button></td></tr>';
+          ? '<img src="' + escHtml(c.img) + '" alt="' + escHtml(c.name) + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #e2e8e0;display:block">'
+          : '<span aria-label="No image">—</span>';
+        return '<tr><td>' + (i + 1) + '</td><td>' + imgCell + '</td><td><b>' + escHtml(c.name) + '</b></td><td>' + escHtml(c.ta) + '</td><td><code>' + escHtml(c.slug) + '</code></td><td>' + count + '</td>' +
+          '<td><button class="btn-sm" data-edit-cat="' + escHtml(c.slug) + '">✏️ Edit</button> <button class="btn-sm btn-sm--danger" data-delete-cat="' + escHtml(c.slug) + '">🗑️</button></td></tr>';
       }).join('') +
-      '</tbody></table></div></div>';
+      '</tbody></table><p class="small muted" style="padding:8px 12px">* Product counts use the current browser catalog; the server also checks DB references before deletion.</p></div></div>';
 
-
+    $('#refreshCatsBtn').addEventListener('click', renderCategories);
     $('#addCatBtn').addEventListener('click', function () {
       var modal = openModal('Add Category', getCategoryFormHTML(), function (m) {
-        var name = m.querySelector('#catName').value.trim();
-        var ta = m.querySelector('#catTa').value.trim();
-        var desc = m.querySelector('#catDesc').value.trim();
-        var img = m.querySelector('#catImg').value || '';
-        if (!name) { toast('Category name is required', 'error'); return false; }
-        var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
-        var exists = (SITE ? SITE.categories : []).some(function (c) { return c.slug === slug; });
-        if (exists) { toast('A category with this name already exists.', 'error'); return false; }
-        var newCat = { slug: slug, name: name, ta: ta, blurb: desc, img: img };
-        var customCats = read(AK.categories, []);
-        customCats.push(newCat);
-        var saved = write(AK.categories, customCats);
-        if (!saved) {
-          newCat.img = '';
-          customCats[customCats.length - 1] = newCat;
-          write(AK.categories, customCats);
-          toast('⚠️ Category saved without image (storage nearly full).', 'warn');
-        } else {
-          toast('Category "' + name + '" added successfully!');
+        var category = categoryPayload(m, null);
+        if (!category) return false;
+        if (cats.some(function (c) { return c.slug === category.slug; })) {
+          toast('A category with this slug already exists.', 'error'); return false;
         }
-        if (SITE) SITE.categories.push(newCat);
-        /* Keep the browser-only edit visibly separate from Supabase. */
-        upsertCategoryToSupabase(newCat);
-        renderCategories();
-      }
-      );
+        return categorySaveInModal(m, upsertCategoryToSupabase(category), 'Category added to Supabase successfully!');
+      });
       initCategoryImageUpload(modal);
     });
 
-    // Edit category handler
-    $$('[data-edit-cat]').forEach(function (btn) {
+    $$('[data-edit-cat]', content).forEach(function (btn) {
       btn.addEventListener('click', function () {
         var slug = btn.getAttribute('data-edit-cat');
-        var cat = cats.filter(function (c) { return c.slug === slug; })[0];
+        var cat = cats.find(function (c) { return c.slug === slug; });
         if (!cat) return;
-
-        var editModal = openModal('Edit Category', getCategoryFormHTML(cat), function (m) {
-          var name = m.querySelector('#catName').value.trim();
-          var ta = m.querySelector('#catTa').value.trim();
-          var desc = m.querySelector('#catDesc').value.trim();
-          var img = m.querySelector('#catImg').value || '';
-          if (!name) { toast('Category name is required', 'error'); return false; }
-
-          // Update in-memory category
-          cat.name = name; cat.ta = ta; cat.blurb = desc; cat.img = img;
-
-          // Save to localStorage
-          var customCats = read(AK.categories, []);
-          var found = false;
-          for (var i = 0; i < customCats.length; i++) {
-            if (customCats[i].slug === slug) {
-              customCats[i].name = name; customCats[i].ta = ta;
-              customCats[i].blurb = desc; customCats[i].img = img;
-              found = true; break;
-            }
-          }
-          if (!found) {
-            customCats.push({ slug: slug, name: name, ta: ta, blurb: desc, img: img });
-          }
-          var saved = write(AK.categories, customCats);
-          if (!saved) {
-            // retry without image
-            for (var j = 0; j < customCats.length; j++) {
-              if (customCats[j].slug === slug) { customCats[j].img = ''; break; }
-            }
-            write(AK.categories, customCats);
-            toast('⚠️ Category saved without image (storage nearly full).', 'warn');
-          } else {
-            toast('Category updated!');
-          }
-          renderCategories();
-          /* Backend catalog sync is unavailable. */
-          upsertCategoryToSupabase(cat);
-        }
-        );
-        initCategoryImageUpload(editModal);
+        var modal = openModal('Edit Category', getCategoryFormHTML(cat), function (m) {
+          var category = categoryPayload(m, slug); // Keep original slug: linked products depend on it.
+          if (!category) return false;
+          return categorySaveInModal(m, upsertCategoryToSupabase(category, slug), 'Category updated in Supabase!');
+        });
+        initCategoryImageUpload(modal);
       });
     });
 
-    // Delete category handler
-    $$('[data-delete-cat]').forEach(function (btn) {
+    $$('[data-delete-cat]', content).forEach(function (btn) {
       btn.addEventListener('click', function () {
         var slug = btn.getAttribute('data-delete-cat');
-        var cat = cats.filter(function (c) { return c.slug === slug; })[0];
+        var cat = cats.find(function (c) { return c.slug === slug; });
         if (!cat) return;
-
-        var count = SITE.products.filter(function (p) { return p.cat === slug; }).length;
-        if (count > 0) {
-          toast('Cannot delete category. There are ' + count + ' products assigned to it.', 'error');
-          return;
-        }
-
+        var count = products.filter(function (p) { return p.cat === slug; }).length;
+        if (count) { toast('Cannot delete: ' + count + ' products use this category.', 'error'); return; }
         openModal('Delete Category',
-          '<p>Are you sure you want to delete the category <b>' + cat.name + '</b>?</p>',
-          function () {
-            // Remove from custom categories list in localStorage
-            var customCats = read(AK.categories, []);
-            customCats = customCats.filter(function (c) { return c.slug !== slug; });
-            write(AK.categories, customCats);
-
-            // Add to deleted categories list
-            var deletedCats = read(AK.deletedCategories, []);
-            if (deletedCats.indexOf(slug) === -1) {
-              deletedCats.push(slug);
-              write(AK.deletedCategories, deletedCats);
-            }
-
-            // Remove from in-memory categories
-            if (SITE) {
-              SITE.categories = SITE.categories.filter(function (c) { return c.slug !== slug; });
-            }
-
-            /* Backend catalog sync is unavailable. */
-            deleteCategoryFromSupabase(slug);
-
-            toast('Category "' + cat.name + '" removed locally only.');
-            renderCategories();
-          },
-          'Delete'
-        );
+          '<p>Delete <b>' + escHtml(cat.name) + '</b> from Supabase? This cannot be undone.</p>',
+          function (m) {
+            return categorySaveInModal(m, deleteCategoryFromSupabase(slug), 'Category deleted from Supabase!');
+          }, 'Delete');
       });
     });
   }
