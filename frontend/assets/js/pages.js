@@ -1,4 +1,3 @@
-
 /* ==========================================================================
    pages.js — per-page controllers, dispatched from <body data-page="…">.
    Loads after data.js and app.js.
@@ -388,26 +387,35 @@
       return [p5, rest - p5, p3, p2, p1];
     })(p.rating);
 
-    /* Gallery sources: real images first, then placeholder SVGs (3 slots) */
+    /* Display ONLY the images actually saved for this product.
+       No fabricated category/farm thumbnails for missing image slots. */
     const gallerySrcs = (function () {
-      const real = ((p.images && p.images.length) ? p.images.filter(Boolean) : [p.img].filter(Boolean)).slice(0, 5);
-      const ph = ['assets/img/categories/' + p.cat + '.svg', 'assets/img/scenes/farm.svg'];
-      const out = real.slice();
-      for (let i = 0; out.length < 3 && i < ph.length; i++) out.push(ph[i]);
-      return out;
+      const saved = Array.isArray(p.images)
+        ? p.images
+        : (p.img ? [p.img] : []); // original static-catalog fallback
+      const unique = [];
+      saved.forEach(function (url) {
+        if (typeof url !== 'string') return;
+        url = url.trim();
+        if (url && unique.indexOf(url) === -1) unique.push(url);
+      });
+      return unique.slice(0, 5);
     })();
+    // If a product has no uploaded images, the main area gets one fallback;
+    // the thumbnail strip remains empty instead of inventing image slots.
+    const mainImage = gallerySrcs[0] || p.img || 'assets/img/categories/' + p.cat + '.svg';
 
     const draw = function () {
       const price = priceOf(size), mrp = mrpOf(size);
       const offPct = mrp > price ? Math.round((mrp - price) / mrp * 100) : 0;
       host.innerHTML =
         '<div class="pdp">' +
-        /* gallery — admin uploads up to 3 images; placeholders fill empty slots */
-        '<div><div class="gallery__main"><img src="' + gallerySrcs[0] + '" alt="' + esc(p.name) + '"></div>' +
-        '<div class="gallery__thumbs">' +
+        /* gallery — only the product's uploaded images become thumbnails */
+        '<div><div class="gallery__main"><img src="' + esc(mainImage) + '" alt="' + esc(p.name) + '"></div>' +
+        (gallerySrcs.length ? '<div class="gallery__thumbs">' +
         gallerySrcs.map(function (src, i) {
-          return '<button class="' + (i === 0 ? 'is-on' : '') + '" data-thumb="' + src + '"><img src="' + src + '" alt=""></button>';
-        }).join('') + '</div></div>' +
+          return '<button class="' + (i === 0 ? 'is-on' : '') + '" data-thumb="' + esc(src) + '"><img src="' + esc(src) + '" alt=""></button>';
+        }).join('') + '</div>' : '') + '</div>' +
 
         /* main column */
         '<div><span class="pcard__cat">' + esc(p.catName) + ' · <span class="ta">' + esc(p.catTa) + '</span></span>' +
