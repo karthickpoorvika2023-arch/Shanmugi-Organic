@@ -7,9 +7,22 @@ const safe = (v: unknown, limit: number) => typeof v === 'string' ? v.trim().sli
 
 Deno.serve(async req => {
   const origin = req.headers.get('origin') || '';
-  // Development is intentionally loopback-only. Never allow arbitrary websites.
-  const allowed = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-  if (!allowed) return reply({ error: 'Demo checkout is available only on localhost' }, 403);
+  // Production admin operations are allowed only from explicitly approved origins.
+  // This is CORS hygiene, NOT the security boundary: auth + DB allowlist below are mandatory.
+  const localOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  const defaultOrigins = [
+    'https://shanmugaorganics.netlify.app',
+    'https://karthickpoorvika2023-arch.github.io',
+  ];
+  const extraOrigins = env('ADMIN_ALLOWED_ORIGINS').split(',').map(s => s.trim()).filter(Boolean);
+  const allowedOrigin = !origin || localOrigin || [...defaultOrigins, ...extraOrigins].includes(origin);
+  const url = new URL(req.url);
+  const isAdminAction = /^\/admin-(check|payments|orders|customers|categories|category-upsert|category-delete)$/.test(
+    url.pathname.replace(/^.*\/demo-payment-kit/, '')
+  );
+  // Never expose demo checkout to hosted origins.
+  if (!allowedOrigin || (!isAdminAction && !localOrigin))
+    return reply({ error: 'Origin not allowed' }, 403);
   if (req.method === 'OPTIONS') return reply({}, 200, origin);
   if (req.method !== 'POST') return reply({ error: 'Method not allowed' }, 405, origin);
   const cors = origin;
@@ -24,8 +37,73 @@ Deno.serve(async req => {
     if (adminError) throw adminError;
     if (!admin) return reply({ error: 'Approved admin access required' }, 403, cors);
 
-    const url = new URL(req.url);
     if (url.pathname.endsWith('/admin-check')) return reply({ admin: true, mode: 'demo' }, 200, cors);
+    // All category endpoints run after getUser() + ownpay_payment_admins verification.
+    // No PUBLIC/anon/authenticated write grant is required on public.categories.
+    if (url.pathname.endsWith('/admin-categories')) {
+      const { data, error } = await client.from('categories')
+        .select('id, name, name_tamil, slug, description, icon, image_url, order_index')
+        .order('order_index', { ascending: true }).order('name', { ascending: true }).limit(500);
+      if (error) { console.error('[admin-categories] list', error); return reply({ error: 'Could not load categories (' + error.code + ')' }, 500, cors); }
+      return reply({ categories: data || [] }, 200, cors);
+    }
+    if (url.pathname.endsWith('/admin-category-upsert')) {
+      const raw = await req.text();
+      if (raw.length > 320000) return reply({ error: 'Category image is too large (max 200 KB compressed).' }, 413, cors);
+      let body: { category?: Record<string, unknown>; originalSlug?: string | null };
+      try { body = JSON.parse(raw); } catch { return reply({ error: 'Invalid JSON' }, 400, cors); }
+      const incoming = body?.category;
+      if (!incoming || typeof incoming !== 'object') return reply({ error: 'Category missing' }, 400, cors);
+      const name = safe(incoming.name, 120);
+      const slug = safe(incoming.slug, 90);
+      const name_tamil = safe(incoming.ta, 150);
+      const description = safe(incoming.blurb, 2000);
+      const image_url = typeof incoming.img === 'string' ? incoming.img.trim() : '';
+      if (!name || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
+        return reply({ error: 'Invalid name or slug' }, 400, cors);
+      if (image_url.length > 280000 ||
+          (image_url && !/^(data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+|https:\/\/[^\s]+|assets\/img\/[A-Za-z0-9_./-]+)$/.test(image_url)))
+        return reply({ error: 'Invalid or oversized category image' }, 400, cors);
+      const payload = { name, name_tamil, description, image_url: image_url || null };
+      const originalSlug = safe(body.originalSlug, 90);
+      if (originalSlug) {
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(originalSlug) || slug !== originalSlug)
+          return reply({ error: 'Changing existing category slugs is not supported' }, 400, cors);
+        const { data, error } = await client.from('categories').update(payload)
+          .eq('slug', originalSlug).select('id, name, name_tamil, slug, description, icon, image_url, order_index').maybeSingle();
+        if (error) { console.error('[admin-categories] update', error); return reply({ error: 'Category update failed (' + error.code + ')' }, 500, cors); }
+        if (!data) return reply({ error: 'Category not found. Reload and try again.' }, 404, cors);
+        return reply({ category: data }, 200, cors);
+      }
+      const { data: last, error: orderError } = await client.from('categories')
+        .select('order_index').order('order_index', { ascending: false }).limit(1);
+      if (orderError) { console.error('[admin-categories] order', orderError); return reply({ error: 'Could not determine category order' }, 500, cors); }
+      const order_index = (Number(last?.[0]?.order_index) || 0) + 1;
+      const { data, error } = await client.from('categories')
+        .insert({ ...payload, slug, order_index }).select('id, name, name_tamil, slug, description, icon, image_url, order_index').single();
+      if (error) {
+        console.error('[admin-categories] insert', error);
+        return reply({ error: error.code === '23505' ? 'Category slug already exists' : 'Category insert failed (' + error.code + ')' }, error.code === '23505' ? 409 : 500, cors);
+      }
+      return reply({ category: data }, 201, cors);
+    }
+    if (url.pathname.endsWith('/admin-category-delete')) {
+      const raw = await req.text();
+      if (raw.length > 1000) return reply({ error: 'Request too large' }, 413, cors);
+      let body: { slug?: string };
+      try { body = JSON.parse(raw); } catch { return reply({ error: 'Invalid JSON' }, 400, cors); }
+      const slug = safe(body?.slug, 90);
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return reply({ error: 'Invalid slug' }, 400, cors);
+      // Protect categories used in real DB products (not only local browser catalog).
+      const { count, error: referenceError } = await client.from('products')
+        .select('id', { count: 'exact', head: true }).eq('category_slug', slug);
+      if (referenceError) { console.error('[admin-categories] references', referenceError); return reply({ error: 'Could not verify product references' }, 500, cors); }
+      if (count && count > 0) return reply({ error: 'This category has ' + count + ' products; move them before deleting.' }, 409, cors);
+      const { data, error } = await client.from('categories').delete().eq('slug', slug).select('id').maybeSingle();
+      if (error) { console.error('[admin-categories] delete', error); return reply({ error: 'Category delete failed (' + error.code + ')' }, 500, cors); }
+      if (!data) return reply({ error: 'Category not found. Reload and try again.' }, 404, cors);
+      return reply({ deleted: true, slug }, 200, cors);
+    }
     if (url.pathname.endsWith('/admin-payments')) {
       const body = await req.text();
       if (body.length > 2000) return reply({ error: 'Request too large' }, 413, cors);
