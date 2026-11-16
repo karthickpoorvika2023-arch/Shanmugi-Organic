@@ -1485,7 +1485,7 @@ html.lang-ta .sec-head .ta { font-size: 1em; color: inherit; }
   width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #f1f2ec;
+  background: #ffffff; /* solid white circle instead of grey ring */
   display: grid;
   place-items: center;
   padding: 12%;
@@ -1510,9 +1510,9 @@ html.lang-ta .sec-head .ta { font-size: 1em; color: inherit; }
   border-color: transparent;
 }
 
-/* hover: circle turns green */
+/* Keep circles white on hover too; only the lift effect changes. */
 .catrail--circle .catcard:hover .catcard__img {
-  background: var(--green-050);
+  background: #ffffff;
   transform: translateY(-3px) scale(1.03);
   box-shadow: var(--shadow-m);
 }
