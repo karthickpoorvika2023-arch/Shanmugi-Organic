@@ -237,8 +237,12 @@
     function setRange(from, to) {
       rangeStart = from; rangeEnd = to;
       if (dateText) dateText.textContent = fmtDate(from) + ' – ' + fmtDate(to);
-      /* Re-render dashboard if already initialised */
-      if (_ready) renderDashboard();
+      /* Update the page currently showing this date range. */
+      if (_ready && pageTitle) {
+        if (pageTitle.textContent === 'Dashboard') renderDashboard();
+        else if (pageTitle.textContent === 'Orders') renderOrders();
+        else if (pageTitle.textContent === 'Reports') renderReports();
+      }
     }
 
     function applyPreset(p) {
@@ -1881,6 +1885,7 @@
       productItems: items,
       supabaseId: row.id,
       payMethod: row.payment_method || '',
+      paymentStatus: row.payment_status || '',
       address: row.shipping_address ? {
         door: escHtml(row.shipping_address),
         street: '',
@@ -2836,8 +2841,129 @@
   }
 
   /* ============================================================ REPORTS */
+  /*
+   * Real orders only, loaded from the existing approved-admin Supabase API.
+   * Never treat order totals or demo payment attempts as verified revenue.
+   */
+  var reportsRequestId = 0;
   function renderReports() {
-    content.innerHTML = '<div class="card"><div class="card__body"><h3>Real revenue report unavailable in demo mode</h3><p>No demo payment attempts count as revenue or confirmed orders. View test attempts under Payment Gateway — DEMO.</p></div></div>';
+    var requestId = ++reportsRequestId;
+    content.innerHTML = '<p role="status">Loading order activity from Supabase…</p>';
+
+    fetchSupabaseOrders().then(function (result) {
+      if (requestId !== reportsRequestId || pageTitle.textContent !== 'Reports') return;
+
+      if (!result || result.failed) {
+        content.innerHTML =
+          '<div class="card"><div class="card__body" role="alert">' +
+          '<h3>Unable to load reports</h3>' +
+          '<p>' + escHtml((result && result.message) || 'Admin backend unavailable.') + '</p>' +
+          '<p>Please check the approved-admin Supabase Edge Function and permissions. No demo data is substituted.</p>' +
+          '<button class="btn-sm" id="reportsRetry">Retry</button>' +
+          '</div></div>';
+        var retry = $('#reportsRetry');
+        if (retry) retry.addEventListener('click', renderReports);
+        return;
+      }
+
+      var allOrders = Array.isArray(result.orders) ? result.orders : [];
+      var range = datePicker.getRange();
+      var from = range.start;
+      var to = range.end;
+      var orders = allOrders.filter(function (o) {
+        if (!from || !to) return true;
+        var date = new Date(o.createdAt || (o.date + 'T00:00:00'));
+        return !isNaN(date.getTime()) && date >= from && date <= to;
+      });
+      orders.sort(function (a, b) {
+        return new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date);
+      });
+
+      var counts = { Processing: 0, Shipped: 0, Delivered: 0, Cancelled: 0, Returned: 0 };
+      var orderValue = 0;
+      orders.forEach(function (o) {
+        if (Object.prototype.hasOwnProperty.call(counts, o.status)) counts[o.status]++;
+        orderValue += Number(o.amount) || 0;
+      });
+      var otherCount = orders.length - counts.Processing - counts.Shipped - counts.Delivered - counts.Cancelled - counts.Returned;
+      var dateLabel = (from && to) ? fmtDate(from) + ' – ' + fmtDate(to) : 'All dates';
+      var rows = orders.map(function (o) {
+        var timestamp = new Date(o.createdAt || (o.date + 'T00:00:00'));
+        var dateStr = !isNaN(timestamp.getTime()) ? timestamp.toLocaleDateString('en-IN') : '—';
+        return '<tr>' +
+          '<td><b>' + (o.id || '—') + '</b></td>' +
+          '<td>' + (o.customer || '—') + '</td>' +
+          '<td>' + dateStr + '</td>' +
+          '<td>' + money(o.amount) + '</td>' +
+          '<td>' + escHtml(o.status || 'Unknown') + '</td>' +
+          '<td>' + escHtml(o.paymentStatus || 'Not recorded') + '</td>' +
+          '<td>' + escHtml(o.payMethod || '—') + '</td>' +
+          '</tr>';
+      }).join('');
+
+      content.innerHTML =
+        '<div class="welcome"><h2>Order Activity Report</h2>' +
+        '<p>Real orders from Supabase — ' + escHtml(dateLabel) + '</p></div>' +
+        '<div class="card" style="margin-bottom:16px"><div class="card__body">' +
+        '<p><b>Important:</b> Order value is not verified revenue. Demo payment attempts are excluded. ' +
+        'A payment-provider-confirmed backend is required for a true revenue report.</p>' +
+        '<p class="small muted">The admin API returns the latest 200 orders at most. ' +
+        'This report is not a complete all-time financial statement.</p>' +
+        '</div></div>' +
+        '<div class="stats-grid">' +
+        statCard('Orders in range', orders.length, null, 'up', 'orders') +
+        statCard('Order value (not revenue)', money(orderValue), null, 'up', 'sales') +
+        statCard('Delivered orders', counts.Delivered, null, 'up', 'orders') +
+        statCard('Processing orders', counts.Processing, null, 'up', 'orders') +
+        '</div>' +
+        '<div class="card" style="margin-top:18px"><div class="card__head">' +
+        '<h3>Orders by Status</h3></div><div class="card__body">' +
+        '<p>Delivered: <b>' + counts.Delivered + '</b> &nbsp; · &nbsp; Shipped: <b>' + counts.Shipped + '</b>' +
+        ' &nbsp; · &nbsp; Processing: <b>' + counts.Processing + '</b> &nbsp; · &nbsp; Cancelled: <b>' + counts.Cancelled + '</b>' +
+        ' &nbsp; · &nbsp; Returned: <b>' + counts.Returned + '</b>' +
+        (otherCount ? ' &nbsp; · &nbsp; Other: <b>' + otherCount + '</b>' : '') +
+        '</p></div></div>' +
+        '<div class="card" style="margin-top:18px">' +
+        '<div class="card__head"><h3>Order Details (' + orders.length + ')</h3>' +
+        '<div class="card__head-actions">' +
+        '<button type="button" class="btn-sm" id="reportsRefresh">Refresh</button> ' +
+        '<button type="button" class="btn-sm" id="reportsDownload">Download CSV</button>' +
+        '</div></div>' +
+        '<div class="card__body" style="padding:0;overflow-x:auto">' +
+        '<table class="admin-table"><thead><tr>' +
+        '<th>Order ID</th><th>Customer</th><th>Date</th><th>Order Value</th>' +
+        '<th>Order Status</th><th>Payment Status (recorded)</th><th>Payment Method</th>' +
+        '</tr></thead><tbody>' +
+        (rows || '<tr><td colspan="7" style="text-align:center;padding:28px">No orders in the selected date range.</td></tr>') +
+        '</tbody></table></div></div>';
+
+      $('#reportsRefresh').addEventListener('click', renderReports);
+      $('#reportsDownload').addEventListener('click', function () {
+        function csvCell(value) {
+          var s = String(value == null ? '' : value);
+          /* Prevent spreadsheet apps from executing untrusted customer fields as formulas. */
+          if (/^[\s\u0000-\u001f]*[=+@\-]/.test(s)) s = "'" + s;
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        var csvRows = [['Order ID', 'Customer', 'Date', 'Order value (INR; NOT VERIFIED REVENUE)',
+          'Order Status', 'Payment Status (recorded)', 'Payment Method']];
+        orders.forEach(function (o) {
+          csvRows.push([o.id, o.customer, o.createdAt || o.date, o.amount,
+            o.status, o.paymentStatus || '', o.payMethod || '']);
+        });
+        var text = csvRows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n');
+        var blob = new Blob(['\uFEFF' + text], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = 'shanmuga_orders_' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        toast('Order activity CSV downloaded. These totals are not verified revenue.');
+      });
+    });
   }
 
   function drawSalesChart2(id) {
