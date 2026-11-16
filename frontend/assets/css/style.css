@@ -4668,3 +4668,37 @@ html.lang-ta .sec-head .ta { font-size: 1em; color: inherit; }
     background: #fff;
   }
 }
+/* FIX: Tamil top navigation menu */
+
+html.lang-ta .mainnav .navitem {
+  display: block !important;
+  flex: 0 0 auto;
+}
+
+html.lang-ta .mainnav .navlink {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-width: max-content;
+  font-size: 13px !important;
+  line-height: 1.5;
+}
+
+/* Hide English labels in Tamil mode */
+html.lang-ta .mainnav .navlink > b {
+  display: none !important;
+}
+
+/* Show Tamil labels in Tamil mode */
+html.lang-ta .mainnav .navlink > span {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: auto !important;
+  height: auto !important;
+  font-family: "Noto Sans Tamil", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
