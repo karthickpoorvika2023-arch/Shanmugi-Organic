@@ -938,7 +938,7 @@
 
   /* One image slot — used by getProductFormHTML and by "+ Add Image" */
   function pImageSlotHTML(v) {
-    v = v || '';
+    v = escHtml(v || '');
     return '<div class="p-img-slot">' +
       '<div class="p-img-label" style="font-size:11px;font-weight:600;color:#6f7d72;margin-bottom:4px">Image</div>' +
       '<input type="hidden" class="p-img-value" value="' + v + '">' +
@@ -983,15 +983,15 @@
       '</div>' +
       existingSizes.map(function (s) {
         return '<div class="size-row" style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
-          '<input class="form-control pSizeUnit" placeholder="e.g. 500g" value="' + (s[0] || '') + '" style="flex:1">' +
+          '<input class="form-control pSizeUnit" placeholder="e.g. 500g" value="' + escHtml(s[0] || '') + '" style="flex:1">' +
           '<input class="form-control pSizePrice" type="number" placeholder="e.g. 55" value="' + (s[1] || '') + '" style="flex:1">' +
           '<input class="form-control pSizeMrp" type="number" placeholder="e.g. 63" value="' + (s[2] || '') + '" style="flex:1">' +
           '<button type="button" class="size-row-remove" style="width:32px;flex-shrink:0;background:none;border:1px solid #e2e8e0;border-radius:6px;padding:5px;cursor:pointer;color:#dc3545;font-size:13px;font-weight:700" title="Remove">✕</button>' +
           '</div>';
       }).join('');
 
-    return '<div class="form-group"><label>Product Name *</label><input class="form-control" id="pName" placeholder="e.g. Groundnut Oil" value="' + (p.name || '') + '"></div>' +
-      '<div class="form-group"><label>Tamil Name</label><input class="form-control" id="pTa" placeholder="e.g. கடலை எண்ணெய்" value="' + (p.ta || '') + '"></div>' +
+    return '<div class="form-group"><label>Product Name *</label><input class="form-control" id="pName" placeholder="e.g. Groundnut Oil" value="' + escHtml(p.name || '') + '"></div>' +
+      '<div class="form-group"><label>Tamil Name</label><input class="form-control" id="pTa" placeholder="e.g. கடலை எண்ணெய்" value="' + escHtml(p.ta || '') + '"></div>' +
       '<div class="form-row">' +
       '<div class="form-group"><label>Category *</label><select class="form-control" id="pCat">' +
       '<option value="">Select category</option>' +
@@ -1002,7 +1002,7 @@
       '<div class="form-group"><label>Rating (1-5)</label><input class="form-control" id="pRating" type="number" min="1" max="5" step="0.1" placeholder="4.5" value="' + (p.rating || '') + '"></div>' +
       '</div>' +
       '<div class="form-row">' +
-      '<div class="form-group"><label>Badge Label</label><input class="form-control" id="pBadge" placeholder="e.g. Bestseller, New" value="' + (p.badge || '') + '"></div>' +
+      '<div class="form-group"><label>Badge Label</label><input class="form-control" id="pBadge" placeholder="e.g. Bestseller, New" value="' + escHtml(p.badge || '') + '"></div>' +
       '</div>' +
       /* Size Variants */
       '<div class="form-group">' +
@@ -1021,7 +1021,7 @@
       '</label>' +
       '<div id="pImagesContainer" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">' + imageSlotsHTML + '</div>' +
       '</div>' +
-      '<div class="form-group"><label>Description</label><textarea class="form-control" id="pDesc" placeholder="Product description...">' + (p.desc || '') + '</textarea></div>' +
+      '<div class="form-group"><label>Description</label><textarea class="form-control" id="pDesc" placeholder="Product description...">' + escHtml(p.desc || '') + '</textarea></div>' +
       /* Key Highlights */
       '<div class="form-group"><label style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2f8f43" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Key Highlights <span style="font-weight:400;font-size:11px;color:#92a096">(shown as tick bullets on product page)</span></label>' +
       '<div style="display:flex;flex-direction:column;gap:6px">' +
@@ -1214,6 +1214,7 @@
 
     // "+ Add Image" — add as many images as you want (no limit)
     addBtn.addEventListener('click', function () {
+      if (imgState.length >= 5) { toast('Maximum 5 product images supported.', 'warn'); return; }
       imgState.push('');
       render();
       var slots = container.querySelectorAll('.p-img-slot');
@@ -1384,12 +1385,57 @@
     };
   }
 
-  /* Product edits are local-only until an approved backend writer is available. */
-  function upsertProductToSupabase(p) {
-    toast('⚠️ Product saved locally only. Supabase sync requires an approved-admin backend.', 'warn');
+  /* Product writes are server-only, checked by the approved-admin allowlist. */
+  function upsertProductToSupabase(p, originalSlug) {
+    return demoAdminRequest('admin-product-upsert', {
+      product: p,
+      originalSlug: originalSlug || null
+    });
   }
   function deleteProductFromSupabase(p) {
-    toast('⚠️ Product removed locally only. Supabase sync requires an approved-admin backend.', 'warn');
+    return demoAdminRequest('admin-product-delete', { slug: p.slug });
+  }
+  function fetchProductsFromSupabase() {
+    return demoAdminRequest('admin-products', {}).then(function (res) {
+      if (!Array.isArray(res.products)) throw new Error('Invalid products response from admin backend.');
+      return res.products.map(function (r) {
+        var meta = r.admin_details && typeof r.admin_details === 'object' ? r.admin_details : {};
+        var sizes = Array.isArray(meta.sizes) && meta.sizes.length ? meta.sizes :
+          [[r.unit || '1 pack', Number(r.price) || 0, Number(r.mrp) || Number(r.price) || 0]];
+        var images = Array.isArray(meta.images) ? meta.images.filter(Boolean) : [];
+        var img = r.image_url || meta.img || '';
+        if (!images.length && img) images.push(img);
+        return {
+          id: r.id, slug: r.slug, name: r.name || '', ta: meta.ta || '',
+          cat: r.category_slug || '', price: Number(r.price) || 0,
+          mrp: Number(r.mrp) || Number(r.price) || 0,
+          unit: r.unit || '', stock: r.in_stock !== false,
+          rating: Number(meta.rating) || 4.5, reviews: Number(meta.reviews) || 0,
+          badge: meta.badge || '', desc: r.description || '',
+          img: img, images: images, sizes: sizes,
+          highlights: Array.isArray(meta.highlights) ? meta.highlights : [],
+          custom: !!meta.custom
+        };
+      });
+    });
+  }
+  /* openModal is synchronous. Keep dialog open while awaiting the backend. */
+  function productSaveInModal(modal, request, successMessage) {
+    var button = modal.querySelector('[data-save]');
+    if (!button || button.disabled) return false;
+    button.disabled = true;
+    var oldLabel = button.textContent;
+    button.textContent = 'Saving…';
+    request.then(function () {
+      if (modal.parentNode) modal.remove();
+      toast(successMessage);
+      if (pageTitle.textContent === 'Products') renderProducts();
+    }).catch(function (error) {
+      toast('Supabase product operation failed: ' + (error.message || String(error)), 'error');
+      button.disabled = false;
+      button.textContent = oldLabel;
+    });
+    return false;
   }
 
   /* ---- Supabase error → human hint (RLS / missing table etc.) ---- */
@@ -1441,111 +1487,80 @@
       '<p>Product sync needs a server-side approved-admin endpoint, tested on staging first.</p>', null);
   }
 
-  /* Disabled: the old full-catalog push used public-table browser writes. */
-  function syncCatalogToSupabase(btn) {
-    toast('⚠️ Product sync is disabled until an approved-admin backend is staged and tested.', 'warn');
-  }
+  /* Never bulk-upload browser-only data to a production catalog. */
+  function syncCatalogToSupabase() { renderProducts(); }
+  var productsRequestId = 0;
   function renderProducts() {
-    var allProducts = data.products();
-
-    // Build category counts
-    var catCounts = {};
-    allProducts.forEach(function (p) {
-      catCounts[p.cat] = (catCounts[p.cat] || 0) + 1;
+    var requestId = ++productsRequestId;
+    content.innerHTML = '<p role="status">Loading products from Supabase…</p>';
+    Promise.all([fetchProductsFromSupabase(), fetchCategoriesFromSupabase()]).then(function (result) {
+      if (requestId !== productsRequestId || pageTitle.textContent !== 'Products') return;
+      var products = result[0], cats = result[1];
+      if (SITE) { SITE.products = products; SITE.categories = cats; }
+      renderProductsWithData(products, cats);
+    }).catch(function (error) {
+      if (requestId !== productsRequestId || pageTitle.textContent !== 'Products') return;
+      content.innerHTML = '<div role="alert" style="padding:18px;background:#fff4f0;border:1px solid #f6b6a9;border-radius:9px">' +
+        '<h3>Could not load products from Supabase</h3><p>' + escHtml(error.message || String(error)) + '</p>' +
+        '<p>Product changes are disabled until the approved-admin backend is available. No data was modified.</p>' +
+        '<button id="retryProductsBtn" class="btn-sm">Retry</button></div>';
+      $('#retryProductsBtn').addEventListener('click', renderProducts);
     });
-    var cats = SITE && SITE.categories ? SITE.categories : [];
-
-    // Category pills HTML
+  }
+  function renderProductsWithData(allProducts, cats) {
+    var catCounts = {};
+    allProducts.forEach(function (p) { catCounts[p.cat] = (catCounts[p.cat] || 0) + 1; });
     var catPills = '<button class="cat-pill is-active" data-cat-filter="all">All <span class="cat-pill__count">' + allProducts.length + '</span></button>';
     cats.forEach(function (c) {
       var count = catCounts[c.slug] || 0;
-      if (count > 0) {
-        catPills += '<button class="cat-pill" data-cat-filter="' + c.slug + '">' + c.name + ' <span class="cat-pill__count">' + count + '</span></button>';
-      }
+      if (count > 0) catPills += '<button class="cat-pill" data-cat-filter="' + escHtml(c.slug) + '">' + escHtml(c.name) + ' <span class="cat-pill__count">' + count + '</span></button>';
     });
-    // Check for custom products not in any standard category
     var customCount = allProducts.filter(function (p) { return p.custom; }).length;
-    if (customCount > 0) {
-      catPills += '<button class="cat-pill" data-cat-filter="__custom__">Custom <span class="cat-pill__count">' + customCount + '</span></button>';
-    }
+    if (customCount > 0) catPills += '<button class="cat-pill" data-cat-filter="__custom__">Custom <span class="cat-pill__count">' + customCount + '</span></button>';
 
     content.innerHTML =
       '<div class="page-toolbar">' +
       '<div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
       '<input type="text" id="prodSearch" placeholder="Search products..."></div>' +
-      '<button class="btn-sm" id="syncSupabaseBtn" disabled title="Requires an approved server-side catalog writer">☁️ Sync unavailable</button>' +
+      '<button class="btn-sm" id="syncSupabaseBtn">↻ Refresh</button>' +
       '<button class="btn-sm btn-sm--primary" id="addProductBtn">+ Add Product</button>' +
       '</div>' +
-      '<p role="status" class="small muted">Catalog editor changes are local to this browser only. Supabase product sync is disabled until an approved-admin backend is staged and tested.</p>' +
+      '<p role="status" class="small muted">Products loaded from Supabase. Add, Edit and Delete save to the approved-admin backend. Older browser-only edits are not uploaded automatically.</p>' +
       '<div class="cat-pills-bar" id="catPillsBar">' + catPills + '</div>' +
       '<div class="product-grid" id="productGrid"></div>';
 
-    var activeCat = 'all';
-    var activeQ = '';
-
+    var activeCat = 'all', activeQ = '';
     function applyFilters() {
       var list = allProducts;
-      if (activeCat !== 'all') {
-        if (activeCat === '__custom__') {
-          list = list.filter(function (p) { return p.custom; });
-        } else {
-          list = list.filter(function (p) { return p.cat === activeCat; });
-        }
-      }
-      if (activeQ) {
-        list = list.filter(function (p) {
-          return p.name.toLowerCase().indexOf(activeQ) > -1 || p.cat.toLowerCase().indexOf(activeQ) > -1;
-        });
-      }
+      if (activeCat !== 'all') list = list.filter(function (p) { return activeCat === '__custom__' ? p.custom : p.cat === activeCat; });
+      if (activeQ) list = list.filter(function (p) {
+        return p.name.toLowerCase().indexOf(activeQ) > -1 || p.cat.toLowerCase().indexOf(activeQ) > -1;
+      });
       renderProductGrid(list);
     }
-
     renderProductGrid(allProducts);
-
-    // Search filter
-    var searchInput = $('#prodSearch');
-    searchInput.addEventListener('input', function () {
-      activeQ = searchInput.value.toLowerCase();
+    $('#syncSupabaseBtn').addEventListener('click', renderProducts);
+    $('#prodSearch').addEventListener('input', function () {
+      activeQ = this.value.toLowerCase();
       applyFilters();
     });
-
-    // Category pills
-    $$('[data-cat-filter]').forEach(function (btn) {
+    $$('[data-cat-filter]', content).forEach(function (btn) {
       btn.addEventListener('click', function () {
-        $$('[data-cat-filter]').forEach(function (b) { b.classList.remove('is-active'); });
+        $$('[data-cat-filter]', content).forEach(function (b) { b.classList.remove('is-active'); });
         btn.classList.add('is-active');
         activeCat = btn.getAttribute('data-cat-filter');
         applyFilters();
       });
     });
-
-
     $('#addProductBtn').addEventListener('click', function () {
       var modal = openModal('Add New Product', getProductFormHTML(), function (m) {
-        var product = readProductForm(m);
-        if (!product) return false;
-        // Check duplicate
-        var existing = data.products();
-        var dup = existing.filter(function (p) { return p.slug === product.slug; });
-        if (dup.length > 0) {
-          product.slug = product.slug + '-' + Date.now();
+        var p = readProductForm(m);
+        if (!p) return false;
+        if (!p.slug) { toast('Use an English product name to create a slug.', 'error'); return false; }
+        if (allProducts.some(function (item) { return item.slug === p.slug; })) {
+          toast('A product with this name already exists.', 'error'); return false;
         }
-        var customProds = read(AK.products, []);
-        customProds.push(product);
-        var saved = write(AK.products, customProds);
-        if (!saved) {
-          // Storage full — try saving without images
-          product.img = '';
-          product.images = [];
-          customProds[customProds.length - 1] = product;
-          var retry = write(AK.products, customProds);
-          if (!retry) { toast('❌ Could not save product. Storage is full.', 'error'); return false; }
-          toast('⚠️ Product saved without image (storage nearly full).', 'warn');
-        } else {
-          toast('✅ Product "' + product.name + '" saved locally only.');
-        }
-        upsertProductToSupabase(product);
-        renderProducts();
+        return productSaveInModal(m, upsertProductToSupabase(p), 'Product added to Supabase successfully!');
       });
       initImageUpload(modal);
       initSizeVariants(modal);
@@ -1560,18 +1575,18 @@
       return;
     }
     grid.innerHTML = products.map(function (p, idx) {
-      var imgSrc = p.img || 'assets/img/products/' + p.slug + '.jpg';
+      var imgSrc = escHtml(p.img || 'assets/img/products/' + p.slug + '.jpg');
       var isCustom = p.custom === true;
       var uid = p.slug + '__' + idx;
-      return '<div class="product-admin-card" data-slug="' + p.slug + '" data-uid="' + uid + '" data-custom="' + (isCustom ? '1' : '0') + '">' +
+      return '<div class="product-admin-card" data-slug="' + escHtml(p.slug) + '" data-uid="' + uid + '" data-custom="' + (isCustom ? '1' : '0') + '">' +
         '<div class="product-admin-card__img">' +
-        '<img src="' + imgSrc + '" alt="' + p.name + '" onerror="this.parentElement.style.background=\'#e6f0e0\';this.style.display=\'none\'">' +
-        (p.badge ? '<span class="product-admin-card__badge">' + p.badge + '</span>' : '') +
+        '<img src="' + imgSrc + '" alt="' + escHtml(p.name) + '" onerror="this.parentElement.style.background=\'#e6f0e0\';this.style.display=\'none\'">' +
+        (p.badge ? '<span class="product-admin-card__badge">' + escHtml(p.badge) + '</span>' : '') +
         (isCustom ? '<span class="product-admin-card__badge" style="background:#3b82f6;right:8px;left:auto">Custom</span>' : '') +
         '</div>' +
         '<div class="product-admin-card__body">' +
-        '<div class="product-admin-card__name">' + p.name + '</div>' +
-        '<div class="product-admin-card__cat">' + p.cat + '</div>' +
+        '<div class="product-admin-card__name">' + escHtml(p.name) + '</div>' +
+        '<div class="product-admin-card__cat">' + escHtml(p.cat) + '</div>' +
         '<div class="product-admin-card__price"><b>' + money(p.price) + '</b>' +
         (p.mrp > p.price ? '<s>' + money(p.mrp) + '</s>' : '') +
         '</div>' +
@@ -1593,83 +1608,38 @@
       productsByUid[p.slug + '__' + idx] = p;
     });
 
-    // Bind Edit buttons
-    $$('[data-edit-uid]', grid).forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var uid = btn.getAttribute('data-edit-uid');
-        var product = productsByUid[uid];
-        if (!product) return;
-        var slug = product.slug;
-
-        var editModal = openModal('Edit Product — ' + product.name, getProductFormHTML(product), function (modal) {
-          var updated = readProductForm(modal);
-          if (!updated) return false;
-
-          if (product.custom) {
-            // Update custom product in localStorage
-            var customProds = read(AK.products, []);
-            for (var i = 0; i < customProds.length; i++) {
-              if (customProds[i].slug === slug) {
-                updated.slug = slug;
-                updated.custom = true;
-                updated.reviews = customProds[i].reviews || 0;
-                customProds[i] = updated;
-                break;
-              }
-            }
-            write(AK.products, customProds);
-            upsertProductToSupabase(updated);
-            toast('✅ Product "' + updated.name + '" updated locally only.');
-          } else {
-            // Catalog product — save edits as custom override
-            updated.slug = slug;
-            updated.custom = true;
-            updated.reviews = product.reviews || 0;
-            var customProds = read(AK.products, []);
-            customProds = customProds.filter(function (p) { return p.slug !== slug; });
-            customProds.push(updated);
-            write(AK.products, customProds);
-            upsertProductToSupabase(updated);
-            toast('✅ Product "' + updated.name + '" updated locally only.');
-          }
-          renderProducts();
-        });
-        initImageUpload(editModal);
-        initSizeVariants(editModal);
+  // Edit: preserve the original slug and save to Supabase before closing.
+  $$('[data-edit-uid]', grid).forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var product = productsByUid[btn.getAttribute('data-edit-uid')];
+      if (!product) return;
+      var slug = product.slug;
+      var modal = openModal('Edit Product — ' + escHtml(product.name), getProductFormHTML(product), function (m) {
+        var updated = readProductForm(m);
+        if (!updated) return false;
+        updated.slug = slug;
+        updated.reviews = product.reviews || 0;
+        updated.custom = product.custom;
+        return productSaveInModal(m, upsertProductToSupabase(updated, slug), 'Product updated in Supabase!');
       });
+      initImageUpload(modal);
+      initSizeVariants(modal);
     });
+  });
 
-    // Bind Delete buttons
-    $$('[data-del-uid]', grid).forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var uid = btn.getAttribute('data-del-uid');
-        var product = productsByUid[uid];
-        if (!product) return;
-        var slug = product.slug;
-
-        openModal('Delete Product',
-          '<div style="text-align:center;padding:10px 0">' +
-          '<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#dc3545" stroke-width="1.5" style="margin:0 auto 12px"><path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l.9 12.4h9.2L17.5 7"/></svg>' +
-          '<h4 style="font-size:16px;margin-bottom:6px">Delete "' + product.name + '"?</h4>' +
-          '<p style="color:#6f7d72;font-size:13px">This action cannot be undone.</p>' +
-          '</div>',
-          function () {
-            if (product.custom) {
-              var customProds = read(AK.products, []);
-              customProds = customProds.filter(function (p) { return p.slug !== slug; });
-              write(AK.products, customProds);
-              deleteProductFromSupabase(product);
-              toast('🗑️ Product "' + product.name + '" removed locally only.');
-              renderProducts();
-            } else {
-              toast('Catalog products cannot be deleted.', 'warn');
-            }
-          },
-          'Delete'
-        );
-      });
+  // Delete: server blocks deletion if product is referenced by orders.
+  $$('[data-del-uid]', grid).forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var product = productsByUid[btn.getAttribute('data-del-uid')];
+      if (!product) return;
+      openModal('Delete Product',
+        '<p>Delete <b>' + escHtml(product.name) + '</b> from Supabase? This cannot be undone.</p>',
+        function (modal) {
+          return productSaveInModal(modal, deleteProductFromSupabase(product), 'Product deleted from Supabase!');
+        }, 'Delete');
     });
-  }
+  });
+}
 
 
   /* ============================================================ CATEGORIES */
