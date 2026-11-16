@@ -104,7 +104,7 @@
   };
 
   /* --------------------------------------------------------------- store --- */
-  const K = { cart: 'so_cart_v1', wish: 'so_wish_v1', lang: 'so_lang_v1', recent: 'so_recent_v1', orders: 'so_orders_v1', news: 'so_news_v1', coupon: 'so_coupon_v1', addr: 'so_addr_v1' };
+  const K = { cart: 'so_cart_v2_signed_out', wish: 'so_wish_v1', lang: 'so_lang_v1', recent: 'so_recent_v1', orders: 'so_orders_v1', news: 'so_news_v1', coupon: 'so_coupon_v1', addr: 'so_addr_v1' };
   const read = function (k, d) {
     try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; }
   };
@@ -113,10 +113,35 @@
   };
 
   /* ---------------------------------------------------------------- cart --- */
+  // Cart data belongs to a specific authenticated Supabase user, not a browser.
+  // Do NOT automatically migrate so_cart_v1: the old key has no owner and may
+  // contain someone else's items. It remains untouched for manual recovery.
+  let cartUserId = null;
+  const cartKey = function () {
+    return cartUserId ? 'so_cart_v2_' + cartUserId : 'so_cart_v2_signed_out';
+  };
   const Cart = {
-    all: function () { return read(K.cart, []); },
-    save: function (items) { write(K.cart, items); Cart.sync(); },
-    count: function () { return Cart.all().reduce(function (n, i) { return n + i.qty; }, 0); },
+    setUser: function (id) {
+      const nextId = typeof id === 'string' && id ? id : null;
+      if (cartUserId === nextId) return;
+      cartUserId = nextId;
+      // Keep App.keys.cart compatible with pages using App.read/App.write.
+      K.cart = cartKey();
+      Cart.sync();
+    },
+    all: function () {
+      if (!cartUserId) return [];
+      const items = read(cartKey(), []);
+      return Array.isArray(items) ? items : [];
+    },
+    save: function (items) {
+      // Never write another customer's cart when auth is missing/resolving.
+      if (!cartUserId) return false;
+      write(cartKey(), Array.isArray(items) ? items : []);
+      Cart.sync();
+      return true;
+    },
+    count: function () { return Cart.all().reduce(function (n, i) { return n + (Number(i.qty) || 0); }, 0); },
     find: function (slug, size) {
       return Cart.all().filter(function (i) { return i.slug === slug && i.size === size; })[0];
     },
@@ -125,17 +150,21 @@
       if (!p) return false;
       if (!p.stock) { Toast.show(p.name + ' is sold out', 'We press to order — usually back within a week.', 'err'); return false; }
 
-      /* Require sign-in before adding to cart. Lazily load Supabase if needed. */
-      try { await ensureSupabase(); } catch (e) { /* ignore load errors, fall through */ }
-      if (window.Supabase && typeof window.Supabase.isAuthenticated === 'function') {
-        let isAuth = false;
-        try { isAuth = await window.Supabase.isAuthenticated(); } catch (e) { isAuth = false; }
-        if (!isAuth) {
-          const ret = encodeURIComponent(window.location.pathname + window.location.search);
-          window.location.href = 'signin.html?redirect=' + ret + '&message=signin';
-          return false;
+      /* Require a verified user ID (not just an old localStorage cart). */
+      try { await ensureSupabase(); } catch (e) { /* fail closed below */ }
+      let cartUser = null;
+      try {
+        if (window.Supabase && typeof window.Supabase.getCurrentUser === 'function') {
+          cartUser = await window.Supabase.getCurrentUser();
         }
+      } catch (e) { /* signed out or unavailable */ }
+      if (!cartUser || !cartUser.id) {
+        Cart.setUser(null);
+        const ret = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = 'signin.html?redirect=' + ret + '&message=signin';
+        return false;
       }
+      Cart.setUser(cartUser.id);
 
       size = size || p.sizes[0][0];
       qty = Math.max(1, qty || 1);
@@ -1052,8 +1081,9 @@
 
     if (request !== authUiRequest) return;
 
-    // A session alone is not enough: only load hearts for a resolved user ID.
-    Wish.setUser(isAuth ? userId : null);
+    // Only show account-specific cart and hearts once its user ID is resolved.
+    Cart.setUser(isAuth && userId ? userId : null);
+    Wish.setUser(isAuth && userId ? userId : null);
 
     if (accountBtn) {
       accountBtn.style.display = isAuth ? 'flex' : 'none';
@@ -1113,14 +1143,23 @@
       if (auth && typeof auth.onAuthStateChange === 'function') {
         auth.onAuthStateChange(function (event) {
           if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') {
-            if (event === 'SIGNED_OUT') { authUiRequest++; Wish.setUser(null); }
+            if (event === 'SIGNED_OUT') {
+              authUiRequest++;
+              Cart.setUser(null); // Clear old user's cart badge immediately.
+              Wish.setUser(null);
+            }
             // Supabase auth callbacks must not await other auth calls directly.
             setTimeout(updateAuthUI, 0);
           }
         });
       }
-    }).catch(function () { Wish.setUser(null); });
+    }).catch(function () { Cart.setUser(null); Wish.setUser(null); });
   }
+
+  // localStorage changes in other tabs: re-render only the active user's cart.
+  window.addEventListener('storage', function (event) {
+    if (cartUserId && (event.key === cartKey() || event.key === null)) Cart.sync();
+  });
 
   function ready(fn) {
     if (document.readyState !== 'loading') fn();
