@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    pages.js — per-page controllers, dispatched from <body data-page="…">.
    Loads after data.js and app.js.
@@ -172,12 +173,13 @@
 
   /* ========================================================= products ==== */
   function products() {
+    const priceCeiling = Math.max(1000, Math.ceil(Math.max.apply(Math, SITE.products.map(function (p) { return Number(p.price) || 0; })) / 100) * 100, parseInt(qs('max') || '0', 10) || 0);
     const state = {
       cats: qs('cat') ? [qs('cat')] : [],
       q: qs('q'),
       tag: qs('tag'),
       min: 0,
-      max: parseInt(qs('max') || '0', 10) || 1000,
+      max: parseInt(qs('max') || '0', 10) || priceCeiling,
       rating: 0,
       stockFilter: '',
       sort: 'popular',
@@ -198,8 +200,8 @@
     const q = $('[data-f-q]');
     if (q && state.q) q.value = state.q;
     const minEl = $('[data-f-min]'), maxEl = $('[data-f-max]'), slider = $('[data-f-slider]');
-    if (maxEl) maxEl.value = state.max;
-    if (slider) slider.value = state.max;
+    if (maxEl) { maxEl.value = state.max; maxEl.max = String(priceCeiling); }
+    if (slider) { slider.min = '0'; slider.max = String(priceCeiling); slider.step = priceCeiling > 5000 ? '100' : '10'; slider.value = state.max; }
 
     function apply() {
       let list = SITE.products.slice();
@@ -245,7 +247,7 @@
       if (state.q) chips.push(['q', '“' + state.q + '”']);
       if (state.tag) chips.push(['tag', state.tag === 'new' ? 'New arrivals' : 'Bestsellers']);
       if (state.rating) chips.push(['rating', state.rating + '★ & above']);
-      if (state.max < 1000 || state.min > 0) chips.push(['price', money(state.min) + ' – ' + money(state.max)]);
+      if (state.max < priceCeiling || state.min > 0) chips.push(['price', money(state.min) + ' – ' + money(state.max)]);
       if (state.stockFilter) chips.push(['stock', state.stockFilter === 'in' ? 'In stock' : 'Out of stock']);
       const af = $('[data-activefilters]');
       af.innerHTML = chips.length
@@ -287,7 +289,7 @@
         if (t.hasAttribute('data-f-stock')) { state.stockFilter = t.checked ? t.value : ''; state.page = 1; apply(); return; }
         if (t.hasAttribute('data-f-min') || t.hasAttribute('data-f-max')) {
           state.min = Math.max(0, parseInt(minEl.value || '0', 10));
-          state.max = Math.max(state.min, parseInt(maxEl.value || '1000', 10));
+          state.max = Math.max(state.min, parseInt(maxEl.value || String(priceCeiling), 10));
           if (slider) slider.value = state.max;
           state.page = 1; apply(); return;
         }
@@ -322,14 +324,14 @@
         } else if (k === 'q') { state.q = ''; if ($('[data-f-q]')) $('[data-f-q]').value = ''; }
         else if (k === 'tag') state.tag = '';
         else if (k === 'rating') { state.rating = 0; $$('[data-f-rating]').forEach(function (i) { i.checked = false; }); }
-        else if (k === 'price') { state.min = 0; state.max = 1000; if (minEl) minEl.value = ''; if (maxEl) maxEl.value = 1000; if (slider) slider.value = 1000; }
+        else if (k === 'price') { state.min = 0; state.max = priceCeiling; if (minEl) minEl.value = ''; if (maxEl) maxEl.value = priceCeiling; if (slider) slider.value = priceCeiling; }
         else if (k === 'stock') { state.stockFilter = ''; $$('[data-f-stock]').forEach(function (i) { i.checked = false; }); }
         state.page = 1; apply(); return;
       }
       if (e.target.closest('[data-clear-all]')) {
-        state.cats = []; state.q = ''; state.tag = ''; state.rating = 0; state.min = 0; state.max = 1000; state.stockFilter = ''; state.page = 1;
+        state.cats = []; state.q = ''; state.tag = ''; state.rating = 0; state.min = 0; state.max = priceCeiling; state.stockFilter = ''; state.page = 1;
         $$('[data-f-cats] input, [data-f-rating], [data-f-stock]').forEach(function (i) { i.checked = false; });
-        if (minEl) minEl.value = ''; if (maxEl) maxEl.value = 1000; if (slider) slider.value = 1000;
+        if (minEl) minEl.value = ''; if (maxEl) maxEl.value = priceCeiling; if (slider) slider.value = priceCeiling;
         if ($('[data-f-q]')) $('[data-f-q]').value = '';
         apply();
       }
@@ -1188,11 +1190,28 @@
   }
 
   /* ========================================================= dispatch ==== */
-  A.ready(function () {
+  A.ready(async function () {
+    const page = document.body.getAttribute('data-page');
+    // Wait for LIVE Supabase products/categories before creating cards, filters,
+    // PDPs, and cart totals. Without this, browser-local catalog hides new items.
+    try {
+      if (typeof SITE.loadCatalog === 'function') await SITE.loadCatalog();
+    } catch (err) {
+      // Keep the original catalogue as a fallback, but clearly flag stale data.
+      if (page === 'products' || page === 'product') {
+        const host = document.querySelector('.pagehead .container') || document.querySelector('[data-pdp]');
+        if (host) {
+          const warning = document.createElement('p');
+          warning.setAttribute('role', 'alert');
+          warning.style.cssText = 'padding:12px 14px;margin:12px 0;border:1px solid #efb2a5;background:#fff3ef;border-radius:8px;color:#8b2617';
+          warning.textContent = 'Live products could not be loaded from Supabase. Showing a local fallback. ' + (err.message || String(err));
+          host.appendChild(warning);
+        }
+      }
+    }
     icons();
     rails();
     forms();
-    const page = document.body.getAttribute('data-page');
     try {
       if (page === 'home') home();
       else if (page === 'products') products();
