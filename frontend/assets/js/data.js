@@ -1,4 +1,3 @@
-
 /* ==========================================================================
    data.js — catalog, categories, reviews, recipes, FAQs, coupons.
    Exposes window.SITE (read-only source of truth for every page).
@@ -567,11 +566,14 @@
     var unit = String(row.unit || old.unit || '1 pack');
     var cat = String(row.category_slug);
     var category = categoryMap.get(cat);
+    // admin_details.images is the source of truth for the saved gallery.
+    // A stale image_url must not replace the actual first uploaded photo.
     var imageList = Array.isArray(detail.images) ? detail.images.map(catalogImage).filter(Boolean) : [];
-    var primaryImage = catalogImage(row.image_url || detail.img || old.img || '');
-    if (!primaryImage && imageList.length) primaryImage = imageList[0];
+    var legacyImage = catalogImage(row.image_url || detail.img || '');
+    if (!imageList.length && legacyImage) imageList = [legacyImage];
+    var primaryImage = imageList[0] || catalogImage(old.img || '');
     if (!primaryImage) primaryImage = catalogImage('assets/img/categories/' + cat + '.svg') || 'assets/img/categories/cold-pressed-oils.svg';
-    if (!imageList.length) imageList = [primaryImage];
+    // Important: don't insert the fallback into imageList. No upload = no thumbnail.
     var sizes = Array.isArray(detail.sizes) ? detail.sizes.filter(function (s) {
       return Array.isArray(s) && typeof s[0] === 'string' && s[0].trim() &&
         Number.isFinite(Number(s[1])) && Number(s[1]) > 0;
