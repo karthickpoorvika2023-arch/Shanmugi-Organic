@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    data.js — catalog, categories, reviews, recipes, FAQs, coupons.
    Exposes window.SITE (read-only source of truth for every page).
@@ -524,6 +525,143 @@
     }
   };
 
+  /* ======================================================== live catalog === */
+  /*
+   * The original catalog above is a local fallback. In production, Supabase is
+   * authoritative for the storefront, just as it is for the admin panel.
+   * Run this AFTER app.js has installed __soEnsureSupabase() and BEFORE page
+   * controllers paint catalog cards. Public reads only; NEVER use a service key.
+   */
+  var catalogPromise = null;
+  var originalProducts = new Map(products.map(function (p) { return [p.slug, p]; }));
+  var originalCategories = new Map(categories.map(function (c) { return [c.slug, c]; }));
+
+  function catalogImage(value) {
+    if (typeof value !== 'string') return '';
+    value = value.trim();
+    return /^(?:https:\/\/[^\s"'<>]+|assets\/img\/[a-zA-Z0-9_./-]+|data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+)$/.test(value) ? value : '';
+  }
+  function catalogNumber(v, fallback) {
+    var n = Number(v);
+    return v !== null && v !== undefined && v !== '' && Number.isFinite(n) ? n : fallback;
+  }
+  function catalogCategory(row) {
+    var old = originalCategories.get(row.slug) || {};
+    return {
+      slug: String(row.slug || ''),
+      name: String(row.name || old.name || row.slug || ''),
+      ta: String(row.name_tamil || old.ta || ''),
+      blurb: String(row.description || old.blurb || ''),
+      img: catalogImage(row.image_url || old.img || '')
+    };
+  }
+  function catalogProduct(row, i, categoryMap) {
+    if (!row || !row.slug || !row.category_slug) return null;
+    var old = originalProducts.get(row.slug) || {};
+    var detail = row.admin_details && typeof row.admin_details === 'object' && !Array.isArray(row.admin_details)
+      ? row.admin_details : {};
+    var price = catalogNumber(row.price, 0);
+    if (!(price > 0)) return null;
+    var mrp = catalogNumber(row.mrp, price);
+    if (mrp <= 0) mrp = price;
+    var unit = String(row.unit || old.unit || '1 pack');
+    var cat = String(row.category_slug);
+    var category = categoryMap.get(cat);
+    var imageList = Array.isArray(detail.images) ? detail.images.map(catalogImage).filter(Boolean) : [];
+    var primaryImage = catalogImage(row.image_url || detail.img || old.img || '');
+    if (!primaryImage && imageList.length) primaryImage = imageList[0];
+    if (!primaryImage) primaryImage = catalogImage('assets/img/categories/' + cat + '.svg') || 'assets/img/categories/cold-pressed-oils.svg';
+    if (!imageList.length) imageList = [primaryImage];
+    var sizes = Array.isArray(detail.sizes) ? detail.sizes.filter(function (s) {
+      return Array.isArray(s) && typeof s[0] === 'string' && s[0].trim() &&
+        Number.isFinite(Number(s[1])) && Number(s[1]) > 0;
+    }).map(function (s) {
+      return [s[0], Number(s[1]), Math.max(Number(s[1]), catalogNumber(s[2], Number(s[1])) )];
+    }) : [];
+    if (!sizes.length) sizes = Array.isArray(old.sizes) && old.sizes.length ? old.sizes : [[unit, price, mrp]];
+    var badge = String(detail.badge || old.badge || '');
+    var tags = Array.isArray(old.tags) ? old.tags.slice() : [];
+    if (badge) {
+      var tag = badge.toLowerCase();
+      if (!tags.includes(tag)) tags.push(tag);
+    }
+    var inStock = row.in_stock !== false;
+    return {
+      id: i + 1, dbId: row.id, slug: String(row.slug),
+      name: String(row.name || old.name || row.slug),
+      ta: String(detail.ta || old.ta || ''), cat: cat,
+      catName: category ? category.name : cat,
+      catTa: category ? category.ta : '',
+      price: price, mrp: mrp, unit: unit,
+      off: mrp > price ? Math.round((1 - price / mrp) * 100) : 0,
+      rating: Math.max(0, Math.min(5, catalogNumber(detail.rating, old.rating || 4.5))),
+      reviews: Math.max(0, catalogNumber(detail.reviews, old.reviews || 0)),
+      img: primaryImage, images: imageList,
+      sku: old.sku || ('SO-' + (SKU_PREFIX[cat] || 'CUS') + '-' + String(i + 1).padStart(3, '0')),
+      badge: badge, tags: tags,
+      featured: tags.indexOf('featured') >= 0,
+      bestseller: tags.indexOf('bestseller') >= 0,
+      isNew: tags.indexOf('new') >= 0,
+      stock: inStock ? 1 : 0,
+      desc: String(row.description || old.desc || ''),
+      highlights: Array.isArray(detail.highlights) ? detail.highlights : (old.highlights || []),
+      use: old.use || '', sizes: sizes, specs: old.specs || {},
+      custom: detail.custom === true || !originalProducts.has(row.slug)
+    };
+  }
+
+  window.SITE.loadCatalog = function () {
+    if (catalogPromise) return catalogPromise;
+    catalogPromise = (async function () {
+      if (typeof window.__soEnsureSupabase !== 'function') {
+        throw new Error('Supabase loader unavailable. Check assets/js/app.js.');
+      }
+      await window.__soEnsureSupabase();
+      var client = window.SupabaseClient;
+      if (!client || typeof client.from !== 'function') {
+        throw new Error('Public Supabase client unavailable. Check Supabase configuration.');
+      }
+      var results = await Promise.all([
+        client.from('categories')
+          .select('slug,name,name_tamil,description,image_url,order_index')
+          .order('order_index', { ascending: true }).range(0, 999),
+        client.from('products')
+          .select('id,slug,name,category_slug,price,unit,in_stock,image_url,description,mrp,admin_details')
+          .order('name', { ascending: true }).range(0, 999)
+      ]);
+      if (results[0].error) throw new Error('Categories read failed: ' + results[0].error.message);
+      if (results[1].error) throw new Error('Products read failed: ' + results[1].error.message);
+      var categoryRows = results[0].data, productRows = results[1].data;
+      if (!Array.isArray(categoryRows) || !categoryRows.length) {
+        throw new Error('No public categories returned. Check Supabase SELECT/RLS policies.');
+      }
+      if (!Array.isArray(productRows) || !productRows.length) {
+        throw new Error('No public products returned. Check Supabase SELECT/RLS policies.');
+      }
+      var liveCategories = categoryRows.map(catalogCategory);
+      var categoryMap = new Map(liveCategories.map(function (c) { return [c.slug, c]; }));
+      var liveProducts = productRows.map(function (r, i) {
+        return catalogProduct(r, i, categoryMap);
+      }).filter(Boolean);
+      if (!liveProducts.length) throw new Error('No usable products in public catalog.');
+      // Mutate existing arrays so SITE.cat(), SITE.incat() and App references
+      // continue to use the SAME catalogs. Never merge browser-local admin edits.
+      categories.splice.apply(categories, [0, categories.length].concat(liveCategories));
+      products.splice.apply(products, [0, products.length].concat(liveProducts));
+      window.SITE.catalogReady = true;
+      window.SITE.catalogError = null;
+      console.info('[SO] live Supabase catalog:', liveCategories.length,
+        'categories,', liveProducts.length, 'products');
+      return { categories: liveCategories.length, products: liveProducts.length };
+    })().catch(function (err) {
+      window.SITE.catalogError = err;
+      catalogPromise = null; // Permit an explicit retry after connectivity recovers.
+      console.error('[SO] public catalog unavailable:', err);
+      throw err;
+    });
+    return catalogPromise;
+  };
+
   /* Version marker — lets us verify in the console (F12) which copy of
      data.js the browser is actually running. */
   console.log('[SO] data.js v5 loaded — ' + categories.length + ' categories, ' + products.length + ' products');
@@ -669,4 +807,3 @@
     });
   } catch (e) { /* ignore */ }
 })();
-
