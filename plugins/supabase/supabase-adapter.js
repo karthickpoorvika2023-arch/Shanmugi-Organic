@@ -12,6 +12,25 @@
   window.SupabaseAdapter = {
     enabled: USE_SUPABASE,
 
+    /* Public product translation reader: safe even while legacy adapter
+       initialization is disabled. No privileged key or write access. */
+    async loadProductTamil(slug) {
+      if (!slug || typeof slug !== 'string') return null;
+      const client = window.SupabaseClient;
+      if (!client || typeof client.from !== 'function') return null;
+      const { data, error } = await client.from('products')
+        .select('admin_details').eq('slug', slug).maybeSingle();
+      if (error || !data || !data.admin_details) {
+        if (error) console.warn('[Supabase] Could not read Tamil product copy:', error.message);
+        return null;
+      }
+      const details = data.admin_details;
+      return {
+        desc_ta: typeof details.desc_ta === 'string' ? details.desc_ta : '',
+        highlights_ta: Array.isArray(details.highlights_ta) ? details.highlights_ta : []
+      };
+    },
+
     /* Load products from Supabase and convert to SITE format */
     async loadProducts() {
       if (!this.enabled) return null;
@@ -34,6 +53,9 @@
         unit: p.unit,
         img: p.image_url,
         desc: p.short_description || p.description,
+        desc_ta: (p.admin_details && p.admin_details.desc_ta) || '',
+        highlights_ta: (p.admin_details && Array.isArray(p.admin_details.highlights_ta))
+          ? p.admin_details.highlights_ta : [],
         featured: p.featured,
         bestseller: p.bestseller,
         isNew: p.is_new,
