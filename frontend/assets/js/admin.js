@@ -1406,7 +1406,7 @@
     var highlightsTa = ['#pH1Ta', '#pH2Ta', '#pH3Ta'].map(function (selector) {
       var input = modal.querySelector(selector);
       return input ? input.value.trim() : '';
-    }).filter(Boolean);
+    });
 
     /* Gallery — read all image slots in order */
     var imgs = [];
@@ -1437,11 +1437,32 @@
     };
   }
 
-  /* Product writes are server-only, checked by the approved-admin allowlist. */
+  /* Product writes are server-only, checked by the approved-admin allowlist.
+     IMPORTANT: a successfully answered POST is not proof that older Edge Function
+     versions stored the newly introduced Tamil fields. Confirm the returned DB row. */
   function upsertProductToSupabase(p, originalSlug) {
     return demoAdminRequest('admin-product-upsert', {
       product: p,
       originalSlug: originalSlug || null
+    }).then(function (response) {
+      var details = response && response.product && response.product.admin_details;
+      var expectedDesc = (p.desc_ta || '').trim();
+      var actualDesc = details && typeof details.desc_ta === 'string'
+        ? details.desc_ta.trim() : '';
+      var expectedHighlights = Array.isArray(p.highlights_ta) ? p.highlights_ta : [];
+      var actualHighlights = details && Array.isArray(details.highlights_ta)
+        ? details.highlights_ta : [];
+      var mismatch = expectedDesc !== actualDesc;
+      for (var i = 0; i < Math.max(expectedHighlights.length, actualHighlights.length); i++) {
+        if (String(expectedHighlights[i] || '').trim() !== String(actualHighlights[i] || '').trim()) {
+          mismatch = true;
+          break;
+        }
+      }
+      if (mismatch) {
+        throw new Error('Tamil fields NOT saved in Supabase. The deployed demo-payment-kit Edge Function may be an old version. Open Supabase > Edge Functions > demo-payment-kit > Code, apply the Tamil patch and click Deploy updates. Then reload and save again.');
+      }
+      return response;
     });
   }
   function deleteProductFromSupabase(p) {
@@ -1485,7 +1506,20 @@
       toast(successMessage);
       if (pageTitle.textContent === 'Products') renderProducts();
     }).catch(function (error) {
-      toast('Supabase product operation failed: ' + (error.message || String(error)), 'error');
+      var message = error.message || String(error);
+      toast('Supabase product operation failed: ' + message, 'error');
+      // Keep a persistent, readable error above the Save buttons.
+      var inlineError = modal.querySelector('[data-product-save-error]');
+      if (!inlineError) {
+        inlineError = document.createElement('div');
+        inlineError.setAttribute('data-product-save-error', '');
+        inlineError.setAttribute('role', 'alert');
+        inlineError.style.cssText = 'margin:8px 16px;padding:10px 12px;border:1px solid #f1aeaa;background:#fff4f3;color:#a62920;border-radius:8px;font-size:13px;line-height:1.6;';
+        var footer = modal.querySelector('.modal__foot');
+        if (footer && footer.parentNode) footer.parentNode.insertBefore(inlineError, footer);
+        else modal.appendChild(inlineError);
+      }
+      inlineError.textContent = message;
       button.disabled = false;
       button.textContent = oldLabel;
     });
