@@ -1603,8 +1603,7 @@
       var count = catCounts[c.slug] || 0;
       if (count > 0) catPills += '<button class="cat-pill" data-cat-filter="' + escHtml(c.slug) + '">' + escHtml(c.name) + ' <span class="cat-pill__count">' + count + '</span></button>';
     });
-    var customCount = allProducts.filter(function (p) { return p.custom; }).length;
-    if (customCount > 0) catPills += '<button class="cat-pill" data-cat-filter="__custom__">Custom <span class="cat-pill__count">' + customCount + '</span></button>';
+   
 
     content.innerHTML =
       '<div class="page-toolbar">' +
