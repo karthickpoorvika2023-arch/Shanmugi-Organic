@@ -138,40 +138,64 @@
 
   /* ============================================================= home ==== */
   function home() {
-    /* testimonials — 3 per page, dots */
+    /* Responsive testimonials: 1 card on phones, 2 on tablets, 3 on desktop.
+       Keep all reviews available via the dots (no reviews are discarded). */
     const host = $('[data-tmz]');
-    if (host) {
-      const per = 3, pool = SITE.reviewPool;
-      const pages = Math.ceil(pool.length / per);
-      let page = 0;
+    if (host && Array.isArray(SITE.reviewPool) && SITE.reviewPool.length) {
+      const pool = SITE.reviewPool;
       const track = $('.tmz__track', host), dots = $('.tmz__dots', host);
-      let html = '';
-      for (let i = 0; i < pages; i++) {
-        html += '<div class="tmz__page">' + pool.slice(i * per, i * per + per).map(function (r) {
-          return '<div class="tmz__card">' + stars(r.stars) +
-            '<blockquote>“' + esc(r.text) + '”</blockquote>' +
-            '<div class="tmz__who"><img src="assets/img/avatars/' + r.av + '.svg" alt="">' +
-            '<span><b>' + esc(r.name) + '</b><span>' + esc(r.city) + '</span></span></div></div>';
-        }).join('') + '</div>';
-      }
-      track.innerHTML = html;
-      dots.innerHTML = Array.apply(null, { length: pages }).map(function (_, i) {
-        return '<button data-dot="' + i + '" aria-label="Testimonial page ' + (i + 1) + '"></button>';
-      }).join('');
+      let per = 0, page = 0, timer = null;
+      const visible = function () {
+        return window.innerWidth <= 700 ? 1 : window.innerWidth <= 1180 ? 2 : 3;
+      };
       const go = function (i) {
+        const pages = Math.ceil(pool.length / per);
         page = (i + pages) % pages;
         track.style.transform = 'translateX(' + (-page * 100) + '%)';
-        $$('button', dots).forEach(function (b, k) { b.classList.toggle('is-on', k === page); });
+        $$('button', dots).forEach(function (b, k) {
+          b.classList.toggle('is-on', k === page);
+          b.setAttribute('aria-current', k === page ? 'true' : 'false');
+        });
+      };
+      const render = function () {
+        const next = visible();
+        if (next === per) return;
+        const firstReview = per ? page * per : 0;
+        per = next;
+        const pages = Math.ceil(pool.length / per);
+        let html = '';
+        for (let i = 0; i < pages; i++) {
+          html += '<div class="tmz__page">' + pool.slice(i * per, i * per + per).map(function (r) {
+            return '<div class="tmz__card">' + stars(r.stars) +
+              '<blockquote>“' + esc(r.text) + '”</blockquote>' +
+              '<div class="tmz__who"><img src="assets/img/avatars/' + r.av + '.svg" alt="">' +
+              '<span><b>' + esc(r.name) + '</b><span>' + esc(r.city) + '</span></span></div></div>';
+          }).join('') + '</div>';
+        }
+        track.innerHTML = html;
+        dots.innerHTML = Array.apply(null, { length: pages }).map(function (_, i) {
+          return '<button type="button" data-dot="' + i + '" aria-label="Show customer review page ' + (i + 1) + '"></button>';
+        }).join('');
+        go(Math.floor(firstReview / per));
+      };
+      const stop = function () { if (timer !== null) { clearInterval(timer); timer = null; } };
+      const start = function () {
+        stop();
+        timer = setInterval(function () { go(page + 1); }, 6000);
       };
       dots.addEventListener('click', function (e) {
         const b = e.target.closest('[data-dot]');
-        if (b) { go(+b.getAttribute('data-dot')); restart(); }
+        if (b) { go(+b.getAttribute('data-dot')); start(); }
       });
-      let timer = setInterval(function () { go(page + 1); }, 6000);
-      const restart = function () { clearInterval(timer); timer = setInterval(function () { go(page + 1); }, 6000); };
-      host.addEventListener('mouseenter', function () { clearInterval(timer); });
-      host.addEventListener('mouseleave', restart);
-      go(0);
+      host.addEventListener('mouseenter', stop);
+      host.addEventListener('mouseleave', start);
+      host.addEventListener('focusin', stop);
+      host.addEventListener('focusout', function (e) {
+        if (!host.contains(e.relatedTarget)) start();
+      });
+      window.addEventListener('resize', render);
+      render();
+      start();
     }
   }
 

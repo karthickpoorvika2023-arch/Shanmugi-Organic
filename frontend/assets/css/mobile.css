@@ -231,3 +231,59 @@
 @media (prefers-reduced-motion: reduce) {
   .catrail__track, .carousel__track { transition-duration: 0.01ms; }
 }
+
+/* ========================================================================
+   HOME: CUSTOMER REVIEWS + NEWSLETTER — MOBILE FIX 2026-11-18 v2
+   Keep the original desktop 2-column layout above 1180px.
+   ======================================================================== */
+@media (max-width: 1180px) {
+  /* The original 2-column .duo squeezes both panels into unusable widths. */
+  .duo {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .duo > .tmz,
+  .duo > .news {
+    min-width: 0;
+    width: 100%;
+  }
+  .tmz__page { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tmz__card { min-width: 0; }
+  .tmz__card blockquote { overflow-wrap: break-word; }
+  .tmz__who > span { min-width: 0; overflow-wrap: break-word; }
+  .news__body { max-width: 100%; }
+  .news__form { max-width: 100%; }
+  .news__form input { min-width: 0; }
+}
+@media (max-width: 700px) {
+  .duo { gap: 16px; }
+  .tmz { padding: 18px 16px; }
+  .tmz__head h3 { font-size: 22px; }
+  .tmz__head .ta { font-size: 13px; }
+  /* JS groups testimonials one per page on phones. */
+  .tmz__page { grid-template-columns: minmax(0, 1fr); }
+  .tmz__card { padding: 17px; min-height: 170px; }
+  .tmz__card blockquote { font-size: 14px; line-height: 1.6; }
+  .tmz__who b { font-size: 13px; }
+  .tmz__who span { font-size: 11.5px; }
+  .tmz__dots { margin-top: 18px; }
+  .tmz__dots button { min-height: 10px; }
+  .news { padding: 22px 18px; }
+  .news h3 { font-size: 23px; }
+  .news__art { width: 120px; opacity: .25; pointer-events: none; }
+  .news p { font-size: 14px; line-height: 1.7; }
+  .news__form { display: flex; flex-direction: column; gap: 9px; }
+  .news__form input {
+    flex: none; width: 100%; min-width: 0; min-height: 46px;
+    border: 1.5px solid #cfe0c2;
+    border-radius: var(--radius-s);
+    font-size: 16px;
+  }
+  .news__form button {
+    width: 100%; min-height: 45px; height: auto;
+    border-radius: var(--radius-s);
+    font-size: 14px;
+  }
+  .news__perks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 13px; }
+  .news__perk { min-width: 0; }
+}
