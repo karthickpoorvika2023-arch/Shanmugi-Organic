@@ -1059,13 +1059,20 @@
       '</label>' +
       '<div id="pImagesContainer" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">' + imageSlotsHTML + '</div>' +
       '</div>' +
-      '<div class="form-group"><label>Description</label><textarea class="form-control" id="pDesc" placeholder="Product description...">' + escHtml(p.desc || '') + '</textarea></div>' +
+      '<div class="form-group"><label for="pDesc">Description (English)</label><textarea class="form-control" id="pDesc" maxlength="10000" placeholder="Product description in English...">' + escHtml(p.desc || '') + '</textarea></div>' +
+      '<div class="form-group"><label for="pDescTa">தமிழ் விளக்கம் (Tamil Description)</label><textarea class="form-control" id="pDescTa" lang="ta" maxlength="10000" rows="4" placeholder="தயாரிப்பின் விவரத்தைத் தமிழில் எழுதுங்கள்...">' + escHtml(p.desc_ta || '') + '</textarea></div>' +
       /* Key Highlights */
       '<div class="form-group"><label style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2f8f43" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Key Highlights <span style="font-weight:400;font-size:11px;color:#92a096">(shown as tick bullets on product page)</span></label>' +
       '<div style="display:flex;flex-direction:column;gap:6px">' +
-      '<input class="form-control" id="pH1" placeholder="e.g. Cold-pressed, no refining" value="' + ((p.highlights && p.highlights[0]) || '') + '">' +
-      '<input class="form-control" id="pH2" placeholder="e.g. Rich in nutrients" value="' + ((p.highlights && p.highlights[1]) || '') + '">' +
-      '<input class="form-control" id="pH3" placeholder="e.g. No additives or preservatives" value="' + ((p.highlights && p.highlights[2]) || '') + '">' +
+      '<input class="form-control" id="pH1" maxlength="200" placeholder="e.g. Cold-pressed, no refining" value="' + escHtml((p.highlights && p.highlights[0]) || '') + '">' +
+      '<input class="form-control" id="pH2" maxlength="200" placeholder="e.g. Rich in nutrients" value="' + escHtml((p.highlights && p.highlights[1]) || '') + '">' +
+      '<input class="form-control" id="pH3" maxlength="200" placeholder="e.g. No additives or preservatives" value="' + escHtml((p.highlights && p.highlights[2]) || '') + '">' +
+      '</div></div>' +
+      '<div class="form-group"><label>முக்கிய சிறப்பம்சங்கள் (Tamil Key Highlights)</label>' +
+      '<div style="display:flex;flex-direction:column;gap:6px">' +
+      '<input class="form-control" id="pH1Ta" lang="ta" maxlength="200" placeholder="1. 100% தூய்மையான கடலை எண்ணெய்" value="' + escHtml((p.highlights_ta && p.highlights_ta[0]) || '') + '">' +
+      '<input class="form-control" id="pH2Ta" lang="ta" maxlength="200" placeholder="2. இயற்கையான மணமும் சுவையும்" value="' + escHtml((p.highlights_ta && p.highlights_ta[1]) || '') + '">' +
+      '<input class="form-control" id="pH3Ta" lang="ta" maxlength="200" placeholder="3. பாரம்பரிய செக்கு முறையில் தயாரிப்பு" value="' + escHtml((p.highlights_ta && p.highlights_ta[2]) || '') + '">' +
       '</div></div>' +
       '<div class="form-group"><div class="switch"><input type="checkbox" id="pStock"' + (p.stock !== false ? ' checked' : '') + '><label class="switch__track" for="pStock"></label><span class="switch__label">In Stock</span></div></div>';
   }
@@ -1395,6 +1402,11 @@
     var h2 = (modal.querySelector('#pH2') || {}).value || '';
     var h3 = (modal.querySelector('#pH3') || {}).value || '';
     var highlights = [h1.trim(), h2.trim(), h3.trim()].filter(Boolean);
+    // Tamil copy is stored separately; do not overwrite the English description/highlights.
+    var highlightsTa = ['#pH1Ta', '#pH2Ta', '#pH3Ta'].map(function (selector) {
+      var input = modal.querySelector(selector);
+      return input ? input.value.trim() : '';
+    }).filter(Boolean);
 
     /* Gallery — read all image slots in order */
     var imgs = [];
@@ -1416,9 +1428,11 @@
       img: imgs[0] || '',
       images: imgs,
       desc: modal.querySelector('#pDesc').value.trim() || '',
+      desc_ta: modal.querySelector('#pDescTa').value.trim() || '',
       stock: modal.querySelector('#pStock').checked,
       sizes: sizes,
       highlights: highlights,
+      highlights_ta: highlightsTa,
       custom: true
     };
   }
@@ -1450,8 +1464,10 @@
           unit: r.unit || '', stock: r.in_stock !== false,
           rating: Number(meta.rating) || 4.5, reviews: Number(meta.reviews) || 0,
           badge: meta.badge || '', desc: r.description || '',
+          desc_ta: typeof meta.desc_ta === 'string' ? meta.desc_ta : '',
           img: img, images: images, sizes: sizes,
           highlights: Array.isArray(meta.highlights) ? meta.highlights : [],
+          highlights_ta: Array.isArray(meta.highlights_ta) ? meta.highlights_ta : [],
           custom: !!meta.custom
         };
       });
