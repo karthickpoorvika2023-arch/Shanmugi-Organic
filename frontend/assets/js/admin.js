@@ -528,7 +528,8 @@
     wrap.querySelectorAll('[data-close]').forEach(function (b) {
       b.addEventListener('click', function () { wrap.remove(); });
     });
-    wrap.addEventListener('click', function (e) { if (e.target === wrap) wrap.remove(); });
+    // Backdrop clicks must not close the modal or discard product form edits.
+    // Only explicit Cancel/X actions or a successful Save may close it.
     if (onSave) {
       wrap.querySelector('[data-save]').addEventListener('click', function () {
         var result = onSave(wrap);
@@ -1519,6 +1520,8 @@
       var count = catCounts[c.slug] || 0;
       if (count > 0) catPills += '<button class="cat-pill" data-cat-filter="' + escHtml(c.slug) + '">' + escHtml(c.name) + ' <span class="cat-pill__count">' + count + '</span></button>';
     });
+    var customCount = allProducts.filter(function (p) { return p.custom; }).length;
+    if (customCount > 0) catPills += '<button class="cat-pill" data-cat-filter="__custom__">Custom <span class="cat-pill__count">' + customCount + '</span></button>';
 
     content.innerHTML =
       '<div class="page-toolbar">' +
@@ -1584,6 +1587,7 @@
         '<div class="product-admin-card__img">' +
         '<img src="' + imgSrc + '" alt="' + escHtml(p.name) + '" onerror="this.parentElement.style.background=\'#e6f0e0\';this.style.display=\'none\'">' +
         (p.badge ? '<span class="product-admin-card__badge">' + escHtml(p.badge) + '</span>' : '') +
+        (isCustom ? '<span class="product-admin-card__badge" style="background:#3b82f6;right:8px;left:auto">Custom</span>' : '') +
         '</div>' +
         '<div class="product-admin-card__body">' +
         '<div class="product-admin-card__name">' + escHtml(p.name) + '</div>' +
