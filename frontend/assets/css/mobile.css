@@ -403,3 +403,134 @@
   .home-bestsellers .sec-title { font-size: 18px; }
   .home-bestsellers .sec-sub { font-size: 11px; }
 }
+
+
+/* ========================================================================
+   SHANMUGA NAVIGATION v4 — Mobile left side drawer, 4 primary links only.
+   Desktop header/navigation is unchanged. All category labels come from SITE.
+   ======================================================================== */
+.so-drawer__head, .so-drawer__expand, .so-drawer__categories, .so-drawer__scrim { display: none; }
+@media (max-width: 1180px) {
+  body.so-drawer--locked { overflow: hidden !important; }
+  .so-drawer__scrim {
+    position: fixed; inset: 0; z-index: 1098;
+    display: block; visibility: hidden; opacity: 0;
+    background: rgba(9, 25, 15, .55);
+    transition: opacity .22s ease, visibility .22s;
+  }
+  .so-drawer__scrim.is-open { visibility: visible; opacity: 1; }
+  .masthead__in .mainnav {
+    display: flex !important; flex-direction: column;
+    position: fixed !important; z-index: 1099;
+    top: 0 !important; left: 0 !important; bottom: 0 !important;
+    width: min(86vw, 360px) !important;
+    max-width: 360px; height: 100dvh; min-height: 100vh;
+    margin: 0 !important; padding: 0 !important;
+    grid-column: auto !important; grid-row: auto !important;
+    border: 0 !important; border-right: 1px solid #e8eadd !important;
+    border-radius: 0 !important; background: #fff !important;
+    box-shadow: 14px 0 34px rgba(2, 30, 14, .14) !important;
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(-104%); visibility: hidden;
+    transition: transform .25s ease, visibility .25s;
+  }
+  .masthead.menu-open .mainnav { transform: translateX(0); visibility: visible; }
+  .masthead__in .mainnav .so-drawer__head {
+    display: flex; align-items: center; justify-content: space-between;
+    flex: 0 0 auto; gap: 14px; min-height: 82px;
+    padding: 17px 17px 15px; border-bottom: 1px solid #e5ebdf;
+    background: #f7faf4;
+  }
+  .so-drawer__identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .so-drawer__identity img { width: 74px; max-height: 51px; object-fit: contain; }
+  .so-drawer__head-title { display: flex; flex-direction: column; gap: 1px; }
+  .so-drawer__head-title b { color: #184b2b; font-size: 18px; font-weight: 750; }
+  .so-drawer__head-title span { color: #51765a; font-size: 12px; font-weight: 550; }
+  .so-drawer__close {
+    flex: none; display: grid; place-items: center; width: 37px; height: 37px;
+    background: #fff; color: #24552f; border: 1px solid #dce5d5; border-radius: 11px;
+    cursor: pointer;
+  }
+  .so-drawer__close svg { width: 19px; height: 19px; }
+  .masthead__in .mainnav .mainnav__in {
+    display: flex !important; flex-direction: column !important; align-items: stretch !important;
+    flex: 0 0 auto; gap: 0 !important; width: 100%; padding: 10px 0 30px;
+  }
+  .masthead__in .mainnav__in .navitem,
+  html.lang-ta .masthead__in .mainnav .mainnav__in .navitem {
+    display: flex !important; flex-wrap: wrap; flex: 0 0 auto;
+    align-items: stretch; position: relative; width: 100%;
+    min-width: 0; border-bottom: 1px solid #f0f1e9;
+    background: #fff;
+  }
+  .masthead__in .mainnav__in .navitem.is-active .navlink { margin: 0 !important; }
+  .masthead__in .mainnav__in .navlink,
+  html.lang-ta .masthead__in .mainnav .mainnav__in .navlink {
+    display: flex !important; flex-direction: row !important;
+    flex: 1 1 0 !important; width: auto !important;
+    min-width: 0 !important; max-width: 100%;
+    min-height: 57px; align-items: center !important;
+    justify-content: flex-start !important;
+    border-radius: 0 !important;
+    padding: 16px 21px !important;
+    background: transparent !important; color: #24372c !important;
+    text-align: left !important; text-decoration: none;
+  }
+  .masthead__in .mainnav__in .navlink b { font-size: 15px; font-weight: 650; }
+  .masthead__in .mainnav__in .navitem.is-active .navlink {
+    color: #12612b !important; border-left: 3px solid #1c7336;
+    padding-left: 18px !important;
+  }
+  .masthead__in .mainnav__in .navitem.is-active { background: #f2f8ef; }
+  .masthead__in .mainnav__in .navlink:focus-visible,
+  .so-drawer__expand:focus-visible, .so-drawer__close:focus-visible,
+  .so-drawer__categories a:focus-visible { outline: 2px solid #1d793b; outline-offset: -3px; }
+  /* Hide desktop mega + all old extra mobile links. Only 4 main rows remain. */
+  .masthead__in .mainnav .mega, .masthead__in .mainnav .mobile-nav-extras { display: none !important; }
+  .masthead__in .mainnav .so-drawer__expand {
+    display: grid; flex: none; place-items: center; width: 56px; min-height: 57px;
+    border: none; border-left: 1px solid #ebeee8;
+    background: transparent; color: #366843; cursor: pointer;
+  }
+  .so-drawer__expand svg { width: 20px; height: 20px; transition: transform .2s ease; }
+  .so-drawer__expanded .so-drawer__expand svg { transform: rotate(180deg); }
+  .masthead__in .mainnav .so-drawer__categories:not([hidden]) {
+    display: flex !important; flex-direction: column; flex: 0 0 100%; width: 100%;
+    background: #fbfcf8; border-top: 1px solid #e7ecdf;
+  }
+  .so-drawer__categories[hidden] { display: none !important; }
+  .masthead__in .mainnav .so-drawer__categories a {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; min-height: 47px; padding: 11px 18px 11px 30px;
+    border-bottom: 1px solid #edf0e9;
+    color: #3a503f; text-decoration: none;
+    font-size: 13px; line-height: 1.45;
+  }
+  .so-drawer__categories a:hover { background: #eef7eb; }
+  .so-drawer__cat-label { min-width: 0; display: flex; flex-direction: column; }
+  .so-drawer__cat-label b { font-size: 13px; font-weight: 550; }
+  .so-drawer__cat-label span { font-size: 12px; color: #728573; }
+  .so-drawer__cat-all { background: #ebf5e8; color: #1f6434 !important; font-weight: 650; }
+  .so-drawer__cat-all b { font-weight: 700; }
+  .so-drawer__cat-all > span { color: #64836d; font-size: 11px; }
+  .so-drawer__categories svg { width: 15px; height: 15px; flex: none; }
+  html.lang-ta .masthead__in .mainnav__in .navlink b,
+  html.lang-ta .so-drawer__head-title b,
+  html.lang-ta .so-drawer__categories .so-drawer__cat-label b,
+  html.lang-ta .so-drawer__categories .so-drawer__cat-all b { display: none !important; }
+  html.lang-ta .masthead__in .mainnav__in .navlink > span,
+  html.lang-ta .so-drawer__head-title span,
+  html.lang-ta .so-drawer__categories .so-drawer__cat-label span,
+  html.lang-ta .so-drawer__categories .so-drawer__cat-all > span {
+    display: inline-block !important; color: inherit !important;
+    font-family: 'Noto Sans Tamil', sans-serif; font-size: 14px !important;
+    font-weight: 650; white-space: normal; line-height: 1.5;
+  }
+  html:not(.lang-ta) .so-drawer__categories .so-drawer__cat-label span,
+  html:not(.lang-ta) .so-drawer__categories .so-drawer__cat-all > span { display: none; }
+  .mobile-menu-toggle { z-index: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .so-drawer__scrim, .masthead__in .mainnav, .so-drawer__expand svg { transition: none !important; }
+}

@@ -656,6 +656,15 @@
     }).join('') + '</div>';
   }
 
+  /* Mobile navigation: categories are links into the live storefront catalog. */
+  function mobileCategoryLinks() {
+    return '<a class="so-drawer__cat-all" href="products.html"><b>All Products</b><span>அனைத்து பொருட்கள்</span>' + ic('chevR') + '</a>' +
+      SITE.categories.map(function (c) {
+        return '<a class="so-drawer__cat" href="products.html?cat=' + encodeURIComponent(c.slug) + '">' +
+          '<span class="so-drawer__cat-label"><b>' + esc(c.name) + '</b><span>' + esc(c.ta || c.name) + '</span></span>' + ic('chevR') + '</a>';
+      }).join('');
+  }
+
   function headerHTML(active) {
     const sh = SITE.shop;
     return '' +
@@ -677,13 +686,18 @@
       '<button class="mobile-menu-toggle" type="button" data-mobile-menu aria-controls="so-mobile-nav" aria-expanded="false" aria-label="Open navigation menu">' +
       '<span aria-hidden="true">☰</span><span class="sr-only">Menu</span></button>' +
 
-      '<nav class="mainnav" id="so-mobile-nav" aria-label="Main"><div class="mainnav__in">' +
+      '<nav class="mainnav" id="so-mobile-nav" aria-label="Main navigation">' +
+      '<div class="so-drawer__head"><div class="so-drawer__identity"><img src="assets/img/logo.png" alt="Shanmuga Organics"><span class="so-drawer__head-title"><b>Menu</b><span>மெனு</span></span></div>' +
+      '<button type="button" class="so-drawer__close" data-mobile-menu-close aria-label="Close menu">' + ic('x') + '</button></div>' +
+      '<div class="mainnav__in">' +
       NAV.map(function (n) {
         return '<div class="navitem' + (n.key === active ? ' is-active' : '') + (n.drop ? ' navitem--drop' : '') + '">' +
-          '<a class="navlink" href="' + n.href + '"><b>' + n.label + '</b><span>' + n.ta + '</span></a>' +
+          '<a class="navlink" href="' + n.href + '"' + (n.key === 'products' ? ' data-mobile-products-link aria-expanded="false" aria-controls="so-drawer-categories"' : '') + '><b>' + n.label + '</b><span>' + n.ta + '</span></a>' +
+          (n.key === 'products' ? '<button type="button" class="so-drawer__expand" data-mobile-products-toggle aria-controls="so-drawer-categories" aria-expanded="false" aria-label="Show product categories">' + ic('chevD') + '</button>' +
+           '<div class="so-drawer__categories" id="so-drawer-categories" hidden>' + mobileCategoryLinks() + '</div>' : '') +
           (n.drop === 'products' ? megaProducts() : n.drop === 'cats' ? megaCats() : '') + '</div>';
       }).join('') +
-      '</div><div class="mobile-nav-extras"><a href="categories.html">All Categories</a><a href="store-locator.html">Store Locator</a><a href="track-order.html">Track Order</a><a href="bulk-enquiry.html">Wholesale Enquiry</a></div></nav>' +
+      '</div></nav>' +
 
       '<form class="searchbar" role="search" data-search>' +
       '<span class="searchbar__field">' + ic('search') +
@@ -1018,21 +1032,93 @@
     const header = button && button.closest('.masthead');
     const nav = header && header.querySelector('.mainnav');
     if (!button || !header || !nav) return;
+    const closeButton = nav.querySelector('[data-mobile-menu-close]');
+    const productLink = nav.querySelector('[data-mobile-products-link]');
+    const productToggle = nav.querySelector('[data-mobile-products-toggle]');
+    const categoryArea = nav.querySelector('#so-drawer-categories');
+    const scrim = document.createElement('div');
+    scrim.className = 'so-drawer__scrim';
+    scrim.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(scrim);
+    const isMobile = function () { return window.matchMedia('(max-width: 1180px)').matches; };
+    let previousFocus = null;
+
+    function setCategories(open) {
+      if (!categoryArea) return;
+      categoryArea.hidden = !open;
+      const item = productLink && productLink.closest('.navitem');
+      if (item) item.classList.toggle('so-drawer__expanded', !!open);
+      if (productLink) productLink.setAttribute('aria-expanded', String(!!open));
+      if (productToggle) {
+        productToggle.setAttribute('aria-expanded', String(!!open));
+        productToggle.setAttribute('aria-label', open ? 'Hide product categories' : 'Show product categories');
+      }
+    }
+
     function setOpen(open) {
-      header.classList.toggle('menu-open', !!open);
-      button.setAttribute('aria-expanded', String(!!open));
+      open = !!open && isMobile();
+      if (open) previousFocus = document.activeElement;
+      header.classList.toggle('menu-open', open);
+      document.body.classList.toggle('so-drawer--locked', open);
+      scrim.classList.toggle('is-open', open);
+      button.setAttribute('aria-expanded', String(open));
       button.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
       button.querySelector('[aria-hidden]').textContent = open ? '✕' : '☰';
+      if (isMobile()) {
+        nav.setAttribute('aria-hidden', String(!open));
+        nav.inert = !open;
+      } else {
+        nav.removeAttribute('aria-hidden');
+        nav.inert = false;
+      }
+      if (open && closeButton) closeButton.focus();
+      if (!open) {
+        setCategories(false);
+        if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+        previousFocus = null;
+      }
     }
+
+    // Product row opens the category accordion on touchscreens. The first
+    // submenu item (All Products) remains the direct catalogue link.
+    function toggleCategories(e) {
+      if (!isMobile() || !categoryArea) return;
+      e.preventDefault();
+      setCategories(categoryArea.hidden);
+    }
+    if (productLink) productLink.addEventListener('click', toggleCategories);
+    if (productToggle) productToggle.addEventListener('click', toggleCategories);
+    if (closeButton) closeButton.addEventListener('click', function () { setOpen(false); });
+    scrim.addEventListener('click', function () { setOpen(false); });
     button.addEventListener('click', function () { setOpen(!header.classList.contains('menu-open')); });
-    document.addEventListener('click', function (e) {
-      if (header.classList.contains('menu-open') && !nav.contains(e.target) && !button.contains(e.target)) setOpen(false);
+    document.addEventListener('keydown', function (e) {
+      if (!header.classList.contains('menu-open')) return;
+      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Tab') {
+        const focusables = Array.prototype.slice.call(nav.querySelectorAll('a[href], button:not([disabled])'))
+          .filter(function (element) { return !element.closest('[hidden]') && element.getClientRects().length; });
+        if (!focusables.length) return;
+        const first = focusables[0], last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
     nav.addEventListener('click', function (e) {
-      if (e.target.closest('a')) setOpen(false);
+      if (e.target.closest('a') && !e.target.closest('[data-mobile-products-link]')) setOpen(false);
     });
-    window.addEventListener('resize', function () { if (window.innerWidth > 1180) setOpen(false); });
+    window.addEventListener('resize', function () { if (!isMobile()) setOpen(false); });
+    if (isMobile()) {
+      nav.inert = true;
+      nav.setAttribute('aria-hidden', 'true');
+    }
+
+    // Refresh the category links when the live Supabase catalog finishes
+    // loading; never need admin permissions to display public categories.
+    if (typeof SITE.loadCatalog === 'function' && categoryArea) {
+      SITE.loadCatalog().then(function () {
+        categoryArea.innerHTML = mobileCategoryLinks();
+      }).catch(function () { /* Keep bundled categories as fallback. */ });
+    }
   }
 
   function mount(active) {
