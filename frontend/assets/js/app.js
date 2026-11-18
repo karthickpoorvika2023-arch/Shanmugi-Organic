@@ -520,27 +520,59 @@
     opts = opts || {};
     const flags = [];
     if (p.badge) flags.push('<span class="flag' + (p.badge === 'New' ? ' flag--new' : '') + '">' + esc(p.badge) + '</span>');
-    if (p.off >= 12) flags.push('<span class="flag flag--sale">' + p.off + '% OFF</span>');
+    if (Number(p.off) >= 12) flags.push('<span class="flag flag--sale">' + Math.round(Number(p.off)) + '% OFF</span>');
     if (!p.stock) flags.push('<span class="flag flag--out">Out of stock</span>');
-    return '<article class="pcard" data-slug="' + p.slug + '">' +
-      '<div class="pcard__media">' +
-      '<a href="product.html?p=' + p.slug + '"><img src="' + p.img + '" alt="' + esc(p.name) + '" loading="lazy"></a>' +
+
+    // All storefront grids share this component; keep existing data-* hooks so
+    // cart, wishlist, Quick View and Supabase-driven products work unchanged.
+    const slug = esc(p.slug || '');
+    const productUrl = 'product.html?p=' + encodeURIComponent(p.slug || '');
+    const imageSrc = String(p.img || '').trim();
+    const rating = Number(p.rating || 0);
+    const reviewCount = Math.max(0, Number(p.reviews || 0));
+    const rated = Number.isFinite(rating) && rating > 0;
+    const validMrp = Number(p.mrp) > Number(p.price);
+    const brief = String(p.desc || '').trim();
+    const mediaClass = 'pcard__media' + (imageSrc ? '' : ' is-image-missing');
+    const placeholderSvg = '<svg viewBox="0 0 80 88" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M29 12h22v10l7 9v41a7 7 0 0 1-7 7H29a7 7 0 0 1-7-7V31l7-9z"/><path d="M29 13V8h22v5M22 39h36M22 65h36"/><path d="M40 48c-7 1-10 5-9 12 9 0 13-5 9-12zm0 0c6 1 11 6 10 12-7 0-12-4-10-12z"/></svg>';
+
+    return '<article class="pcard pcard--premium" data-slug="' + slug + '">' +
+      '<div class="' + mediaClass + '">' +
+      '<a class="pcard__image-link" href="' + productUrl + '" aria-label="View ' + esc(p.name) + '">' +
+      (imageSrc ? '<img data-pcard-image src="' + esc(imageSrc) + '" alt="' + esc(p.name) + '" loading="lazy">' : '') +
+      '<span class="pcard__fallback">' + placeholderSvg + '<span>Product photo coming soon</span></span></a>' +
       (flags.length ? '<div class="pcard__flags">' + flags.join('') + '</div>' : '') +
-      '<button class="pcard__wish" data-wish="' + p.slug + '" aria-label="Add ' + esc(p.name) + ' to wishlist">' + ic('heart') + '</button>' +
-      '<button class="pcard__quick" data-quick="' + p.slug + '">' + ic('eye') + ' Quick View</button>' +
+      '<button type="button" class="pcard__wish" data-wish="' + slug + '" aria-label="Add ' + esc(p.name) + ' to wishlist">' + ic('heart') + '</button>' +
+      '<span class="pcard__rating-chip" aria-label="' + (rated ? rating.toFixed(1) + ' out of 5 stars, ' + reviewCount + ' reviews' : 'New product') + '">' +
+      (rated ? '<b>' + rating.toFixed(1) + '</b><span aria-hidden="true">★</span>' : '<b>New</b>') + '</span>' +
+      '<button type="button" class="pcard__quick" data-quick="' + slug + '">' + ic('eye') + ' Quick View</button>' +
       '</div>' +
       '<div class="pcard__body">' +
-      (opts.showCat ? '<span class="pcard__cat">' + esc(p.catName) + '</span>' : '') +
-      '<a class="pcard__nm" href="product.html?p=' + p.slug + '">' + esc(p.name) + '</a>' +
+      '<span class="pcard__cat">' + esc(p.catName || p.cat || 'Shanmuga Organics') + '</span>' +
+      '<a class="pcard__nm" href="' + productUrl + '">' + esc(p.name) + '</a>' +
       '<span class="pcard__ta ta">' + esc(p.ta) + '</span>' +
       '<span class="pcard__unit">' + esc(p.unit) + '</span>' +
-      '<div class="pcard__price"><b>' + money(p.price) + '</b><s>' + money(p.mrp) + '</s></div>' +
-      '<div class="pcard__rate">' + stars(p.rating) + '<small>(' + p.reviews + ')</small></div>' +
+      (brief ? '<p class="pcard__intro">' + esc(brief) + '</p>' : '') +
+      '<div class="pcard__buyrow"><div class="pcard__price"><b>' + money(p.price) + '</b>' +
+      (validMrp ? '<s>' + money(p.mrp) + '</s>' : '') + '</div>' +
       (p.stock
-        ? '<button class="btn btn--primary btn--sm btn--block" data-add="' + p.slug + '">Add to Cart</button>'
-        : '<button class="btn btn--ghost btn--sm btn--block" disabled>Notify Me</button>') +
-      '</div></article>';
+        ? '<button type="button" class="btn btn--primary btn--sm pcard__cta" data-add="' + slug + '">Add to Cart ' + ic('arrowR') + '</button>'
+        : '<button type="button" class="btn btn--ghost btn--sm pcard__cta" disabled>Out of Stock</button>') +
+      '</div></div></article>';
   }
+
+  // Handle photo URLs that are missing or not publicly accessible (e.g. a
+  // deleted Supabase Storage file) without showing broken-image icons/alt text.
+  // The capture listener also works for cards rendered after async catalog load.
+  document.addEventListener('error', function (event) {
+    var target = event.target;
+    if (!target || !target.matches || !target.matches('img[data-pcard-image]')) return;
+    var media = target.closest('.pcard__media');
+    if (media) {
+      media.classList.add('is-image-missing');
+      target.hidden = true;
+    }
+  }, true);
 
   /* ------------------------------------------------------------ carousel --- */
   function carousel(root) {

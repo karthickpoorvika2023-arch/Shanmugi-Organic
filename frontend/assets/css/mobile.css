@@ -566,3 +566,12 @@
   object-fit: contain;
   padding: 10%;
 }
+
+
+/* V6 premium portrait product cards — override earlier two-column mobile rules. */
+@media (max-width: 700px) {
+  body .pgrid.pgrid--3, body .pgrid.pgrid--4 { grid-template-columns: 1fr; gap: 19px; }
+  body .pgrid .pcard.pcard--premium { padding: 0; }
+  body .pgrid .pcard.pcard--premium .pcard__media img[data-pcard-image] { height: 100%; }
+  body .pgrid .pcard.pcard--premium .pcard__cta { padding-inline: 16px; }
+}

@@ -4706,3 +4706,262 @@ html.lang-ta .mainnav .navlink > span {
   font-weight: 600 !important;
   white-space: nowrap;
 }
+
+
+/* =======================================================================
+   SHANMUGA PREMIUM PRODUCT CARDS — NOV 2026 V6
+   Presentation-only styles. Shared app.js hooks continue to own cart/wishlist.
+   ======================================================================= */
+.pgrid .pcard.pcard--premium {
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dde9de;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 7px 20px rgba(26, 61, 42, .045);
+  isolation: isolate;
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.pgrid .pcard.pcard--premium:hover {
+  transform: translateY(-4px);
+  border-color: #b9d9c2;
+  box-shadow: 0 17px 36px rgba(25, 68, 42, .12);
+}
+.pcard--premium .pcard__media {
+  position: relative;
+  width: 100%;
+  height: 245px;
+  flex: 0 0 245px;
+  border-radius: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at 20% 25%, #f5fbf3 0, transparent 42%),
+              linear-gradient(140deg, #e2f0e8 0%, #edf6f0 48%, #dbeadd 100%);
+}
+.pcard--premium .pcard__media::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.35);
+  top: -115px; right: -106px;
+  pointer-events: none;
+}
+.pcard--premium .pcard__image-link {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset: 0;
+  padding: 17px 22px 11px;
+  z-index: 1;
+}
+.pgrid .pcard.pcard--premium .pcard__media img[data-pcard-image] {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  transition: transform .35s ease;
+  filter: drop-shadow(0 9px 10px rgba(12, 53, 27, .1));
+}
+.pgrid .pcard.pcard--premium:hover .pcard__media img[data-pcard-image] { transform: scale(1.045); }
+.pgrid .pcard.pcard--premium .pcard__media img[hidden] { display: none !important; }
+.pcard--premium .pcard__fallback {
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  text-align: center;
+  color: #83a58d;
+  position: absolute; inset: 0;
+  padding: 25px;
+}
+.pcard--premium .pcard__fallback svg { width: 76px; height: 86px; }
+.pcard--premium .pcard__fallback span { font-size: 12px; color: #50735c; }
+.pcard--premium .pcard__media.is-image-missing .pcard__fallback { display: flex; }
+.pcard--premium .pcard__flags {
+  position: absolute; z-index: 3;
+  left: 14px; top: 14px;
+  gap: 6px;
+}
+.pcard--premium .pcard__flags .flag {
+  font-size: 10px;
+  font-weight: 750;
+  padding: 5px 10px;
+  line-height: 1.2;
+  border-radius: 9px;
+  box-shadow: 0 3px 9px rgba(20,58,31,.12);
+}
+.pcard--premium .pcard__wish {
+  position: absolute;
+  z-index: 4;
+  top: 14px; right: 14px;
+  height: 42px; width: 42px;
+  border: 1px solid #fff;
+  box-shadow: 0 5px 15px rgba(20,49,35,.1);
+  background: #fff;
+  color: #cd6570;
+  opacity: 1;
+  transform: none;
+  transition: background .2s ease, transform .2s ease;
+}
+.pcard--premium .pcard__wish:hover { background: #fff8f9; transform: scale(1.04); }
+.pcard--premium .pcard__wish svg { height: 21px; width: 21px; }
+.pcard--premium .pcard__rating-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  z-index: 3;
+  left: 15px; bottom: 37px;
+  background: #fff;
+  color: #263f30;
+  border-radius: 30px;
+  padding: 6px 11px;
+  font-size: 13px;
+  box-shadow: 0 5px 14px rgba(16,55,28,.09);
+}
+.pcard--premium .pcard__rating-chip b { font-size: 13px; font-weight: 750; }
+.pcard--premium .pcard__rating-chip span { color: #e3a52b; font-size: 17px; line-height: 1; }
+.pcard--premium .pcard__quick { z-index: 4; bottom: 63px; left: 52px; right: 52px; }
+.pgrid .pcard.pcard--premium .pcard__body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: -23px;
+  padding: 27px 20px 19px;
+  text-align: left;
+  background: #fff;
+  border-radius: 44px 30px 0 0;
+}
+.pgrid .pcard.pcard--premium .pcard__cat {
+  color: #49865a;
+  text-transform: uppercase;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 1px;
+  font-weight: 750;
+}
+.pgrid .pcard.pcard--premium .pcard__nm,
+html.lang-ta .pgrid .pcard.pcard--premium .pcard__ta {
+  display: block;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(17px, 1.7vw, 23px);
+  line-height: 1.26;
+  font-weight: 700;
+  color: #263a2b;
+  letter-spacing: -.25px;
+  margin: 6px 0 0;
+  min-height: 0;
+  overflow-wrap: anywhere;
+}
+html.lang-ta .pgrid .pcard.pcard--premium .pcard__ta {
+  font-family: var(--font-ta, 'Noto Sans Tamil', sans-serif);
+  font-size: clamp(16px, 1.55vw, 21px);
+  letter-spacing: 0;
+}
+html.lang-en .pgrid .pcard.pcard--premium .pcard__ta { display: none; }
+html.lang-ta .pgrid .pcard.pcard--premium .pcard__nm { display: none; }
+.pgrid .pcard.pcard--premium .pcard__unit {
+  margin-top: 4px;
+  color: #7a9180;
+  font-size: 12.5px;
+  font-weight: 550;
+}
+.pgrid .pcard.pcard--premium .pcard__intro {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  margin: 11px 0 16px;
+  min-height: 36px;
+  overflow: hidden;
+  color: #627469;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.pgrid .pcard.pcard--premium .pcard__buyrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: auto;
+  min-height: 46px;
+}
+.pgrid .pcard.pcard--premium .pcard__price {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 0 1 auto;
+}
+.pgrid .pcard.pcard--premium .pcard__price b {
+  font-size: clamp(21px, 2vw, 29px);
+  line-height: 1;
+  font-weight: 800;
+  white-space: nowrap;
+  color: #193a26;
+}
+.pgrid .pcard.pcard--premium .pcard__price s { font-size: 11px; color: #9baaa0; }
+.pgrid .pcard.pcard--premium .pcard__cta {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 99px;
+  color: #fff;
+  background: #196c34;
+  box-shadow: 0 5px 12px rgba(20, 106, 50, .17);
+  font-weight: 700;
+  font-size: 11.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pgrid .pcard.pcard--premium .pcard__cta:hover { background: #115726; }
+.pgrid .pcard.pcard--premium .pcard__cta svg { width: 14px; height: 14px; flex: none; }
+.pgrid .pcard.pcard--premium .pcard__cta[disabled] { background: #8eaa98; box-shadow: none; }
+.pcard--premium .pcard__wish:focus-visible,
+.pcard--premium .pcard__cta:focus-visible,
+.pcard--premium .pcard__quick:focus-visible,
+.pcard--premium .pcard__image-link:focus-visible {
+  outline: 3px solid #f0b544;
+  outline-offset: 2px;
+}
+@media (max-width: 1180px) {
+  .pcard--premium .pcard__media { height: 230px; flex-basis: 230px; }
+}
+@media (max-width: 700px) {
+  /* Readable portrait cards, matching the supplied reference rather than
+     squeezing four sections into a narrow two-column mobile product grid. */
+  .pgrid.pgrid--3, .pgrid.pgrid--4 { grid-template-columns: 1fr; gap: 19px; }
+  .pgrid .pcard.pcard--premium { max-width: 540px; width: 100%; margin-inline: auto; border-radius: 28px; }
+  .pcard--premium .pcard__media { height: 270px; flex-basis: 270px; }
+  .pgrid .pcard.pcard--premium .pcard__body { padding: 29px 22px 22px; }
+  .pgrid .pcard.pcard--premium .pcard__nm, html.lang-ta .pgrid .pcard.pcard--premium .pcard__ta { font-size: 23px; }
+  .pgrid .pcard.pcard--premium .pcard__cta { font-size: 14px; min-height: 48px; padding: 12px 16px; }
+}
+@media (max-width: 380px) {
+  .pcard--premium .pcard__media { height: 235px; flex-basis: 235px; }
+  .pgrid .pcard.pcard--premium .pcard__body { padding-inline: 16px; }
+  .pgrid .pcard.pcard--premium .pcard__nm, html.lang-ta .pgrid .pcard.pcard--premium .pcard__ta { font-size: 20px; }
+  .pgrid .pcard.pcard--premium .pcard__cta { font-size: 12.5px; padding-inline: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pgrid .pcard.pcard--premium, .pgrid .pcard.pcard--premium .pcard__media img { transition: none; }
+}
+
