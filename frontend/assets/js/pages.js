@@ -364,6 +364,55 @@
     document.title = p.name + ' — ' + SITE.shop.name;
     A.Recent.push(p.slug);
 
+    // Admin stores translated product content in products.admin_details.
+    // Keep English copy as a fallback when Tamil copy has not been entered.
+    const tamilData = function () {
+      const meta = p.admin_details || p.adminDetails || p.details || {};
+      const text = p.desc_ta || p.description_tamil || p.descTa || meta.desc_ta || meta.description_tamil || '';
+      const lines = p.highlights_ta || p.highlights_tamil || p.highlightsTa || meta.highlights_ta || meta.highlights_tamil || [];
+      return {
+        desc: typeof text === 'string' ? text.trim() : '',
+        highlights: Array.isArray(lines) ? lines.filter(function (s) {
+          return typeof s === 'string' && !!s.trim();
+        }) : []
+      };
+    };
+
+    const isTamil = function () {
+      return document.documentElement.classList.contains('lang-ta');
+    };
+
+    // Change just product copy, rather than rebuilding the whole product
+    // page, so selected size, gallery thumbnail, quantity and tabs stay put.
+    const updateLocalizedCopy = function () {
+      const ta = isTamil();
+      const translated = tamilData();
+      const desc = (ta && translated.desc) ? translated.desc : (p.desc || '');
+      const highlights = (ta && translated.highlights.length)
+        ? translated.highlights : (Array.isArray(p.highlights) ? p.highlights : []);
+
+      const summary = host.querySelector('.pdp__desc');
+      if (summary) summary.textContent = desc;
+      const ticks = host.querySelector('.pdp__ticks');
+      if (ticks) ticks.innerHTML = highlights.map(function (line) {
+        return '<span class="tick">' + ic('check') + esc(line) + '</span>';
+      }).join('');
+
+      const panel = host.querySelector('.tabs__panel[data-panel="d"] .prose');
+      if (panel) {
+        const first = panel.querySelector('p');
+        if (first) first.textContent = desc;
+        const heading = panel.querySelector('h4');
+        if (heading) heading.textContent = ta ? 'முக்கிய சிறப்பம்சங்கள்' : 'What makes it different';
+        const list = panel.querySelector('ul');
+        if (list) list.innerHTML = highlights.map(function (line) {
+          return '<li>' + esc(line) + '</li>';
+        }).join('');
+      }
+      const tab = host.querySelector('.tabs__bar [data-tab="d"]');
+      if (tab) tab.textContent = ta ? 'விளக்கம்' : 'Description';
+    };
+
     let size = p.sizes[0][0];
     /* priceOf and mrpOf: use s[2] for per-size MRP if stored, else fall back to product-level ratio */
     const priceOf = function (s) { return p.sizes.filter(function (z) { return z[0] === s; })[0][1]; };
@@ -515,8 +564,56 @@
       $$('[data-crumb-cat]').forEach(function (el) { el.textContent = p.catName; el.href = 'products.html?cat=' + p.cat; });
       $$('[data-crumb-current]').forEach(function (el) { el.textContent = p.name; });
       A.Wish.sync();
+      updateLocalizedCopy();
     };
     draw();
+
+    // app.js switches the <html> language class when the top-bar button is
+    // clicked. Watch that class so the product copy updates without reload.
+    let lastTamil = isTamil();
+    const languageWatcher = new MutationObserver(function () {
+      const current = isTamil();
+      if (current === lastTamil) return;
+      lastTamil = current;
+      updateLocalizedCopy();
+    });
+    languageWatcher.observe(document.documentElement, {
+      attributes: true, attributeFilter: ['class']
+    });
+
+    // Even if data.js only keeps the English fields, get the public Tamil
+    // fields directly from Supabase (read-only; never changes RLS/settings).
+    (async function loadSavedTamilCopy() {
+      const existing = tamilData();
+      if (existing.desc && existing.highlights.length) return;
+      try {
+        if (typeof window.__soEnsureSupabase === 'function') {
+          await window.__soEnsureSupabase();
+        }
+        let translated = null;
+        if (window.SupabaseAdapter && typeof window.SupabaseAdapter.loadProductTamil === 'function') {
+          translated = await window.SupabaseAdapter.loadProductTamil(p.slug);
+        }
+        if (!translated) {
+          const client = window.SupabaseClient;
+          if (client && typeof client.from === 'function') {
+            const result = await client.from('products')
+              .select('admin_details').eq('slug', p.slug).maybeSingle();
+            if (!result.error && result.data) translated = result.data.admin_details;
+          }
+        }
+        if (!translated || typeof translated !== 'object') return;
+        if (!existing.desc && typeof translated.desc_ta === 'string') {
+          p.desc_ta = translated.desc_ta;
+        }
+        if (!existing.highlights.length && Array.isArray(translated.highlights_ta)) {
+          p.highlights_ta = translated.highlights_ta;
+        }
+        updateLocalizedCopy();
+      } catch (error) {
+        console.warn('[Product language] Tamil copy unavailable; English fallback remains.', error);
+      }
+    })();
 
     host.addEventListener('click', function (e) {
       const s = e.target.closest('[data-size]');
