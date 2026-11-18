@@ -17,7 +17,7 @@ Deno.serve(async req => {
   const extraOrigins = env('ADMIN_ALLOWED_ORIGINS').split(',').map(s => s.trim()).filter(Boolean);
   const allowedOrigin = !origin || localOrigin || [...defaultOrigins, ...extraOrigins].includes(origin);
   const url = new URL(req.url);
-  const isAdminAction = /^\/admin-(check|payments|orders|customers|categories|category-upsert|category-delete)$/.test(
+  const isAdminAction = /^\/admin-(check|payments|orders|customers|categories|category-upsert|category-delete|products|product-upsert|product-delete)$/.test(
     url.pathname.replace(/^.*\/demo-payment-kit/, '')
   );
   // Never expose demo checkout to hosted origins.
@@ -38,6 +38,108 @@ Deno.serve(async req => {
     if (!admin) return reply({ error: 'Approved admin access required' }, 403, cors);
 
     if (url.pathname.endsWith('/admin-check')) return reply({ admin: true, mode: 'demo' }, 200, cors);
+    // ADMIN PRODUCTS: every request runs AFTER getUser() + ownpay_payment_admins check.
+    if (url.pathname.endsWith('/admin-products')) {
+      const { data, error } = await client.from('products')
+        .select('id,slug,name,category_slug,price,unit,in_stock,image_url,description,mrp,admin_details')
+        .order('name', { ascending: true }).limit(500);
+      if (error) { console.error('[admin-products] list', error); return reply({ error: 'Could not load products (' + error.code + ')' }, 500, cors); }
+      return reply({ products: data || [] }, 200, cors);
+    }
+    if (url.pathname.endsWith('/admin-product-upsert')) {
+      const raw = await req.text();
+      if (raw.length > 2600000) return reply({ error: 'Product images are too large. Use at most 5 compressed images.' }, 413, cors);
+      let body: { product?: Record<string, unknown>; originalSlug?: string | null };
+      try { body = JSON.parse(raw); } catch { return reply({ error: 'Invalid product JSON' }, 400, cors); }
+      const p = body?.product;
+      if (!p || typeof p !== 'object') return reply({ error: 'Missing product' }, 400, cors);
+      const name = safe(p.name, 150);
+      const slug = safe(p.slug, 90);
+      const category_slug = safe(p.cat, 90);
+      const unit = safe(p.unit, 60);
+      if (!name || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ||
+          !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(category_slug) || !unit)
+        return reply({ error: 'Product name, slug, category, and size are required' }, 400, cors);
+      const price = Number(p.price);
+      const mrp = Number(p.mrp ?? p.price);
+      if (!Number.isFinite(price) || price <= 0 || price > 10000000 ||
+          !Number.isFinite(mrp) || mrp < 0 || mrp > 10000000)
+        return reply({ error: 'Invalid price or MRP' }, 400, cors);
+      if (!Array.isArray(p.sizes) || !p.sizes.length || p.sizes.length > 20)
+        return reply({ error: 'Provide 1 to 20 size variants' }, 400, cors);
+      const sizes: [string, number, number][] = [];
+      for (const s of p.sizes) {
+        if (!Array.isArray(s) || s.length < 3) return reply({ error: 'Invalid size row' }, 400, cors);
+        const label = safe(s[0], 60), cost = Number(s[1]), max = Number(s[2]);
+        if (!label || !Number.isFinite(cost) || cost <= 0 || cost > 10000000 ||
+            !Number.isFinite(max) || max < 0 || max > 10000000)
+          return reply({ error: 'Invalid size price' }, 400, cors);
+        sizes.push([label, cost, max]);
+      }
+      if (sizes[0][0] !== unit || sizes[0][1] !== price || sizes[0][2] !== mrp)
+        return reply({ error: 'First size must match primary unit, price and MRP' }, 400, cors);
+      const { data: category, error: categoryError } = await client.from('categories')
+        .select('id').eq('slug', category_slug).maybeSingle();
+      if (categoryError || !category) return reply({ error: 'Category not found in Supabase' }, 400, cors);
+      const validImage = (value: unknown) => typeof value === 'string' &&
+        value.length <= 420000 &&
+        /^(?:data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+|https:\/\/[^\s]+|assets\/img\/[A-Za-z0-9_./-]+)$/.test(value);
+      if (!Array.isArray(p.images) || p.images.length > 5 ||
+          p.images.some(item => !validImage(item)) ||
+          p.images.reduce((sum: number, item: string) => sum + item.length, 0) > 1900000)
+        return reply({ error: 'Please use up to five compressed product images' }, 400, cors);
+      const img = typeof p.img === 'string' ? p.img : '';
+      if (img && !validImage(img)) return reply({ error: 'Invalid main product image' }, 400, cors);
+      const hl = Array.isArray(p.highlights) ? p.highlights : [];
+      if (hl.length > 10 || hl.some(item => typeof item !== 'string' || item.length > 200))
+        return reply({ error: 'Invalid highlights' }, 400, cors);
+      // Tamil text is optional, separately validated, and stored in admin_details JSONB.
+      const hlTa = Array.isArray(p.highlights_ta) ? p.highlights_ta : [];
+      if (hlTa.length > 10 || hlTa.some(item => typeof item !== 'string' || item.length > 200))
+        return reply({ error: 'Invalid Tamil highlights' }, 400, cors);
+      const rating = Number(p.rating);
+      const details = {
+        ta: safe(p.ta, 150), badge: safe(p.badge, 80),
+        desc_ta: safe(p.desc_ta, 10000), highlights_ta: hlTa.map(item => item.trim()).filter(Boolean),
+        images: p.images, img, sizes,
+        highlights: hl, rating: Number.isFinite(rating) ? Math.max(1, Math.min(5, rating)) : 4.5,
+        reviews: Math.max(0, Math.min(1000000, Number(p.reviews) || 0)),
+        custom: p.custom === true
+      };
+      const payload = { name, slug, category_slug, price, mrp, unit,
+        in_stock: p.stock !== false, image_url: img || null,
+        description: safe(p.desc, 10000), admin_details: details };
+      const columns = 'id,slug,name,category_slug,price,unit,in_stock,image_url,description,mrp,admin_details';
+      const originalSlug = safe(body?.originalSlug, 90);
+      if (originalSlug) {
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(originalSlug) || originalSlug !== slug)
+          return reply({ error: 'Changing product slugs is not supported' }, 400, cors);
+        const { data, error } = await client.from('products').update(payload)
+          .eq('slug', originalSlug).select(columns).maybeSingle();
+        if (error) { console.error('[admin-products] update', error); return reply({ error: 'Product update failed (' + error.code + ')' }, 500, cors); }
+        if (!data) return reply({ error: 'Product not found; refresh the page' }, 404, cors);
+        return reply({ product: data }, 200, cors);
+      }
+      const { data, error } = await client.from('products').insert(payload).select(columns).single();
+      if (error) { console.error('[admin-products] insert', error);
+        return reply({ error: error.code === '23505' ? 'Product slug already exists' : 'Product insert failed (' + error.code + ')' }, error.code === '23505' ? 409 : 500, cors); }
+      return reply({ product: data }, 201, cors);
+    }
+    if (url.pathname.endsWith('/admin-product-delete')) {
+      const raw = await req.text();
+      if (raw.length > 1000) return reply({ error: 'Request too large' }, 413, cors);
+      let body: { slug?: string };
+      try { body = JSON.parse(raw); } catch { return reply({ error: 'Invalid JSON' }, 400, cors); }
+      const slug = safe(body?.slug, 90);
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return reply({ error: 'Invalid product slug' }, 400, cors);
+      // Foreign-key constraints protect sold products. Do not cascade-delete order history.
+      const { data, error } = await client.from('products').delete().eq('slug', slug).select('id').maybeSingle();
+      if (error) { console.error('[admin-products] delete', error);
+        return reply({ error: error.code === '23503' ? 'Product has related records and cannot be deleted.' : 'Product delete failed (' + error.code + ')' }, error.code === '23503' ? 409 : 500, cors); }
+      if (!data) return reply({ error: 'Product not found; refresh the page' }, 404, cors);
+      return reply({ deleted: true, slug }, 200, cors);
+    }
+
     // All category endpoints run after getUser() + ownpay_payment_admins verification.
     // No PUBLIC/anon/authenticated write grant is required on public.categories.
     if (url.pathname.endsWith('/admin-categories')) {
