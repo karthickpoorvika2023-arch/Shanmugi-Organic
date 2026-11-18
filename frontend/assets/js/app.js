@@ -548,9 +548,12 @@
     const prev = $('[data-car-prev]', root);
     const next = $('[data-car-next]', root);
     if (!track) return;
-    const per = parseInt(root.getAttribute('data-per') || '8', 10);
+    const desktopPer = parseInt(root.getAttribute('data-per') || '8', 10);
+    const perPage = function () {
+      return window.innerWidth <= 540 ? 2 : window.innerWidth <= 1180 ? Math.min(3, desktopPer) : desktopPer;
+    };
     let page = 0;
-    const pages = function () { return Math.max(1, Math.ceil(track.children.length / per)); };
+    const pages = function () { return Math.max(1, Math.ceil(track.children.length / perPage())); };
     const apply = function () {
       page = clamp(page, 0, pages() - 1);
       track.style.transform = 'translateX(' + (-page * 100) + '%)';
@@ -559,6 +562,7 @@
     };
     if (prev) prev.addEventListener('click', function () { page--; apply(); });
     if (next) next.addEventListener('click', function () { page++; apply(); });
+    window.addEventListener('resize', apply);
     apply();
     return { apply: apply };
   }
@@ -670,14 +674,16 @@
       '<header class="masthead"><div class="container masthead__in">' +
       '<a class="brand" href="index.html">' +
       '<img class="brand__logo" src="assets/img/logo.png" alt="Shanmuga Organics"></a>' +
+      '<button class="mobile-menu-toggle" type="button" data-mobile-menu aria-controls="so-mobile-nav" aria-expanded="false" aria-label="Open navigation menu">' +
+      '<span aria-hidden="true">☰</span><span class="sr-only">Menu</span></button>' +
 
-      '<nav class="mainnav" aria-label="Main"><div class="mainnav__in">' +
+      '<nav class="mainnav" id="so-mobile-nav" aria-label="Main"><div class="mainnav__in">' +
       NAV.map(function (n) {
         return '<div class="navitem' + (n.key === active ? ' is-active' : '') + (n.drop ? ' navitem--drop' : '') + '">' +
           '<a class="navlink" href="' + n.href + '"><b>' + n.label + '</b><span>' + n.ta + '</span></a>' +
           (n.drop === 'products' ? megaProducts() : n.drop === 'cats' ? megaCats() : '') + '</div>';
       }).join('') +
-      '</div></nav>' +
+      '</div><div class="mobile-nav-extras"><a href="categories.html">All Categories</a><a href="store-locator.html">Store Locator</a><a href="track-order.html">Track Order</a><a href="bulk-enquiry.html">Wholesale Enquiry</a></div></nav>' +
 
       '<form class="searchbar" role="search" data-search>' +
       '<span class="searchbar__field">' + ic('search') +
@@ -1007,6 +1013,28 @@
   }
 
   /* ----------------------------------------------------------- bootstrap --- */
+  function wireMobileMenu() {
+    const button = document.querySelector('[data-mobile-menu]');
+    const header = button && button.closest('.masthead');
+    const nav = header && header.querySelector('.mainnav');
+    if (!button || !header || !nav) return;
+    function setOpen(open) {
+      header.classList.toggle('menu-open', !!open);
+      button.setAttribute('aria-expanded', String(!!open));
+      button.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+      button.querySelector('[aria-hidden]').textContent = open ? '✕' : '☰';
+    }
+    button.addEventListener('click', function () { setOpen(!header.classList.contains('menu-open')); });
+    document.addEventListener('click', function (e) {
+      if (header.classList.contains('menu-open') && !nav.contains(e.target) && !button.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    nav.addEventListener('click', function (e) {
+      if (e.target.closest('a')) setOpen(false);
+    });
+    window.addEventListener('resize', function () { if (window.innerWidth > 1180) setOpen(false); });
+  }
+
   function mount(active) {
     /* Each step is isolated so one failing feature (e.g. search, cart,
        auth) can never kill the rest of the page — most importantly the
@@ -1022,6 +1050,7 @@
       const f = $('[data-shell="footer"]');
       if (f) f.innerHTML = footerHTML();
     });
+    safe('mobile menu', wireMobileMenu);
     safe('search', function () { $$('[data-search]').forEach(wireSearch); });
     safe('lang', applyLang);
     safe('cart', function () { Cart.sync(); });

@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1240">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>All Products — Shanmuga Organics</title>
 <meta name="description" content="Browse every Shanmuga Organics product — cold pressed oils, traditional rice, millets, flours, health mixes, herbal soaps, pickles, ghee and honey.">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=mobile-20261118">
+<link rel="stylesheet" href="assets/css/mobile.css?v=mobile-20261118">
 </head>
 <body data-page="products">
 
@@ -30,7 +31,8 @@
   <div class="container shoplayout">
 
     <!-- ================================================== filters ======== -->
-    <aside class="filters" data-filters>
+    <button type="button" class="mobile-filter-toggle" data-mobile-filter-toggle aria-expanded="false" aria-controls="so-product-filters">☷ Show product filters / வடிகட்டி</button>
+    <aside class="filters" data-filters id="so-product-filters">
       <div class="fbox">
         <h5>Search in products</h5>
         <div class="fbox__in">
@@ -126,8 +128,8 @@
 <div data-shell="footer"></div>
 
 <script src="assets/js/data.js"></script>
-<script src="assets/js/app.js"></script>
-<script src="assets/js/pages.js"></script>
+<script src="assets/js/app.js?v=mobile-20261118"></script>
+<script src="assets/js/pages.js?v=mobile-20261118"></script>
 <script>App.init('products');</script>
   <script src="plugins/cms/content-cms.js?v=1"></script>
 </body>

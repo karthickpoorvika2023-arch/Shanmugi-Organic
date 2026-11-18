@@ -81,9 +81,9 @@
       if (slides) {
         try {
           const total = SITE.categories.length;
-          const visible = 5;
-          const maxOff = total - visible;
-          if (maxOff > 0) {
+          // Match the visible circle count to the CSS breakpoint.
+          const getVisible = function () { return window.innerWidth <= 540 ? 2 : window.innerWidth <= 1180 ? 3 : 5; };
+          if (total > 2) {
             /* the arrows live in .catrail-wrap — the same width as the rail, so
                nothing about the animation crosses the banner's edges */
             let zone = host.closest('.catrail-wrap');
@@ -109,16 +109,21 @@
 
             let off = 0, timer = null;
             const paint = function () {
-              /* one step = one tile width (1/visible of the track) */
+              const visible = getVisible();
+              const maxOff = Math.max(0, total - visible);
+              off = Math.min(off, maxOff);
+              // The flex track width is the rail width, so percentages use the
+              // actual number of cards visible at the current viewport.
               track.style.transform = 'translateX(-' + (off * (100 / visible)) + '%)';
               btnL.classList.toggle('is-off', off === 0);
               btnR.classList.toggle('is-off', off === maxOff);
             };
-            const start = function () { stop(); timer = setInterval(function () { off = off >= maxOff ? 0 : off + 1; paint(); }, 3500); };
+            const start = function () { stop(); timer = setInterval(function () { off = off >= Math.max(0, total - getVisible()) ? 0 : off + 1; paint(); }, 3500); };
             const stop = function () { clearInterval(timer); };
 
             btnL.addEventListener('click', function () { if (off > 0) { off--; paint(); } });
-            btnR.addEventListener('click', function () { if (off < maxOff) { off++; paint(); } });
+            btnR.addEventListener('click', function () { if (off < Math.max(0, total - getVisible())) { off++; paint(); } });
+            window.addEventListener('resize', paint);
             zone.addEventListener('mouseenter', stop);
             zone.addEventListener('mouseleave', start);
             paint();
@@ -172,6 +177,15 @@
 
   /* ========================================================= products ==== */
   function products() {
+    const filterBtn = document.querySelector('[data-mobile-filter-toggle]');
+    const filterPanel = document.querySelector('[data-filters]');
+    if (filterBtn && filterPanel) {
+      filterBtn.addEventListener('click', function () {
+        const open = filterPanel.classList.toggle('is-open');
+        filterBtn.setAttribute('aria-expanded', String(open));
+        filterBtn.textContent = open ? '✕ Hide product filters / மூடு' : '☷ Show product filters / வடிகட்டி';
+      });
+    }
     const priceCeiling = Math.max(1000, Math.ceil(Math.max.apply(Math, SITE.products.map(function (p) { return Number(p.price) || 0; })) / 100) * 100, parseInt(qs('max') || '0', 10) || 0);
     const state = {
       cats: qs('cat') ? [qs('cat')] : [],
