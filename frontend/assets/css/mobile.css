@@ -287,3 +287,119 @@
   .news__perks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 13px; }
   .news__perk { min-width: 0; }
 }
+
+
+/* ========================================================================
+   HOME MOBILE POLISH — Bestsellers / footer / icon spacing — Nov 2026 v3
+   Limits bestseller layout changes to the home page and phone-sized screens.
+   ======================================================================== */
+@media (max-width: 700px) {
+  /* BESTSELLERS: keep each heading on one line, move the action below it. */
+  .home-bestsellers .sec-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 9px;
+    margin-bottom: 17px;
+  }
+  .home-bestsellers .sec-head > div { min-width: 0; }
+  .home-bestsellers .sec-title {
+    font-size: clamp(19px, 5.6vw, 25px);
+    line-height: 1.25;
+    letter-spacing: -.35px;
+    white-space: nowrap;
+  }
+  .home-bestsellers .sec-sub {
+    font-size: clamp(11.5px, 3.35vw, 14px);
+    line-height: 1.5;
+    letter-spacing: -.15px;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+  .home-bestsellers .sec-head .linkish {
+    justify-self: start;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  /* One full-width bestseller card per row on phones, not a 2-column grid. */
+  .home-bestsellers .pgrid[data-rail="bestseller"] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .home-bestsellers .pcard {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+  }
+  .home-bestsellers .pgrid .pcard__media img {
+    height: clamp(175px, 52vw, 240px);
+    object-fit: contain;
+  }
+  /* FOOTER: original fixed 36px height cut off second line on mobile. */
+  .footbar { margin-top: 20px; }
+  .footbar__in {
+    height: auto;
+    min-height: 0;
+    padding-block: 14px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .footbar__in > span {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  /* HEADER: keep wishlist, cart, profile and hamburger distinct. */
+  .masthead__in {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 13px;
+  }
+  .masthead__in .utilities { margin: 0; gap: 0; min-width: 0; }
+  .masthead__in .utilities .auth-items {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 13px;
+  }
+  .masthead__in .utilities .auth-items > .util {
+    flex: 0 0 32px;
+    width: 32px;
+    min-width: 32px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+    align-content: center;
+  }
+  .masthead__in .utilities .util__ic {
+    width: 26px;
+    height: 26px;
+  }
+  .masthead__in .utilities .util__badge {
+    top: -7px;
+    right: -8px;
+  }
+  .mobile-menu-toggle {
+    width: 42px;
+    height: 42px;
+    margin-left: 1px;
+    flex-shrink: 0;
+  }
+}
+@media (max-width: 360px) {
+  .masthead__in { column-gap: 9px; }
+  .masthead__in .utilities .auth-items { gap: 9px; }
+  .masthead__in .utilities .auth-items > .util {
+    flex-basis: 29px; width: 29px; min-width: 29px;
+  }
+  .mobile-menu-toggle { width: 36px; height: 40px; }
+  .home-bestsellers .sec-title { font-size: 18px; }
+  .home-bestsellers .sec-sub { font-size: 11px; }
+}
