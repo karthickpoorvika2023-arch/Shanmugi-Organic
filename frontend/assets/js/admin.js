@@ -508,6 +508,32 @@
   }
 
   /* ============================================================ MODAL */
+  /* Product form safety guard (2026-11-18 v2).
+     Some deployments or other page scripts may still have a document-level
+     outside-click handler. Capture those clicks at WINDOW before they reach
+     document/overlay handlers. Never discard an unfinished product form.
+     Explicit Cancel/X buttons and a successful Supabase Save remain available. */
+  window.__shanmugaModalGuardVersion = '20261118-v2';
+  function blockProductModalBackdropEvent(event) {
+    var activeOverlay = document.querySelector('.modal-overlay.is-open');
+    if (!activeOverlay || !activeOverlay.querySelector('#pName')) return;
+    var dialog = activeOverlay.querySelector('.modal');
+    if (dialog && !dialog.contains(event.target)) {
+      if (event.cancelable) event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }
+  ['pointerdown', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'].forEach(function (eventName) {
+    window.addEventListener(eventName, blockProductModalBackdropEvent, true);
+  });
+  window.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    var activeOverlay = document.querySelector('.modal-overlay.is-open');
+    if (!activeOverlay || !activeOverlay.querySelector('#pName')) return;
+    if (event.cancelable) event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+
   function openModal(title, bodyHTML, onSave, saveLabel) {
     var old = $('.modal-overlay'); if (old) old.remove();
     var wrap = document.createElement('div');
@@ -525,6 +551,13 @@
         '</div>' : '') +
       '</div>';
     document.body.appendChild(wrap);
+    // The grey/blurred backdrop must be inert. Stop delegated outside-click handlers.
+    wrap.addEventListener('click', function (event) {
+      if (event.target === wrap) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    });
     wrap.querySelectorAll('[data-close]').forEach(function (b) {
       b.addEventListener('click', function () { wrap.remove(); });
     });
