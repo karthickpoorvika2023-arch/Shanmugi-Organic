@@ -568,10 +568,14 @@
 }
 
 
-/* V6 premium portrait product cards — override earlier two-column mobile rules. */
+/* V7 target-reference cards: one full-width card per mobile row. */
 @media (max-width: 700px) {
-  body .pgrid.pgrid--3, body .pgrid.pgrid--4 { grid-template-columns: 1fr; gap: 19px; }
-  body .pgrid .pcard.pcard--premium { padding: 0; }
-  body .pgrid .pcard.pcard--premium .pcard__media img[data-pcard-image] { height: 100%; }
-  body .pgrid .pcard.pcard--premium .pcard__cta { padding-inline: 16px; }
+  body .pgrid.pgrid--3, body .pgrid.pgrid--4 {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  body .pgrid .pcard.pcard--ref { padding: 0; width: 100%; }
+  body .pgrid .pcard.pcard--ref .pcard__image-link img[data-pcard-image] {
+    height: 100%;
+  }
 }

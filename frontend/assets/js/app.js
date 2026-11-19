@@ -518,47 +518,48 @@
   /* -------------------------------------------------------- product card --- */
   function card(p, opts) {
     opts = opts || {};
-    const flags = [];
-    if (p.badge) flags.push('<span class="flag' + (p.badge === 'New' ? ' flag--new' : '') + '">' + esc(p.badge) + '</span>');
-    if (Number(p.off) >= 12) flags.push('<span class="flag flag--sale">' + Math.round(Number(p.off)) + '% OFF</span>');
-    if (!p.stock) flags.push('<span class="flag flag--out">Out of stock</span>');
-
-    // All storefront grids share this component; keep existing data-* hooks so
-    // cart, wishlist, Quick View and Supabase-driven products work unchanged.
+    // The same product card is used on Home, About and Products listing pages.
+    // Keep the original data-* action hooks; design changes do not change cart data.
     const slug = esc(p.slug || '');
     const productUrl = 'product.html?p=' + encodeURIComponent(p.slug || '');
     const imageSrc = String(p.img || '').trim();
     const rating = Number(p.rating || 0);
-    const reviewCount = Math.max(0, Number(p.reviews || 0));
     const rated = Number.isFinite(rating) && rating > 0;
-    const validMrp = Number(p.mrp) > Number(p.price);
+    const off = Number(p.off || 0);
+    const hasSale = Number.isFinite(off) && off > 0;
     const brief = String(p.desc || '').trim();
     const mediaClass = 'pcard__media' + (imageSrc ? '' : ' is-image-missing');
     const placeholderSvg = '<svg viewBox="0 0 80 88" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M29 12h22v10l7 9v41a7 7 0 0 1-7 7H29a7 7 0 0 1-7-7V31l7-9z"/><path d="M29 13V8h22v5M22 39h36M22 65h36"/><path d="M40 48c-7 1-10 5-9 12 9 0 13-5 9-12zm0 0c6 1 11 6 10 12-7 0-12-4-10-12z"/></svg>';
+    // The frame follows the reference: rounded green outline and angled lower-left notch.
+    const frame = '<svg class="pcard__frame" viewBox="0 0 560 520" preserveAspectRatio="none" aria-hidden="true">' +
+      '<path d="M58 7 H502 Q548 7 548 56 V476 H210 L174 508 H14 V57 Q14 7 58 7 Z"/>' +
+      '</svg>';
+    const actionArrow = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H19V14M19 5l-10 10"/><path d="M19 15v4H5V5h5"/></svg>';
+    const badge = !p.stock ? 'Out of Stock' : hasSale ? Math.round(off) + '% OFF' : p.badge ? esc(p.badge) : '';
+    const badgeClass = !p.stock ? ' pcard__badge--out' : hasSale ? ' pcard__badge--sale' : '';
 
-    return '<article class="pcard pcard--premium" data-slug="' + slug + '">' +
-      '<div class="' + mediaClass + '">' +
+    return '<article class="pcard pcard--ref" data-slug="' + slug + '">' +
+      '<div class="' + mediaClass + '">' + frame +
       '<a class="pcard__image-link" href="' + productUrl + '" aria-label="View ' + esc(p.name) + '">' +
       (imageSrc ? '<img data-pcard-image src="' + esc(imageSrc) + '" alt="' + esc(p.name) + '" loading="lazy">' : '') +
       '<span class="pcard__fallback">' + placeholderSvg + '<span>Product photo coming soon</span></span></a>' +
-      (flags.length ? '<div class="pcard__flags">' + flags.join('') + '</div>' : '') +
+      (badge ? '<span class="pcard__badge' + badgeClass + '">' + badge + '</span>' : '') +
       '<button type="button" class="pcard__wish" data-wish="' + slug + '" aria-label="Add ' + esc(p.name) + ' to wishlist">' + ic('heart') + '</button>' +
-      '<span class="pcard__rating-chip" aria-label="' + (rated ? rating.toFixed(1) + ' out of 5 stars, ' + reviewCount + ' reviews' : 'New product') + '">' +
+      '<span class="pcard__rating-chip" aria-label="' + (rated ? rating.toFixed(1) + ' out of 5 stars' : 'New product') + '">' +
       (rated ? '<b>' + rating.toFixed(1) + '</b><span aria-hidden="true">★</span>' : '<b>New</b>') + '</span>' +
       '<button type="button" class="pcard__quick" data-quick="' + slug + '">' + ic('eye') + ' Quick View</button>' +
       '</div>' +
       '<div class="pcard__body">' +
       '<span class="pcard__cat">' + esc(p.catName || p.cat || 'Shanmuga Organics') + '</span>' +
+      '<div class="pcard__headline"><div class="pcard__namewrap">' +
       '<a class="pcard__nm" href="' + productUrl + '">' + esc(p.name) + '</a>' +
-      '<span class="pcard__ta ta">' + esc(p.ta) + '</span>' +
-      '<span class="pcard__unit">' + esc(p.unit) + '</span>' +
-      (brief ? '<p class="pcard__intro">' + esc(brief) + '</p>' : '') +
-      '<div class="pcard__buyrow"><div class="pcard__price"><b>' + money(p.price) + '</b>' +
-      (validMrp ? '<s>' + money(p.mrp) + '</s>' : '') + '</div>' +
-      (p.stock
-        ? '<button type="button" class="btn btn--primary btn--sm pcard__cta" data-add="' + slug + '">Add to Cart ' + ic('arrowR') + '</button>'
-        : '<button type="button" class="btn btn--ghost btn--sm pcard__cta" disabled>Out of Stock</button>') +
-      '</div></div></article>';
+      '<span class="pcard__ta ta">' + esc(p.ta || '') + '</span>' +
+      '</div><div class="pcard__price"><b>' + money(p.price) + '</b></div></div>' +
+      '<span class="pcard__unit">' + esc(p.unit || '') + '</span>' +
+      (brief ? '<p class="pcard__intro">' + esc(brief) + '</p>' : '<p class="pcard__intro"></p>') +
+      (p.stock ? '<button type="button" class="btn btn--primary pcard__cta" data-add="' + slug + '"><span>Add to Cart</span>' + actionArrow + '</button>' :
+        '<button type="button" class="btn btn--ghost pcard__cta" disabled><span>Out of Stock</span></button>') +
+      '</div></article>';
   }
 
   // Handle photo URLs that are missing or not publicly accessible (e.g. a
