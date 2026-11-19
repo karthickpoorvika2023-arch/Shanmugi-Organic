@@ -988,13 +988,19 @@
       '</div>' +
       '<div class="p-img-preview" style="display:' + (v ? 'block' : 'none') + ';position:relative;border-radius:10px;overflow:hidden;border:1px solid #e2e8e0">' +
       /* white canvas behind the preview — a transparent PNG must never show a page/dark colour */
-      '<img class="p-img-thumb" src="' + v + '" style="width:100%;height:110px;object-fit:cover;background:#ffffff;display:block" alt="Preview">' +
+      '<img class="p-img-thumb" src="' + v + '" style="width:100%;height:110px;object-fit:contain;background:#f2fbed;display:block;transform-origin:center center" alt="Preview">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;background:#f8f9f6">' +
       '<span class="p-img-info" style="flex:1;min-width:0;font-size:10px;color:#6f7d72;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Image loaded</span>' +
       '<span style="display:flex;align-items:center;gap:4px;flex:none">' +
       '<button type="button" class="p-img-white" style="font-size:10.5px;font-weight:600;color:#2f8f43;background:#eef7ea;border:1px solid #cfe6c4;border-radius:6px;cursor:pointer;padding:3px 7px;white-space:nowrap" title="Replace a black background with white">White BG</button>' +
       '<button type="button" class="p-img-remove" style="font-size:11px;font-weight:600;color:#dc3545;background:none;border:none;cursor:pointer;padding:2px 4px" title="Remove image">✕</button>' +
       '</span>' +
+      '</div>' +
+      '<div class="p-img-sizing" style="padding:7px 8px 9px;background:#fff;border-top:1px solid #e2e8e0">' +
+      '<label style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;color:#176b37">Photo size <span class="p-img-size-value">100%</span></label>' +
+      '<input type="range" class="p-img-size" min="55" max="100" step="5" value="100" style="width:100%;accent-color:#176b37" aria-label="Adjust photo size">' +
+      '<button type="button" class="p-img-apply-size" style="display:block;width:100%;padding:5px 7px;background:#176b37;color:white;border:0;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600">Apply Size</button>' +
+      '<small style="display:block;font-size:9px;color:#6f7d72;margin-top:4px">Press Save Product after applying</small>' +
       '</div></div></div>';
   }
 
@@ -1097,19 +1103,28 @@
     return probe.toDataURL(type).indexOf('data:' + type + ';') === 0;
   }
 
-  function encodeImage(canvas, maxKB) {
-    var plan = canEncode('image/webp')
-      ? [['image/webp', 0.92], ['image/webp', 0.85], ['image/webp', 0.78], ['image/webp', 0.7],
-         ['image/jpeg', 0.9], ['image/jpeg', 0.82], ['image/jpeg', 0.74]]
-      : [['image/jpeg', 0.94], ['image/jpeg', 0.88], ['image/jpeg', 0.82], ['image/jpeg', 0.74]];
+  function encodeImage(canvas, maxKB, preserveAlpha) {
+    var plan;
+    if (preserveAlpha) {
+      /* Never use JPEG as an automatic fallback for transparent uploads. */
+      plan = canEncode('image/webp')
+        ? [['image/webp', 0.92], ['image/webp', 0.85], ['image/webp', 0.78],
+           ['image/webp', 0.70], ['image/webp', 0.58], ['image/webp', 0.45]]
+        : [['image/png', 1]];
+    } else {
+      plan = canEncode('image/webp')
+        ? [['image/webp', 0.92], ['image/webp', 0.85], ['image/webp', 0.78], ['image/webp', 0.7],
+           ['image/jpeg', 0.9], ['image/jpeg', 0.82], ['image/jpeg', 0.74]]
+        : [['image/jpeg', 0.94], ['image/jpeg', 0.88], ['image/jpeg', 0.82], ['image/jpeg', 0.74]];
+    }
     var out = '';
     for (var i = 0; i < plan.length; i++) {
       var url = canvas.toDataURL(plan[i][0], plan[i][1]);
-      if (url.indexOf('data:' + plan[i][0] + ';') !== 0) continue;  /* codec unavailable */
+      if (url.indexOf('data:' + plan[i][0] + ';') !== 0) continue;
       out = url;
-      if (url.length <= maxKB * 1024) break;                       /* inside the budget */
+      if (url.length <= maxKB * 1024) break;
     }
-    return out || canvas.toDataURL('image/jpeg', 0.7);
+    return out || canvas.toDataURL(preserveAlpha ? 'image/png' : 'image/jpeg', .7);
   }
 
   function initImageUpload(modal) {
@@ -1138,13 +1153,13 @@
         var canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         var ctx = canvas.getContext('2d');
-        /* White backdrop first — transparent PNG areas would turn BLACK in JPEG */
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, w, h);
+        /* Preserve PNG/WebP alpha for the pale-green storefront product frame.
+           JPEG has no alpha; opaque JPG uploads stay opaque automatically. */
+        ctx.clearRect(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
-        /* Encode at the best quality that fits the byte budget, and hand the
-           source pixel size back so a low-res upload can be flagged. */
-        callback(encodeImage(canvas, maxKB), { w: img.width, h: img.height });
+        var keepAlpha = /image\/(png|webp)/i.test(file.type);
+        /* WebP retains transparency; PNG is used if WebP unsupported. */
+        callback(encodeImage(canvas, maxKB, keepAlpha), { w: img.width, h: img.height });
       };
       img.onerror = function () { toast('Failed to load image', 'error'); };
       img.src = URL.createObjectURL(file);
@@ -1267,10 +1282,74 @@
       if (last && last.scrollIntoView) last.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
-    // Delegated clicks — remove ✕ / open file picker
+    // Adjust preview before applying: visual zoom affects this product only.
+    container.addEventListener('input', function (e) {
+      if (!e.target.classList.contains('p-img-size')) return;
+      var idx = slotIndex(e.target);
+      if (idx < 0) return;
+      var slot = e.target.closest('.p-img-slot');
+      var size = Math.max(55, Math.min(100, Number(e.target.value) || 100));
+      var value = slot.querySelector('.p-img-size-value');
+      if (value) value.textContent = size + '%';
+      var preview = slot.querySelector('.p-img-thumb');
+      if (preview) preview.style.transform = 'scale(' + (size / 100) + ')';
+    });
+
+    // Delegated clicks — remove ✕ / open file picker / image-size adjustment
     container.addEventListener('click', function (e) {
       var idx = slotIndex(e.target);
       if (idx < 0) return;
+      if (e.target.closest('.p-img-apply-size')) {
+        if (!imgState[idx]) return;
+        var slot = e.target.closest('.p-img-slot');
+        var slider = slot.querySelector('.p-img-size');
+        var pct = Math.max(55, Math.min(100, Number(slider.value) || 100));
+        var btn = e.target.closest('.p-img-apply-size');
+        btn.disabled = true; btn.textContent = 'Applying…';
+        var image = new Image();
+        image.onload = function () {
+          var canvas = document.createElement('canvas');
+          canvas.width = 1200; canvas.height = 1200;
+          var ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, 1200, 1200);
+          /* Trim only truly transparent margins. Never cut into the product. */
+          var sample = document.createElement('canvas');
+          sample.width = image.width; sample.height = image.height;
+          var sampleCtx = sample.getContext('2d', { willReadFrequently: true });
+          sampleCtx.drawImage(image, 0, 0);
+          var px = sampleCtx.getImageData(0, 0, image.width, image.height).data;
+          var minX = image.width, minY = image.height, maxX = -1, maxY = -1;
+          for (var y = 0; y < image.height; y++) {
+            for (var x = 0; x < image.width; x++) {
+              if (px[(y * image.width + x) * 4 + 3] > 15) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+          if (maxX < minX || maxY < minY) {
+            minX = 0; minY = 0; maxX = image.width - 1; maxY = image.height - 1;
+          }
+          var srcW = maxX - minX + 1, srcH = maxY - minY + 1;
+          /* Product always fits inside 1200px square without cropping. */
+          var fit = Math.min(1200 / srcW, 1200 / srcH) * pct / 100;
+          var w = srcW * fit, h = srcH * fit;
+          ctx.drawImage(image, minX, minY, srcW, srcH,
+            (1200 - w) / 2, (1200 - h) / 2, w, h);
+          /* Image pixels encode the size; no new Supabase column required. */
+          imgState[idx] = encodeImage(canvas, IMG_KB.product, true);
+          render();
+          toast('Photo size updated. Click Save Product to keep the change.');
+        };
+        image.onerror = function () {
+          btn.disabled = false; btn.textContent = 'Apply Size';
+          toast('Could not adjust image. Re-upload the original PNG.', 'error');
+        };
+        image.src = imgState[idx];
+        return;
+      }
       if (e.target.closest('.p-img-remove')) {
         imgState.splice(idx, 1);
         if (!imgState.length) imgState.push('');
