@@ -4765,7 +4765,10 @@ html.lang-ta .mainnav .navlink > span {
   display: flex;
   position: absolute;
   z-index: 1;
-  left: 7%; right: 7%; top: 7%; bottom: 14%;
+  left: 8%;
+  right: 8%;
+  top: 8%;
+  bottom: 14%;
   justify-content: center;
   align-items: center;
   border-radius: 12px;
@@ -4773,14 +4776,16 @@ html.lang-ta .mainnav .navlink > span {
 }
 .pgrid .pcard.pcard--ref .pcard__image-link img[data-pcard-image] {
   display: block;
-  width: 100%;
-  height: 100%;
-  max-height: none;
+  width: auto;
+  height: auto;
+  max-width: 72%;
+  max-height: 72%;
   object-fit: contain;
   object-position: center;
   mix-blend-mode: multiply;
   filter: none;
   transition: transform .25s ease;
+  margin: auto;
 }
 .pgrid .pcard.pcard--ref:hover .pcard__image-link img[data-pcard-image] { transform: scale(1.025); }
 .pgrid .pcard.pcard--ref .pcard__image-link img[hidden] { display: none !important; }
@@ -4996,6 +5001,10 @@ html.lang-ta .pgrid .pcard.pcard--ref .pcard__nm { display: none; }
   .pgrid .pcard.pcard--ref .pcard__headline { gap: 7px; }
   .pgrid .pcard.pcard--ref .pcard__body { padding-inline: 4.2%; }
   .pgrid .pcard.pcard--ref .pcard__cta { border-radius: 13px; }
+  .pgrid .pcard.pcard--ref .pcard__image-link img[data-pcard-image] {
+    max-width: 70%;
+    max-height: 70%;
+  }
 }
 @media (hover: none), (pointer: coarse) {
   .pcard--ref .pcard__quick { display: none; }
@@ -5003,89 +5012,4 @@ html.lang-ta .pgrid .pcard.pcard--ref .pcard__nm { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .pgrid .pcard.pcard--ref,
   .pcard--ref .pcard__image-link img { transition: none !important; }
-}
-
-
-/* ==========================================================================
-   SHANMUGA V8 — Equal product card spacing and real review form.
-   Design remains the V7 notch-bordered card supplied by the owner.
-   ========================================================================== */
-.pgrid { align-items: stretch; }
-.pgrid .pcard.pcard--ref { height: 100%; }
-.pgrid .pcard.pcard--ref .pcard__body {
-  box-sizing: border-box;
-  padding-inline: 5% !important; /* equal left/right white-space */
-  padding-bottom: 5.2%;
-  min-width: 0;
-}
-.pgrid .pcard.pcard--ref .pcard__cat {
-  min-height: 2.4em;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  margin-bottom: 8px;
-}
-.pgrid .pcard.pcard--ref .pcard__headline {
-  min-height: clamp(52px, 15cqw, 95px);
-  align-items: flex-start;
-}
-.pgrid .pcard.pcard--ref .pcard__namewrap { align-self: flex-start; }
-.pgrid .pcard.pcard--ref .pcard__price { align-self: flex-start; padding-top: 2px; }
-.pgrid .pcard.pcard--ref .pcard__unit { margin-top: 3px; }
-.pgrid .pcard.pcard--ref .pcard__intro {
-  min-height: 3em;
-  margin-top: 16px;
-  margin-bottom: 18px;
-}
-.pgrid .pcard.pcard--ref .pcard__cta { margin-top: auto; }
-
-/* Product detail: authenticated customer rating + review form */
-.so-reviews { color: #233d2b; width: 100%; }
-.so-reviews__summary {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
-  border: 1px solid #d9e8d7; background: #f5fbf1;
-  border-radius: 18px; padding: 18px 20px; margin-bottom: 22px;
-}
-.so-reviews__average { font-size: 32px; font-weight: 800; color: #176b37; line-height: 1; }
-.so-reviews__stars { color: #e7a21d; font-size: 22px; letter-spacing: 2px; white-space: nowrap; }
-.so-reviews__count { color: #607767; font-size: 14px; }
-.so-reviews__grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; align-items: start; }
-.so-reviews__formbox { border: 1px solid #e1ebdf; background: #fff; padding: 22px; border-radius: 20px; }
-.so-reviews__heading { font-size: 20px; font-weight: 750; margin: 0 0 6px; color: #123b22; }
-.so-reviews__small { font-size: 13px; color: #67806f; line-height: 1.6; margin: 0 0 17px; }
-.so-reviews__field { margin-bottom: 14px; }
-.so-reviews__label { display:block; font-size: 13px; font-weight: 650; margin-bottom: 7px; color:#234a2d; }
-.so-reviews__field input, .so-reviews__field textarea {
-  width: 100%; box-sizing: border-box; border: 1px solid #cddccd;
-  border-radius: 10px; background:#fff; padding: 12px 14px;
-  font: 15px/1.45 Inter, 'Noto Sans Tamil', sans-serif; color: #23382c;
-}
-.so-reviews__field textarea { resize: vertical; min-height: 104px; }
-.so-reviews__field input:focus-visible, .so-reviews__field textarea:focus-visible {
-  outline: 2px solid #228346; outline-offset: 1px;
-}
-.so-reviews__starbuttons { display:flex; flex-wrap: wrap; gap: 5px; margin: 3px 0 16px; }
-.so-reviews__starbtn { cursor:pointer; appearance:none; border:0; background:transparent;
-  padding: 3px; font-size: 30px; line-height:1; color: #c5d2c5; transition:color .12s ease;
-}
-.so-reviews__starbtn.is-selected { color: #e6a11e; }
-.so-reviews__starbtn:focus-visible { outline:2px solid #1b763c; outline-offset:2px; border-radius:5px; }
-.so-reviews__submit { min-height: 45px; padding: 10px 22px; width: 100%; border:0;
-  background:#176b37; color:#fff; border-radius:11px; font-weight:750; cursor:pointer;
-}
-.so-reviews__submit:disabled { opacity:.6; cursor:wait; }
-.so-reviews__message { font-size:13px; padding:11px 13px; border-radius:10px; margin: 12px 0 0; line-height: 1.5; }
-.so-reviews__message[data-state="error"] { color:#9a2420; background:#fff1ed; border:1px solid #f1cbc1; }
-.so-reviews__message[data-state="success"] { color:#176b37; background:#f0faed; border:1px solid #bfe3bb; }
-.so-reviews__item { border-bottom:1px solid #e6e9df; padding: 0 0 17px; margin: 0 0 17px; }
-.so-reviews__item h4 { font-size:15px; margin:9px 0 6px; color:#173722; }
-.so-reviews__item p { font-size:14px; line-height:1.6; color:#3f5547; white-space:pre-wrap; overflow-wrap:anywhere; margin:6px 0 0; }
-.so-reviews__itemhead { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:13px; }
-.so-reviews__itemhead time { color:#8aa18e; }
-.so-reviews__empty { color:#647d6a; font-size:14px; line-height:1.6; }
-@media (max-width: 760px) {
-  .so-reviews__grid { grid-template-columns: 1fr; gap: 18px; }
-  .so-reviews__formbox { padding: 17px; }
-  .so-reviews__summary { padding: 15px; }
-  .pgrid .pcard.pcard--ref .pcard__body { padding-inline:5% !important; }
 }
