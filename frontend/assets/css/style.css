@@ -5120,3 +5120,87 @@ html.lang-ta .pgrid .pcard.pcard--ref .pcard__nm { display: none; }
     max-height: 94%;
   }
 }
+
+/* ========================================================================
+   PRODUCT CARD V11 — reference-matched name / pack / description spacing.
+   Add to Cart uses the owner's uploaded vector, rendered WHITE and gently
+   animated on pointer hover/focus. No JavaScript or cart changes needed.
+   ======================================================================== */
+.pgrid .pcard.pcard--ref {
+  --pcard-copy-gap: clamp(16px, 4.4cqw, 24px);
+}
+/* The earlier 52px minimum headline height created an uneven extra gap
+   under short product names. Let headline size naturally with its text. */
+.pgrid .pcard.pcard--ref .pcard__headline {
+  min-height: 0;
+}
+.pgrid .pcard.pcard--ref .pcard__unit {
+  margin-top: var(--pcard-copy-gap);
+}
+.pgrid .pcard.pcard--ref .pcard__intro {
+  margin-top: var(--pcard-copy-gap);
+  margin-bottom: clamp(20px, 5cqw, 28px);
+}
+/* Hide the old stock arrow artwork. CSS supplies the owner's icon only on
+   enabled Add to Cart buttons, leaving button text/action untouched. */
+.pgrid .pcard.pcard--ref .pcard__cta:not(:disabled) > svg {
+  display: none !important;
+}
+.pgrid .pcard.pcard--ref .pcard__cta:not(:disabled)::after {
+  content: "";
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(21px, 5.8cqw, 30px);
+  height: clamp(21px, 5.8cqw, 30px);
+  margin-left: 1px;
+  background: center / contain no-repeat url("../img/icons/card-arrow-white.svg");
+  transform: translate3d(0, 0, 0);
+  transition: transform .28s cubic-bezier(.2,.75,.25,1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .pgrid .pcard.pcard--ref .pcard__cta:not(:disabled):hover::after {
+    transform: translate3d(4px, -3px, 0);
+  }
+}
+.pgrid .pcard.pcard--ref .pcard__cta:not(:disabled):focus-visible::after {
+  transform: translate3d(4px, -3px, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pgrid .pcard.pcard--ref .pcard__cta:not(:disabled)::after {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* =======================================================================
+   PRODUCT CARD V12 — real MRP directly opposite pack size.
+   Keep V11's original reference layout, SVG cart arrow and hover animation.
+   No discount amount is invented: app.js reads p.mrp from the catalog.
+   ======================================================================= */
+.pgrid .pcard.pcard--ref .pcard__pack-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  margin-top: var(--pcard-copy-gap, clamp(16px, 4.4cqw, 24px));
+}
+.pgrid .pcard.pcard--ref .pcard__pack-price-row .pcard__unit {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.pgrid .pcard.pcard--ref .pcard__pack-price-row .pcard__mrp {
+  flex: 0 0 auto;
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  color: #777b79;
+  font: 500 clamp(17px, 4.3cqw, 25px)/1.2 Inter, Arial, sans-serif;
+  text-decoration-line: line-through;
+  text-decoration-color: #777b79;
+  text-decoration-thickness: 1.5px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

@@ -528,6 +528,13 @@
     const off = Number(p.off || 0);
     const hasSale = Number.isFinite(off) && off > 0;
     const brief = String(p.desc || '').trim();
+    // Only show an MRP strike-through when the stored original price is
+    // valid and strictly above this product's actual selling price.
+    // This is catalog/Admin data, not a hard-coded or fabricated discount.
+    const salePrice = Number(p.price);
+    const mrp = Number(p.mrp);
+    const showMrp = Number.isFinite(salePrice) && salePrice > 0 &&
+      Number.isFinite(mrp) && mrp > salePrice;
     const mediaClass = 'pcard__media' + (imageSrc ? '' : ' is-image-missing');
     const placeholderSvg = '<svg viewBox="0 0 80 88" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M29 12h22v10l7 9v41a7 7 0 0 1-7 7H29a7 7 0 0 1-7-7V31l7-9z"/><path d="M29 13V8h22v5M22 39h36M22 65h36"/><path d="M40 48c-7 1-10 5-9 12 9 0 13-5 9-12zm0 0c6 1 11 6 10 12-7 0-12-4-10-12z"/></svg>';
     // The frame follows the reference: rounded green outline and angled lower-left notch.
@@ -555,7 +562,10 @@
       '<a class="pcard__nm" href="' + productUrl + '">' + esc(p.name) + '</a>' +
       '<span class="pcard__ta ta">' + esc(p.ta || '') + '</span>' +
       '</div><div class="pcard__price"><b>' + money(p.price) + '</b></div></div>' +
+      '<div class="pcard__pack-price-row">' +
       '<span class="pcard__unit">' + esc(p.unit || '') + '</span>' +
+      (showMrp ? '<s class="pcard__mrp" aria-label="MRP ' + money(mrp) + '">' + money(mrp) + '</s>' : '') +
+      '</div>' +
       (brief ? '<p class="pcard__intro">' + esc(brief) + '</p>' : '<p class="pcard__intro"></p>') +
       (p.stock ? '<button type="button" class="btn btn--primary pcard__cta" data-add="' + slug + '"><span>Add to Cart</span>' + actionArrow + '</button>' :
         '<button type="button" class="btn btn--ghost pcard__cta" disabled><span>Out of Stock</span></button>') +
