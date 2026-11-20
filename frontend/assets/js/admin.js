@@ -485,11 +485,16 @@
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token,
           apikey: config.publicKey }, body: JSON.stringify(payload || {})
       }).catch(function () {
+        if (action === 'admin-image-upload') {
+          throw new Error('Upload endpoint could not be reached (network/CORS). Deploy the V22 demo-payment-kit Edge Function in Supabase; GitHub/Netlify deploy alone is not enough. Then reload and try again.');
+        }
         throw new Error('Cannot reach the admin backend. Check your connection and browser Network tab; if the DEMO function is not deployed, validate it on staging first.');
       });
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (body) {
-        if (res.status === 404) throw new Error('Admin backend not deployed. Validate the DEMO migration and function on staging before enabling admin access.');
+        if (res.status === 404) throw new Error(action === 'admin-image-upload' ?
+          'Image upload endpoint is not deployed. Deploy the updated demo-payment-kit Edge Function in Supabase.' :
+          'Admin backend not deployed. Validate the DEMO migration and function on staging before enabling admin access.');
         if (!res.ok) throw new Error(body.error || 'Admin backend unavailable (HTTP ' + res.status + ').');
         return body;
       });
@@ -1020,7 +1025,7 @@
       '<button type="button" class="variant-gallery-add" style="font-size:12px;border:1px solid #176b37;background:#fff;color:#176b37;border-radius:7px;padding:7px 10px;cursor:pointer">+ Add Images</button>' +
       '</div><input type="file" class="variant-gallery-file" accept="image/png,image/jpeg,image/webp" multiple hidden>' +
       '<div class="variant-gallery-items" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:9px"></div>' +
-      '<p class="variant-gallery-status" role="status" style="margin:6px 0 0;color:#627565;font-size:11px">First image will be the main photo for this size.</p>' +
+      '<p class="variant-gallery-status" role="status" style="margin:6px 0 0;color:#627565;font-size:11px">PNG, JPG or WebP • up to 5 MB per image. First photo is the main photo. Requires the V22 admin image upload backend.</p>' +
       '</div></div>';
   }
 
@@ -1070,14 +1075,17 @@
       '<div id="pSizesContainer" style="margin-top:8px">' + sizeRowsHTML + '</div>' +
       '<div style="font-size:11px;color:#92a096;margin-top:4px">e.g. &nbsp;<b>500g</b> ₹55 / MRP ₹63 &nbsp;|&nbsp; <b>1kg</b> ₹100 / MRP ₹115</div>' +
       '</div>' +
-      /* Product Images — dynamic add / remove (like size variants) */
-      '<div class="form-group">' +
-      '<label style="display:flex;align-items:center;justify-content:space-between">' +
-      '<span>Shared / fallback images <span style="font-weight:400;font-size:11px;color:#92a096">(optional; shown only for sizes without specific photos)</span></span>' +
-      '<button type="button" id="pAddImage" style="font-size:12px;font-weight:600;color:#2f8f43;background:none;border:1px solid #2f8f43;border-radius:6px;padding:3px 10px;cursor:pointer">+ Add Image</button>' +
-      '</label>' +
-      '<div id="pImagesContainer" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">' + imageSlotsHTML + '</div>' +
+      /* Existing shared photos are retained for older products, but hidden by
+         default. Never delete stored images merely because the admin switches
+         to per-size galleries. The original IDs remain accessible to JS. */
+      '<details class="form-group p-shared-images" style="padding:10px 12px;border:1px solid #e0e8db;border-radius:9px;background:#fbfdf9">' +
+      '<summary style="font-size:12px;font-weight:600;color:#46634d;cursor:pointer">Older shared photos (optional) — tap only if needed</summary>' +
+      '<p style="color:#6f7d72;font-size:11px;line-height:1.5;margin:9px 0">Old products may use these pictures until you add photos for each pack size. Existing shared photos are kept safely.</p>' +
+      '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">' +
+      '<button type="button" id="pAddImage" style="font-size:12px;font-weight:600;color:#2f8f43;background:none;border:1px solid #2f8f43;border-radius:6px;padding:3px 10px;cursor:pointer">+ Add shared photo</button>' +
       '</div>' +
+      '<div id="pImagesContainer" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">' + imageSlotsHTML + '</div>' +
+      '</details>' +
       '<div class="form-group"><label for="pDesc">Description (English)</label><textarea class="form-control" id="pDesc" maxlength="10000" placeholder="Product description in English...">' + escHtml(p.desc || '') + '</textarea></div>' +
       '<div class="form-group"><label for="pDescTa">தமிழ் விளக்கம் (Tamil Description)</label><textarea class="form-control" id="pDescTa" lang="ta" maxlength="10000" rows="4" placeholder="தயாரிப்பின் விவரத்தைத் தமிழில் எழுதுங்கள்...">' + escHtml(p.desc_ta || '') + '</textarea></div>' +
       /* Key Highlights */
@@ -1501,31 +1509,28 @@
       }
     });
 
+    // V22: A size-specific photo can be up to 5 MiB. Keep original PNG bytes
+    // to preserve the alpha channel; never paint on a white background.
+    // Storage upload is authorized by the Edge Function, not a public client key.
+    var VARIANT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
     function prepareUpload(file) {
       return new Promise(function (resolve, reject) {
         if (!file || !/^image\/(png|jpeg|webp)$/.test(file.type)) {
-          reject(new Error('PNG, JPG and WebP images only')); return;
+          reject(new Error('Choose a PNG, JPG or WebP photo.')); return;
         }
-        if (file.size > 8 * 1024 * 1024) { reject(new Error('Choose an image under 8 MB')); return; }
-        var objectUrl = URL.createObjectURL(file);
-        var picture = new Image();
-        picture.onload = function () {
-          URL.revokeObjectURL(objectUrl);
-          var ratio = Math.min(1, 1600 / picture.width, 1600 / picture.height);
-          var canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(picture.width * ratio));
-          canvas.height = Math.max(1, Math.round(picture.height * ratio));
-          var ctx = canvas.getContext('2d');
-          if (!ctx) { reject(new Error('Image processing unavailable')); return; }
-          // Do not paint a white backdrop; WebP retains PNG transparency.
-          ctx.drawImage(picture, 0, 0, canvas.width, canvas.height);
-          var mime = canEncode('image/webp') ? 'image/webp' : 'image/png';
-          var encoded = mime === 'image/webp' ? canvas.toDataURL(mime, .83) : canvas.toDataURL(mime);
-          if (encoded.length > 2900000) { reject(new Error('This photo is too large after resizing. Choose a smaller photo.')); return; }
-          resolve(encoded);
+        if (file.size < 20 || file.size > VARIANT_IMAGE_MAX_BYTES) {
+          reject(new Error('Each photo must be no larger than 5 MB. This file is ' +
+            (file.size / (1024 * 1024)).toFixed(2) + ' MB.')); return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          if (typeof reader.result !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(reader.result)) {
+            reject(new Error('Could not read image file.')); return;
+          }
+          resolve(reader.result);
         };
-        picture.onerror = function () { URL.revokeObjectURL(objectUrl); reject(new Error('Could not read photo')); };
-        picture.src = objectUrl;
+        reader.onerror = function () { reject(new Error('Cannot read this photo. Please retry.')); };
+        reader.readAsDataURL(file);
       });
     }
 
@@ -1537,6 +1542,16 @@
       var files = Array.from(input.files || []);
       input.value = '';
       if (!files.length) return;
+      var invalid = files.find(function (file) {
+        return !/^image\/(png|jpeg|webp)$/.test(file.type) || file.size < 20 || file.size > VARIANT_IMAGE_MAX_BYTES;
+      });
+      if (invalid) {
+        var message = 'Use PNG/JPG/WebP files no larger than 5 MB each. ' + invalid.name + ' (' +
+          (invalid.size / (1024 * 1024)).toFixed(2) + ' MB) was not uploaded.';
+        block.querySelector('.variant-gallery-status').textContent = message;
+        toast(message, 'error');
+        return;
+      }
       modal._variantPendingUploads++;
       var status = block.querySelector('.variant-gallery-status');
       var button = block.querySelector('.variant-gallery-add');

@@ -42,7 +42,7 @@ Deno.serve(async req => {
     // receives the service-role key or direct Storage write access.
     if (url.pathname.endsWith('/admin-image-upload')) {
       const raw = await req.text();
-      if (raw.length > 3000000) return reply({ error: 'Photo too large after compression (max 2 MB).' }, 413, cors);
+      if (raw.length > 7500000) return reply({ error: 'Photo exceeds the 5 MB upload limit.' }, 413, cors);
       let payload: { image?: string };
       try { payload = JSON.parse(raw); } catch { return reply({ error: 'Invalid upload request' }, 400, cors); }
       const match = typeof payload.image === 'string' ?
@@ -51,8 +51,12 @@ Deno.serve(async req => {
       const mime = `image/${match[1]}`;
       let bytes: Uint8Array;
       try {
+        // 5 MiB binary can expand to ~6.99M base64 characters.
+        if (match[2].length > Math.ceil(5 * 1024 * 1024 / 3) * 4) {
+          return reply({ error: 'Image must be 5 MB or smaller' }, 413, cors);
+        }
         const binary = atob(match[2]);
-        if (binary.length < 20 || binary.length > 2200000) return reply({ error: 'Image must be under 2.2 MB' }, 413, cors);
+        if (binary.length < 20 || binary.length > 5 * 1024 * 1024) return reply({ error: 'Image must be 5 MB or smaller' }, 413, cors);
         bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       } catch { return reply({ error: 'Invalid image bytes' }, 400, cors); }
