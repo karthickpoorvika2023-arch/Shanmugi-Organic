@@ -143,7 +143,7 @@ html.lang-ta .so-exact-card__en { display:none; }
   position:absolute;top:62.85%;left:5.35%;
   width:64%;margin:0;
   font:500 8.15cqw/1.25 'Poppins','Noto Sans Tamil',sans-serif;
-  letter-spacing:-.01em;
+  letter-spacing:-.1px;
   white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;
 }
