@@ -540,3 +540,16 @@ html body .so-exact-card .so-exact-card__photo-link img[data-so-card-image] {
   .modal .so-qv-empty { min-height: 160px; }
   .modal .so-qv-thumbs button { flex-basis: 58px; width: 58px; height: 62px; }
 }
+
+/* =======================================================================
+   Correction 02 — Mobile-only semi-bold (600) product titles and prices.
+   Keep desktop weights, font sizes, card geometry and actions unchanged.
+   ======================================================================= */
+@media (max-width: 700px) {
+  html body .so-exact-card .so-exact-card__title,
+  html body .so-exact-card .so-exact-card__title--mid,
+  html body .so-exact-card .so-exact-card__title--long,
+  html body .so-exact-card .so-exact-card__price {
+    font-weight: 600;
+  }
+}
