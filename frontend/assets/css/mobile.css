@@ -584,3 +584,214 @@
 @media (max-width: 700px) {
   body .pgrid .pcard.pcard--ref .pcard__body { padding-inline: 5% !important; }
 }
+
+
+/* =======================================================================
+   V18 — Mobile product cards: 2 cards per row, compact reference layout,
+   no stretched typography, and Quick View visible on mobile.
+   ======================================================================= */
+@media (max-width: 700px) {
+  body .pgrid.pgrid--3,
+  body .pgrid.pgrid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  body .pgrid .pcard.pcard--ref {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    border-radius: 20px;
+    box-shadow: 0 6px 18px rgba(20, 53, 29, 0.06);
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__media {
+    aspect-ratio: 1 / 1.08;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__frame path {
+    stroke-width: 3px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__image-link {
+    left: 14%;
+    right: 14%;
+    top: 18%;
+    bottom: 25%;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__image-link img[data-pcard-image] {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__badge {
+    left: 8%;
+    top: 10%;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__wish {
+    top: 8%;
+    right: 7%;
+    width: 32px;
+    height: 32px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__wish svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__rating-chip {
+    left: 7%;
+    bottom: 7.5%;
+    gap: 4px;
+    padding: 6px 10px;
+    box-shadow: 0 6px 14px rgba(28, 60, 34, .14);
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__rating-chip b {
+    font-size: 12px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__rating-chip span {
+    font-size: 14px;
+  }
+
+  /* Quick View must show on mobile too */
+  body .pgrid .pcard.pcard--ref .pcard__quick {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    left: 7%;
+    right: 7%;
+    bottom: 12.5%;
+    min-height: 36px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__quick svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__body {
+    margin-top: -1%;
+    padding: 0 12px 14px !important;
+    text-align: center;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__cat {
+    align-self: center;
+    justify-content: center;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0 0 4px;
+    text-align: center;
+    font-size: 9px;
+    line-height: 1.25;
+    letter-spacing: .45px;
+    color: #9aa49d;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__headline {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    min-height: 0;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__namewrap,
+  body .pgrid .pcard.pcard--ref .pcard__price {
+    width: 100%;
+    text-align: center;
+    align-self: center;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__nm,
+  html.lang-ta body .pgrid .pcard.pcard--ref .pcard__ta {
+    font-size: 16px;
+    line-height: 1.15;
+    letter-spacing: -.35px;
+    text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.3em;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__price b {
+    font-size: 18px;
+    line-height: 1.05;
+    letter-spacing: -.25px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__pack-price-row {
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__pack-price-row .pcard__unit {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__pack-price-row .pcard__mrp {
+    font-size: 11px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__intro {
+    display: none;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__cta {
+    min-height: 40px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    gap: 7px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__cta svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  body .pgrid.pgrid--3,
+  body .pgrid.pgrid--4 {
+    gap: 12px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__body {
+    padding-inline: 10px !important;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__nm,
+  html.lang-ta body .pgrid .pcard.pcard--ref .pcard__ta {
+    font-size: 15px;
+  }
+
+  body .pgrid .pcard.pcard--ref .pcard__price b {
+    font-size: 17px;
+  }
+}
