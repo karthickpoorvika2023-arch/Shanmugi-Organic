@@ -487,12 +487,21 @@ html body .so-exact-card .so-exact-card__add {
   font-weight: 500;
 }
 
-/* A white, non-transparent photo backing blends into the card's mint area.
-   This is a visual workaround, not alpha-channel restoration. Upload a true
-   transparent PNG for perfect results across backgrounds. */
-html body .so-exact-card .so-exact-card__photo-link img[data-so-card-image] {
-  mix-blend-mode: multiply;
+/* Correction 04 — blend opaque white product-photo backgrounds into mint.
+   The photo link itself has z-index:1, so it forms a stacking context. Blending
+   its child IMG (as V23 did) cannot reach the green SVG behind that context.
+   Blend the complete link layer with the SVG underneath instead. This works
+   with existing opaque JPG/PNG photos without modifying their saved bytes.
+   True-alpha artwork still displays normally except for multiply compositing.
+   Applies equally to desktop and mobile because the rule is not breakpointed. */
+html body .so-exact-card .so-exact-card__photo-link {
   background: transparent;
+  isolation: auto;
+  mix-blend-mode: multiply;
+}
+html body .so-exact-card .so-exact-card__photo-link img[data-so-card-image] {
+  background: transparent;
+  mix-blend-mode: normal;
 }
 
 /* Photos for the selected pack size in Quick View. */
