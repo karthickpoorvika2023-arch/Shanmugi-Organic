@@ -399,3 +399,74 @@ html.lang-ta .so-exact-card__name.so-exact-card__ta { display:block;font-family:
 @media (prefers-reduced-motion:reduce) {
   .so-exact-card__quick { transition: none!important; }
 }
+
+
+/* =======================================================================
+   V20 — User requested TWO changes only.
+   (1) Lift star-rating pill above the frame/notch line.
+   (2) Mobile: compact eye-only Quick View control.
+       Desktop: eye + label only on hover / keyboard focus.
+   Product data, actions, other layout and styling remain untouched.
+   ======================================================================= */
+
+/* Raise the rating visibly above the green frame rather than sit on its edge. */
+.so-exact-card__rating {
+  top: 50.4%;
+}
+
+/* Desktop: show Quick View only when hovering the card,
+   or when keyboard focus enters the card. */
+@media (min-width: 701px) {
+  .so-exact-card .so-exact-card__quick {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(7px);
+    transition: opacity .2s ease, transform .2s ease,
+                background .2s ease, box-shadow .2s ease;
+  }
+  .so-exact-card:hover .so-exact-card__quick,
+  .so-exact-card:focus-within .so-exact-card__quick {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile/touch: Quick View eye is always visible, text hidden.
+   Keep data-quick and accessible aria-label in existing JS unchanged. */
+@media (max-width: 700px) {
+  html body .so-exact-card__rating {
+    top: 49.3%;
+    left: 7.5%;
+  }
+
+  html body .so-exact-card .so-exact-card__quick {
+    display: grid !important;
+    place-items: center;
+    right: 7.2%;
+    bottom: 46.3%;
+    left: auto;
+    width: 29px;
+    height: 29px;
+    min-width: 29px;
+    min-height: 29px;
+    padding: 0;
+    gap: 0;
+    border: 1px solid #d8e9d9;
+    background: #fff;
+    color: #176b37;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(22,77,32,.12);
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+  html body .so-exact-card .so-exact-card__quick > span {
+    display: none !important;
+  }
+  html body .so-exact-card .so-exact-card__quick svg {
+    display: block;
+    width: 17px;
+    height: 17px;
+  }
+}
