@@ -5110,6 +5110,11 @@ html.lang-ta .pgrid .pcard.pcard--ref .pcard__nm { display: none; }
   margin: var(--pcard-outer-space) auto 0;
 }
 /* Preserve the true alpha of PNG/WebP artwork. Do not matte with white. */
+.pgrid .pcard.pcard--ref .pcard__image-link {
+  background: transparent;
+  isolation: isolate;
+}
+
 .pgrid .pcard.pcard--ref .pcard__image-link img[data-pcard-image] {
   width: auto;
   height: auto;
@@ -5117,8 +5122,8 @@ html.lang-ta .pgrid .pcard.pcard--ref .pcard__nm { display: none; }
   max-height: 94%;
   object-fit: contain;
   object-position: center;
-  mix-blend-mode: normal;
-  background: transparent;
+  mix-blend-mode: multiply;
+  background: transparent !important;
 }
 @media (max-width: 380px) {
   .pgrid .pcard.pcard--ref { --pcard-outer-space: 11px; }

@@ -620,11 +620,20 @@
     bottom: 25%;
   }
 
+  body .pgrid .pcard.pcard--ref .pcard__image-link {
+    background: transparent;
+    isolation: isolate;
+  }
+
   body .pgrid .pcard.pcard--ref .pcard__image-link img[data-pcard-image] {
-    height: 100%;
-    width: 100%;
+    width: auto;
+    height: auto;
+    max-width: 94%;
+    max-height: 94%;
     object-fit: contain;
     object-position: center;
+    mix-blend-mode: multiply;
+    background: transparent !important;
   }
 
   body .pgrid .pcard.pcard--ref .pcard__badge {

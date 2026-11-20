@@ -1234,7 +1234,7 @@
           if (y < h - 1) queue.push(p + w * 4);
         }
         ctx.putImageData(frame, 0, 0);
-        callback(encodeImage(canvas, IMG_KB.product));
+        callback(encodeImage(canvas, IMG_KB.product, true));
       };
       img.onerror = function () { callback(src); };
       img.src = src;
