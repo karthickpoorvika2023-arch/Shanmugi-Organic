@@ -142,8 +142,8 @@ html.lang-ta .so-exact-card__en { display:none; }
 .so-exact-card__title {
   position:absolute;top:62.85%;left:5.35%;
   width:64%;margin:0;
-  font:400 8.15cqw/1.25 'Poppins','Noto Sans Tamil',sans-serif;
-  letter-spacing:-.043em;
+  font:600 8.15cqw/1.25 'Poppins','Noto Sans Tamil',sans-serif;
+  letter-spacing:-.1em;
   white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;
 }
@@ -155,7 +155,7 @@ html.lang-ta .so-exact-card__en { display:none; }
 html.lang-ta .so-exact-card__name.so-exact-card__ta { display:block;font-family:'Noto Sans Tamil',sans-serif;letter-spacing:-.025em;font-size:.8em;line-height:1.55; }
 .so-exact-card__price {
   position:absolute;top:62.82%;right:4.05%;margin:0;
-  font:400 8.15cqw/1.25 'Poppins',sans-serif;
+  font:600 8.15cqw/1.25 'Poppins',sans-serif;
   letter-spacing:-.01em;
   white-space:nowrap;
   color:#000;
