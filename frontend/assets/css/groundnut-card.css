@@ -470,3 +470,73 @@ html.lang-ta .so-exact-card__name.so-exact-card__ta { display:block;font-family:
     height: 17px;
   }
 }
+
+
+/* =======================================================================
+   V23 — Lighter product card text / Quick View gallery / white BG blending
+   Changes only product-card typography, card product-photo blending, and
+   Quick View image gallery; does not alter Cart, Admin or Supabase settings.
+   ======================================================================= */
+
+/* Preserve reference geometry/font sizes; reduce ONLY the thickness. */
+html body .so-exact-card .so-exact-card__title,
+html body .so-exact-card .so-exact-card__title--mid,
+html body .so-exact-card .so-exact-card__title--long,
+html body .so-exact-card .so-exact-card__price,
+html body .so-exact-card .so-exact-card__add {
+  font-weight: 500;
+}
+
+/* A white, non-transparent photo backing blends into the card's mint area.
+   This is a visual workaround, not alpha-channel restoration. Upload a true
+   transparent PNG for perfect results across backgrounds. */
+html body .so-exact-card .so-exact-card__photo-link img[data-so-card-image] {
+  mix-blend-mode: multiply;
+  background: transparent;
+}
+
+/* Photos for the selected pack size in Quick View. */
+.modal .so-qv-gallery { min-width: 0; }
+.modal .so-qv-gallery__main { overflow: hidden; }
+.modal .so-qv-gallery__main img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.modal .so-qv-thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 0 0 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+}
+.modal .so-qv-thumbs button {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 76px;
+  padding: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+  scroll-snap-align: start;
+}
+.modal .so-qv-thumbs button img { width: 100%; height: 100%; object-fit: contain; }
+.modal .so-qv-empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #456c50;
+  text-align: center;
+  padding: 20px;
+  font: 500 14px/1.6 'Poppins','Noto Sans Tamil', sans-serif;
+}
+.modal .so-qv-empty svg { width: 28px; height: 28px; }
+@media (max-width: 700px) {
+  .modal .so-qv-empty { min-height: 160px; }
+  .modal .so-qv-thumbs button { flex-basis: 58px; width: 58px; height: 62px; }
+}

@@ -455,42 +455,112 @@
         if (row && row[2] && row[2] > row[1]) return row[2];
         return Math.round(pr * p.mrp / p.price);
       };
+
+      // V23: use the per-size gallery saved by the V21/V22 admin form.
+      // Do not show a 500 ml product photo for a 1 L / 5 L variant when a
+      // different size already has its own gallery.
+      const picturesFor = function (selectedSize) {
+        const bySize = p.variant_images && typeof p.variant_images === 'object'
+          ? p.variant_images : {};
+        const own = Array.isArray(bySize[selectedSize]) ? bySize[selectedSize] : [];
+        const hasAnySized = Object.keys(bySize).some(function (key) {
+          return Array.isArray(bySize[key]) && bySize[key].length > 0;
+        });
+        const source = own.length ? own : hasAnySized ? [] :
+          (Array.isArray(p.images) && p.images.length ? p.images : (p.img ? [p.img] : []));
+        const result = [];
+        source.forEach(function (url) {
+          if (typeof url === 'string' && url.trim() && result.indexOf(url.trim()) < 0) {
+            result.push(url.trim());
+          }
+        });
+        return result;
+      };
+
       Modal.mount();
-      let size = p.sizes[0][0], price = p.sizes[0][1];
+      let size = p.sizes[0][0], price = p.sizes[0][1], selectedPhotoIndex = 0;
       const render = function () {
         const mrp = mrpOf(size, price);
         const offPct = mrp > price ? Math.round((mrp - price) / mrp * 100) : 0;
+        const photos = picturesFor(size);
+        if (selectedPhotoIndex >= photos.length) selectedPhotoIndex = 0;
+        const activePhoto = photos[selectedPhotoIndex] || '';
+        // No product image for this size: show a clear message instead of
+        // silently displaying a photo belonging to another size.
+        const mainPhotoMarkup = activePhoto
+          ? '<img data-qv-main-image src="' + esc(activePhoto) + '" alt="' + esc(p.name + ' ' + size) + '">'
+          : '<div class="so-qv-empty" role="status">' + ic('info') +
+            '<span>No product photos uploaded for ' + esc(size) + ' yet.</span></div>';
+        const thumbnailMarkup = photos.length > 1
+          ? '<div class="gallery__thumbs so-qv-thumbs" aria-label="Photos for ' + esc(size) + '">' +
+            photos.map(function (src, idx) {
+              return '<button type="button" data-qv-thumb="' + idx + '" class="' +
+                (idx === selectedPhotoIndex ? 'is-on' : '') +
+                '" aria-label="Show ' + esc(size) + ' photo ' + (idx + 1) + '">' +
+                '<img src="' + esc(src) + '" alt=""></button>';
+            }).join('') + '</div>' : '';
         $('[data-modal-in]', Modal.el).innerHTML =
-          '<div class="modal__in"><div>' +
-          '<div class="gallery__main"><img src="' + p.img + '" alt="' + esc(p.name) + '"></div></div>' +
+          '<div class="modal__in"><div class="so-qv-gallery">' +
+          '<div class="gallery__main so-qv-gallery__main">' + mainPhotoMarkup + '</div>' +
+          thumbnailMarkup + '</div>' +
           '<div><span class="pcard__cat">' + esc(p.catName) + '</span>' +
           '<h2 class="pdp__title" style="font-size:23px">' + esc(p.name) + '</h2>' +
           '<div class="pdp__ta ta">' + esc(p.ta) + '</div>' +
-          '<div class="pdp__meta">' + stars(p.rating) + '<span>' + p.rating.toFixed(1) + ' · ' + p.reviews + ' reviews</span><span>SKU ' + p.sku + '</span></div>' +
-          '<div class="pdp__price"><b>' + money(price) + '</b>' + (mrp > price ? '<s>' + money(mrp) + '</s>' : '') +
+          '<div class="pdp__meta">' + stars(p.rating) + '<span>' + p.rating.toFixed(1) +
+          ' · ' + p.reviews + ' reviews</span><span>SKU ' + esc(p.sku) + '</span></div>' +
+          '<div class="pdp__price"><b>' + money(price) + '</b>' +
+          (mrp > price ? '<s>' + money(mrp) + '</s>' : '') +
           (offPct > 0 ? '<span class="chip chip--red">' + offPct + '% OFF</span>' : '') + '</div>' +
-          '<p class="pdp__desc">' + esc(p.desc.split('. ').slice(0, 2).join('. ') + '.') + '</p>' +
-          '<div class="pdp__opts">' + p.sizes.map(function (s) {
-            return '<button class="optbtn' + (s[0] === size ? ' is-on' : '') + '" data-qv-size="' + esc(s[0]) + '">' + esc(s[0]) + '<small>' + money(s[1]) + '</small></button>';
+          '<p class="pdp__desc">' + esc(String(p.desc || '').split('. ').slice(0, 2).join('. ') + '.') + '</p>' +
+          '<div class="pdp__opts">' + p.sizes.map(function (row) {
+            return '<button type="button" class="optbtn' + (row[0] === size ? ' is-on' : '') +
+              '" data-qv-size="' + esc(row[0]) + '">' + esc(row[0]) +
+              '<small>' + money(row[1]) + '</small></button>';
           }).join('') + '</div>' +
           '<div class="pdp__buy"><span class="qty qty--lg"><button data-qv-minus>−</button>' +
           '<input data-qv-qty value="1" readonly><button data-qv-plus>+</button></span>' +
           (p.stock
             ? '<button class="btn btn--primary btn--lg" data-qv-add>' + ic('cart') + ' Add to Cart</button>'
             : '<button class="btn btn--ghost btn--lg" disabled>' + ic('bell') + ' Notify Me</button>') +
-          '<button class="btn btn--ghost btn--lg" data-wish="' + p.slug + '" aria-label="Wishlist">' + ic('heart') + '</button></div>' +
-          (p.stock ? '' : '<p class="small muted mt-8">Sold out for now — we press to order, so it is usually back within a week.</p>') +
+          '<button class="btn btn--ghost btn--lg" data-wish="' + esc(p.slug) +
+          '" aria-label="Wishlist">' + ic('heart') + '</button></div>' +
+          (p.stock ? '' : '<p class="small muted mt-8">Sold out for now — we press to order.</p>') +
           '<div class="pdp__ticks">' + (p.highlights || []).slice(0, 3).map(function (h) {
             return '<span class="tick">' + ic('check') + esc(h) + '</span>';
           }).join('') + '</div>' +
-          '<a class="linkish" href="product.html?p=' + p.slug + '">View full details →</a></div></div>';
+          '<a class="linkish" href="product.html?p=' + encodeURIComponent(p.slug) +
+          '">View full details →</a></div></div>';
         Wish.sync();
       };
       render();
       const inEl = $('[data-modal-in]', Modal.el);
       inEl.onclick = function (e) {
         const s = e.target.closest('[data-qv-size]');
-        if (s) { size = s.getAttribute('data-qv-size'); price = p.sizes.filter(function (z) { return z[0] === size; })[0][1]; render(); return; }
+        if (s) {
+          size = s.getAttribute('data-qv-size');
+          const selected = p.sizes.filter(function (z) { return z[0] === size; })[0];
+          if (!selected) return;
+          price = selected[1];
+          selectedPhotoIndex = 0;
+          render();
+          const newSize = Array.prototype.slice.call(inEl.querySelectorAll('[data-qv-size]'))
+            .filter(function (b) { return b.getAttribute('data-qv-size') === size; })[0];
+          if (newSize) newSize.focus();
+          return;
+        }
+        const t = e.target.closest('[data-qv-thumb]');
+        if (t) {
+          const idx = Number(t.getAttribute('data-qv-thumb'));
+          const images = picturesFor(size);
+          if (!Number.isInteger(idx) || idx < 0 || idx >= images.length) return;
+          selectedPhotoIndex = idx;
+          const image = inEl.querySelector('[data-qv-main-image]');
+          if (image) image.src = images[idx];
+          inEl.querySelectorAll('[data-qv-thumb]').forEach(function (button) {
+            button.classList.toggle('is-on', button === t);
+          });
+          return;
+        }
         const q = $('[data-qv-qty]', inEl);
         if (e.target.closest('[data-qv-minus]')) { q.value = Math.max(1, +q.value - 1); return; }
         if (e.target.closest('[data-qv-plus]')) { q.value = Math.min(99, +q.value + 1); return; }
@@ -501,7 +571,10 @@
           return;
         }
         const w = e.target.closest('[data-wish]');
-        if (w) { e.stopPropagation(); Wish.toggle(w.getAttribute('data-wish')).then(function () { render(); }); return; }
+        if (w) {
+          e.stopPropagation();
+          Wish.toggle(w.getAttribute('data-wish')).then(function () { render(); });
+        }
       };
       Scrim.open(); Modal.el.classList.add('is-open');
     },
