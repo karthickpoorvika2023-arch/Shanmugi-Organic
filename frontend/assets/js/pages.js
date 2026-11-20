@@ -476,23 +476,30 @@
 
     /* Display ONLY the images actually saved for this product.
        No fabricated category/farm thumbnails for missing image slots. */
-    const gallerySrcs = (function () {
-      const saved = Array.isArray(p.images)
-        ? p.images
-        : (p.img ? [p.img] : []); // original static-catalog fallback
-      const unique = [];
-      saved.forEach(function (url) {
-        if (typeof url !== 'string') return;
-        url = url.trim();
-        if (url && unique.indexOf(url) === -1) unique.push(url);
+    const galleryForSize = function (currentSize) {
+      const bySize = p.variant_images && typeof p.variant_images === 'object' ? p.variant_images : {};
+      const specific = Array.isArray(bySize[currentSize]) ? bySize[currentSize] : [];
+      const hasSpecificGalleries = Object.keys(bySize).some(function (key) {
+        return Array.isArray(bySize[key]) && bySize[key].length > 0;
       });
-      return unique.slice(0, 5);
-    })();
-    // If a product has no uploaded images, the main area gets one fallback;
-    // the thumbnail strip remains empty instead of inventing image slots.
-    const mainImage = gallerySrcs[0] || p.img || 'assets/img/categories/' + p.cat + '.svg';
+      // Once galleries are assigned, never show a 500 ml photo as the 5 L pack.
+      const saved = specific.length ? specific : hasSpecificGalleries ? [] :
+        (Array.isArray(p.images) && p.images.length ? p.images : (p.img ? [p.img] : []));
+      const unique = [];
+      saved.forEach(function (src) {
+        if (typeof src !== 'string') return;
+        src = src.trim();
+        if (src && unique.indexOf(src) < 0) unique.push(src);
+      });
+      return unique;
+    };
 
     const draw = function () {
+      const gallerySrcs = galleryForSize(size);
+      const hasMappedImages = p.variant_images && Object.keys(p.variant_images).some(function (key) {
+        return Array.isArray(p.variant_images[key]) && p.variant_images[key].length;
+      });
+      const mainImage = gallerySrcs[0] || (!hasMappedImages && p.img) || 'assets/img/categories/' + p.cat + '.svg';
       const price = priceOf(size), mrp = mrpOf(size);
       const offPct = mrp > price ? Math.round((mrp - price) / mrp * 100) : 0;
       host.innerHTML =
@@ -501,7 +508,7 @@
         '<div><div class="gallery__main"><img src="' + esc(mainImage) + '" alt="' + esc(p.name) + '"></div>' +
         (gallerySrcs.length ? '<div class="gallery__thumbs">' +
         gallerySrcs.map(function (src, i) {
-          return '<button class="' + (i === 0 ? 'is-on' : '') + '" data-thumb="' + esc(src) + '"><img src="' + esc(src) + '" alt=""></button>';
+          return '<button type="button" class="' + (i === 0 ? 'is-on' : '') + '" data-thumb="' + esc(src) + '" aria-label="Photo ' + (i + 1) + ' for ' + esc(size) + '"><img src="' + esc(src) + '" alt="' + esc(size + ' image ' + (i + 1)) + '"></button>';
         }).join('') + '</div>' : '') + '</div>' +
 
         /* main column */

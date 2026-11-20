@@ -1004,6 +1004,26 @@
       '</div></div></div>';
   }
 
+  /* Each size has its own independent image gallery, kept as Storage URLs.
+     Legacy global Product Images stay available as a fallback until replaced. */
+  function productSizeBlockHTML(s) {
+    s = Array.isArray(s) ? s : ['', '', ''];
+    return '<div class="size-block" style="padding:12px;margin-bottom:12px;border:1px solid #e0e8db;border-radius:12px;background:#fbfdf8">' +
+      '<div class="size-row" style="display:flex;gap:8px;align-items:center;margin-bottom:9px">' +
+      '<input class="form-control pSizeUnit" aria-label="Size label" placeholder="e.g. 500 ml" value="' + escHtml(s[0] || '') + '" style="flex:1;min-width:0">' +
+      '<input class="form-control pSizePrice" aria-label="Selling price" type="number" min="1" placeholder="Price ₹" value="' + (s[1] || '') + '" style="flex:1;min-width:0">' +
+      '<input class="form-control pSizeMrp" aria-label="MRP" type="number" min="1" placeholder="MRP ₹" value="' + (s[2] || '') + '" style="flex:1;min-width:0">' +
+      '<button type="button" class="size-row-remove" style="width:34px;flex-shrink:0;background:white;border:1px solid #e2e8e0;border-radius:7px;padding:7px;cursor:pointer;color:#dc3545;font-size:13px;font-weight:700" title="Remove size">✕</button></div>' +
+      '<div class="variant-gallery" style="padding:9px;background:#f2f9ee;border:1px solid #d9e8d3;border-radius:9px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap">' +
+      '<span class="variant-gallery-caption" style="font-size:12px;font-weight:700;color:#166734">Images for this size · 0 images</span>' +
+      '<button type="button" class="variant-gallery-add" style="font-size:12px;border:1px solid #176b37;background:#fff;color:#176b37;border-radius:7px;padding:7px 10px;cursor:pointer">+ Add Images</button>' +
+      '</div><input type="file" class="variant-gallery-file" accept="image/png,image/jpeg,image/webp" multiple hidden>' +
+      '<div class="variant-gallery-items" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:9px"></div>' +
+      '<p class="variant-gallery-status" role="status" style="margin:6px 0 0;color:#627565;font-size:11px">First image will be the main photo for this size.</p>' +
+      '</div></div>';
+  }
+
   /* ============================================================ PRODUCTS */
   function getProductFormHTML(p) {
     var cats = SITE ? SITE.categories : [];
@@ -1025,14 +1045,7 @@
       '<div style="flex:1;font-size:11px;font-weight:600;color:#6f7d72;text-transform:uppercase">MRP (₹)</div>' +
       '<div style="width:40px"></div>' +
       '</div>' +
-      existingSizes.map(function (s) {
-        return '<div class="size-row" style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
-          '<input class="form-control pSizeUnit" placeholder="e.g. 500g" value="' + escHtml(s[0] || '') + '" style="flex:1">' +
-          '<input class="form-control pSizePrice" type="number" placeholder="e.g. 55" value="' + (s[1] || '') + '" style="flex:1">' +
-          '<input class="form-control pSizeMrp" type="number" placeholder="e.g. 63" value="' + (s[2] || '') + '" style="flex:1">' +
-          '<button type="button" class="size-row-remove" style="width:32px;flex-shrink:0;background:none;border:1px solid #e2e8e0;border-radius:6px;padding:5px;cursor:pointer;color:#dc3545;font-size:13px;font-weight:700" title="Remove">✕</button>' +
-          '</div>';
-      }).join('');
+      existingSizes.map(productSizeBlockHTML).join('');
 
     return '<div class="form-group"><label>Product Name *</label><input class="form-control" id="pName" placeholder="e.g. Groundnut Oil" value="' + escHtml(p.name || '') + '"></div>' +
       '<div class="form-group"><label>Tamil Name</label><input class="form-control" id="pTa" placeholder="e.g. கடலை எண்ணெய்" value="' + escHtml(p.ta || '') + '"></div>' +
@@ -1060,7 +1073,7 @@
       /* Product Images — dynamic add / remove (like size variants) */
       '<div class="form-group">' +
       '<label style="display:flex;align-items:center;justify-content:space-between">' +
-      '<span>Product Images <span style="font-weight:400;font-size:11px;color:#92a096">(first one is the main image)</span></span>' +
+      '<span>Shared / fallback images <span style="font-weight:400;font-size:11px;color:#92a096">(optional; shown only for sizes without specific photos)</span></span>' +
       '<button type="button" id="pAddImage" style="font-size:12px;font-weight:600;color:#2f8f43;background:none;border:1px solid #2f8f43;border-radius:6px;padding:3px 10px;cursor:pointer">+ Add Image</button>' +
       '</label>' +
       '<div id="pImagesContainer" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">' + imageSlotsHTML + '</div>' +
@@ -1416,43 +1429,148 @@
     repairBlackBackdrops();
   }
 
-  function initSizeVariants(modal) {
+  function initSizeVariants(modal, product) {
     var container = modal.querySelector('#pSizesContainer');
     var addBtn = modal.querySelector('#pAddSize');
+    var saved = product && product.variant_images && typeof product.variant_images === 'object'
+      ? product.variant_images : {};
+    modal._variantPendingUploads = 0;
+    modal._variantUploadFailed = false;
 
-    function makeRow() {
-      var row = document.createElement('div');
-      row.className = 'size-row';
-      row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px';
-      row.innerHTML =
-        '<input class="form-control pSizeUnit" placeholder="e.g. 1kg" style="flex:1">' +
-        '<input class="form-control pSizePrice" type="number" placeholder="Price ₹" style="flex:1">' +
-        '<input class="form-control pSizeMrp" type="number" placeholder="MRP ₹" style="flex:1">' +
-        '<button type="button" class="size-row-remove" style="width:32px;flex-shrink:0;background:none;border:1px solid #e2e8e0;border-radius:6px;padding:5px;cursor:pointer;color:#dc3545;font-size:13px;font-weight:700" title="Remove">✕</button>';
-      return row;
+    function initBlock(block) {
+      var label = block.querySelector('.pSizeUnit').value.trim();
+      block._variantPhotos = Array.isArray(saved[label]) ? saved[label].filter(function (x) {
+        return typeof x === 'string' && x.indexOf('https://') === 0;
+      }).slice() : [];
+      drawBlock(block);
     }
+    function drawBlock(block) {
+      var pics = block._variantPhotos || [];
+      var label = block.querySelector('.pSizeUnit').value.trim() || 'This size';
+      block.querySelector('.variant-gallery-caption').textContent = label + ' · ' + pics.length + ' image' + (pics.length === 1 ? '' : 's');
+      block.querySelector('.variant-gallery-items').innerHTML = pics.map(function (url, index) {
+        return '<div style="background:#fff;border:1px solid #dce7d7;border-radius:7px;overflow:hidden;padding:4px" data-variant-index="' + index + '">' +
+          '<img src="' + escHtml(url) + '" loading="lazy" alt="' + escHtml(label + ' image ' + (index + 1)) + '" style="width:100%;height:84px;object-fit:contain;display:block">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;gap:2px">' +
+          (index === 0 ? '<strong style="font-size:9px;color:#176b37">Main</strong>' : '<button type="button" class="variant-make-main" style="font-size:10px;color:#176b37;border:0;background:none;cursor:pointer;padding:2px" title="Set as main photo">Make main</button>') +
+          '<button type="button" class="variant-remove-image" style="color:#b91c1c;border:0;background:none;cursor:pointer;padding:2px 4px" title="Remove photo">✕</button>' +
+          '</div></div>';
+      }).join('');
+    }
+    container.querySelectorAll('.size-block').forEach(initBlock);
+    addBtn.addEventListener('click', function () {
+      var block = document.createElement('div');
+      block.innerHTML = productSizeBlockHTML(['', '', '']);
+      block = block.firstElementChild;
+      container.appendChild(block);
+      initBlock(block);
+      block.querySelector('.pSizeUnit').focus();
+    });
 
-    function addRemoveListeners() {
-      container.querySelectorAll('.size-row-remove').forEach(function (btn) {
-        btn.onclick = function () {
-          var rows = container.querySelectorAll('.size-row');
-          if (rows.length <= 1) { toast('At least one size variant is required', 'warn'); return; }
-          btn.closest('.size-row').remove();
+    container.addEventListener('click', function (event) {
+      var block = event.target.closest('.size-block');
+      if (!block) return;
+      if (event.target.closest('.size-row-remove')) {
+        if (container.querySelectorAll('.size-block').length === 1) {
+          toast('At least one size variant is required', 'warn'); return;
+        }
+        if (modal._variantPendingUploads) { toast('Wait for image uploads to finish', 'warn'); return; }
+        block.remove(); return;
+      }
+      if (event.target.closest('.variant-gallery-add')) {
+        block.querySelector('.variant-gallery-file').click(); return;
+      }
+      var photo = event.target.closest('[data-variant-index]');
+      if (!photo) return;
+      var index = Number(photo.getAttribute('data-variant-index'));
+      if (!Number.isInteger(index) || index < 0 || index >= block._variantPhotos.length) return;
+      if (event.target.closest('.variant-remove-image')) {
+        block._variantPhotos.splice(index, 1);
+        drawBlock(block); return;
+      }
+      if (event.target.closest('.variant-make-main')) {
+        var selected = block._variantPhotos.splice(index, 1)[0];
+        block._variantPhotos.unshift(selected);
+        drawBlock(block);
+      }
+    });
+    container.addEventListener('input', function (event) {
+      if (event.target.matches('.pSizeUnit')) {
+        var block = event.target.closest('.size-block');
+        if (block) drawBlock(block);
+      }
+    });
+
+    function prepareUpload(file) {
+      return new Promise(function (resolve, reject) {
+        if (!file || !/^image\/(png|jpeg|webp)$/.test(file.type)) {
+          reject(new Error('PNG, JPG and WebP images only')); return;
+        }
+        if (file.size > 8 * 1024 * 1024) { reject(new Error('Choose an image under 8 MB')); return; }
+        var objectUrl = URL.createObjectURL(file);
+        var picture = new Image();
+        picture.onload = function () {
+          URL.revokeObjectURL(objectUrl);
+          var ratio = Math.min(1, 1600 / picture.width, 1600 / picture.height);
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(picture.width * ratio));
+          canvas.height = Math.max(1, Math.round(picture.height * ratio));
+          var ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error('Image processing unavailable')); return; }
+          // Do not paint a white backdrop; WebP retains PNG transparency.
+          ctx.drawImage(picture, 0, 0, canvas.width, canvas.height);
+          var mime = canEncode('image/webp') ? 'image/webp' : 'image/png';
+          var encoded = mime === 'image/webp' ? canvas.toDataURL(mime, .83) : canvas.toDataURL(mime);
+          if (encoded.length > 2900000) { reject(new Error('This photo is too large after resizing. Choose a smaller photo.')); return; }
+          resolve(encoded);
         };
+        picture.onerror = function () { URL.revokeObjectURL(objectUrl); reject(new Error('Could not read photo')); };
+        picture.src = objectUrl;
       });
     }
 
-    addBtn.addEventListener('click', function () {
-      var row = makeRow();
-      container.appendChild(row);
-      addRemoveListeners();
-      row.querySelector('.pSizeUnit').focus();
+    container.addEventListener('change', function (event) {
+      if (!event.target.matches('.variant-gallery-file')) return;
+      var input = event.target;
+      var block = input.closest('.size-block');
+      if (!block) return;
+      var files = Array.from(input.files || []);
+      input.value = '';
+      if (!files.length) return;
+      modal._variantPendingUploads++;
+      var status = block.querySelector('.variant-gallery-status');
+      var button = block.querySelector('.variant-gallery-add');
+      button.disabled = true;
+      status.textContent = 'Uploading ' + files.length + ' photo(s) securely…';
+      (async function () {
+        var savedCount = 0;
+        try {
+          for (var i = 0; i < files.length; i++) {
+            status.textContent = 'Uploading ' + (i + 1) + '/' + files.length + ' — ' + files[i].name;
+            var dataUrl = await prepareUpload(files[i]);
+            var result = await demoAdminRequest('admin-image-upload', { image: dataUrl });
+            if (!result || typeof result.url !== 'string' || result.url.indexOf('https://') !== 0) {
+              throw new Error('Upload succeeded without a valid image URL');
+            }
+            block._variantPhotos.push(result.url);
+            savedCount++;
+            drawBlock(block);
+          }
+          status.textContent = savedCount + ' uploaded. Click Save Product to link photos to the selected size.';
+        } catch (err) {
+          modal._variantUploadFailed = true;
+          status.textContent = 'Upload stopped: ' + (err.message || err);
+          toast('Image upload failed: ' + (err.message || err), 'error');
+        } finally {
+          modal._variantPendingUploads--;
+          button.disabled = false;
+        }
+      })();
     });
-
-    addRemoveListeners();
   }
 
   function readProductForm(modal) {
+    if (modal._variantPendingUploads > 0) { toast('Please wait until all size photos finish uploading', 'warn'); return null; }
     var name = modal.querySelector('#pName').value.trim();
     var cat = modal.querySelector('#pCat').value;
     if (!name) { toast('Product name is required', 'error'); return null; }
@@ -1471,6 +1589,16 @@
       sizes.push([unit, pr, mrpV > 0 ? mrpV : pr]);
     });
     if (!valid || sizes.length === 0) { toast('Each size needs a label and a valid price', 'error'); return null; }
+    var keys = sizes.map(function (row) { return row[0].toLowerCase(); });
+    if (new Set(keys).size !== keys.length) { toast('Every size label must be unique', 'error'); return null; }
+    var variantImages = {};
+    sizeRows.forEach(function (row) {
+      var block = row.closest('.size-block');
+      if (!block) return;
+      var key = row.querySelector('.pSizeUnit').value.trim();
+      var urls = (block._variantPhotos || []).filter(Boolean);
+      if (urls.length) variantImages[key] = urls.slice();
+    });
 
     var firstPrice = sizes[0][1];
     var firstMrp = sizes[0][2];
@@ -1504,8 +1632,9 @@
       rating: parseFloat(modal.querySelector('#pRating').value) || 4.5,
       reviews: 0,
       badge: modal.querySelector('#pBadge').value.trim() || '',
-      img: imgs[0] || '',
+      img: (variantImages[firstUnit] && variantImages[firstUnit][0]) || imgs[0] || '',
       images: imgs,
+      variant_images: variantImages,
       desc: modal.querySelector('#pDesc').value.trim() || '',
       desc_ta: modal.querySelector('#pDescTa').value.trim() || '',
       stock: modal.querySelector('#pStock').checked,
@@ -1566,6 +1695,7 @@
           badge: meta.badge || '', desc: r.description || '',
           desc_ta: typeof meta.desc_ta === 'string' ? meta.desc_ta : '',
           img: img, images: images, sizes: sizes,
+          variant_images: meta.variant_images && typeof meta.variant_images === 'object' ? meta.variant_images : {},
           highlights: Array.isArray(meta.highlights) ? meta.highlights : [],
           highlights_ta: Array.isArray(meta.highlights_ta) ? meta.highlights_ta : [],
           custom: !!meta.custom
@@ -1789,7 +1919,7 @@
         return productSaveInModal(m, upsertProductToSupabase(updated, slug), 'Product updated in Supabase!');
       });
       initImageUpload(modal);
-      initSizeVariants(modal);
+      initSizeVariants(modal, product);
     });
   });
 

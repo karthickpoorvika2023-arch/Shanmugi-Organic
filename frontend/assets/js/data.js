@@ -571,8 +571,6 @@
     var imageList = Array.isArray(detail.images) ? detail.images.map(catalogImage).filter(Boolean) : [];
     var legacyImage = catalogImage(row.image_url || detail.img || '');
     if (!imageList.length && legacyImage) imageList = [legacyImage];
-    var primaryImage = imageList[0] || catalogImage(old.img || '');
-    if (!primaryImage) primaryImage = catalogImage('assets/img/categories/' + cat + '.svg') || 'assets/img/categories/cold-pressed-oils.svg';
     // Important: don't insert the fallback into imageList. No upload = no thumbnail.
     var sizes = Array.isArray(detail.sizes) ? detail.sizes.filter(function (s) {
       return Array.isArray(s) && typeof s[0] === 'string' && s[0].trim() &&
@@ -581,6 +579,18 @@
       return [s[0], Number(s[1]), Math.max(Number(s[1]), catalogNumber(s[2], Number(s[1])) )];
     }) : [];
     if (!sizes.length) sizes = Array.isArray(old.sizes) && old.sizes.length ? old.sizes : [[unit, price, mrp]];
+    // Per-pack photo galleries live in products.admin_details.variant_images.
+    // Legacy global images stay as fallback for packs without their own photos.
+    var variantImages = {};
+    if (detail.variant_images && typeof detail.variant_images === 'object' && !Array.isArray(detail.variant_images)) {
+      sizes.forEach(function (row) {
+        var list = detail.variant_images[row[0]];
+        if (Array.isArray(list)) variantImages[row[0]] = list.map(catalogImage).filter(Boolean);
+      });
+    }
+    var firstPackImages = variantImages[sizes[0][0]] || [];
+    var primaryImage = firstPackImages[0] || imageList[0] || catalogImage(old.img || '');
+    if (!primaryImage) primaryImage = catalogImage('assets/img/categories/' + cat + '.svg') || 'assets/img/categories/cold-pressed-oils.svg';
     var badge = String(detail.badge || old.badge || '');
     var tags = Array.isArray(old.tags) ? old.tags.slice() : [];
     if (badge) {
@@ -598,7 +608,7 @@
       off: mrp > price ? Math.round((1 - price / mrp) * 100) : 0,
       rating: Math.max(0, Math.min(5, catalogNumber(detail.rating, old.rating || 4.5))),
       reviews: Math.max(0, catalogNumber(detail.reviews, old.reviews || 0)),
-      img: primaryImage, images: imageList,
+      img: primaryImage, images: imageList, variant_images: variantImages,
       sku: old.sku || ('SO-' + (SKU_PREFIX[cat] || 'CUS') + '-' + String(i + 1).padStart(3, '0')),
       badge: badge, tags: tags,
       featured: tags.indexOf('featured') >= 0,

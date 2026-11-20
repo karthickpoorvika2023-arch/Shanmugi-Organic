@@ -17,7 +17,7 @@ Deno.serve(async req => {
   const extraOrigins = env('ADMIN_ALLOWED_ORIGINS').split(',').map(s => s.trim()).filter(Boolean);
   const allowedOrigin = !origin || localOrigin || [...defaultOrigins, ...extraOrigins].includes(origin);
   const url = new URL(req.url);
-  const isAdminAction = /^\/admin-(check|payments|orders|customers|categories|category-upsert|category-delete|products|product-upsert|product-delete)$/.test(
+  const isAdminAction = /^\/admin-(check|payments|orders|customers|categories|category-upsert|category-delete|products|product-upsert|product-delete|image-upload)$/.test(
     url.pathname.replace(/^.*\/demo-payment-kit/, '')
   );
   // Never expose demo checkout to hosted origins.
@@ -38,6 +38,43 @@ Deno.serve(async req => {
     if (!admin) return reply({ error: 'Approved admin access required' }, 403, cors);
 
     if (url.pathname.endsWith('/admin-check')) return reply({ admin: true, mode: 'demo' }, 200, cors);
+    // Authenticated and allowlisted admin-only image upload. The browser NEVER
+    // receives the service-role key or direct Storage write access.
+    if (url.pathname.endsWith('/admin-image-upload')) {
+      const raw = await req.text();
+      if (raw.length > 3000000) return reply({ error: 'Photo too large after compression (max 2 MB).' }, 413, cors);
+      let payload: { image?: string };
+      try { payload = JSON.parse(raw); } catch { return reply({ error: 'Invalid upload request' }, 400, cors); }
+      const match = typeof payload.image === 'string' ?
+        /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(payload.image) : null;
+      if (!match) return reply({ error: 'Upload a PNG, JPEG or WebP photo' }, 400, cors);
+      const mime = `image/${match[1]}`;
+      let bytes: Uint8Array;
+      try {
+        const binary = atob(match[2]);
+        if (binary.length < 20 || binary.length > 2200000) return reply({ error: 'Image must be under 2.2 MB' }, 413, cors);
+        bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      } catch { return reply({ error: 'Invalid image bytes' }, 400, cors); }
+      const isPNG = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+      const isJPEG = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+      const isWebP = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+        String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP';
+      if (!((mime === 'image/png' && isPNG) || (mime === 'image/jpeg' && isJPEG) ||
+            (mime === 'image/webp' && isWebP))) return reply({ error: 'File is not a valid image' }, 400, cors);
+      const extension = mime === 'image/png' ? 'png' : mime === 'image/jpeg' ? 'jpg' : 'webp';
+      const path = `${auth.user.id}/${crypto.randomUUID()}.${extension}`;
+      const bucket = 'shanmuga-variant-photos';
+      const { error: uploadError } = await client.storage.from(bucket).upload(path, bytes, {
+        contentType: mime, upsert: false, cacheControl: '31536000'
+      });
+      if (uploadError) {
+        console.error('[admin-image-upload] upload', uploadError);
+        return reply({ error: 'Photo upload failed. Ensure the shanmuga-variant-photos bucket exists and is public.' }, 500, cors);
+      }
+      const { data: publicData } = client.storage.from(bucket).getPublicUrl(path);
+      return reply({ url: publicData.publicUrl }, 201, cors);
+    }
     // ADMIN PRODUCTS: every request runs AFTER getUser() + ownpay_payment_admins check.
     if (url.pathname.endsWith('/admin-products')) {
       const { data, error } = await client.from('products')
@@ -97,11 +134,34 @@ Deno.serve(async req => {
       const hlTa = Array.isArray(p.highlights_ta) ? p.highlights_ta : [];
       if (hlTa.length > 10 || hlTa.some(item => typeof item !== 'string' || item.length > 200))
         return reply({ error: 'Invalid Tamil highlights' }, 400, cors);
+      // Galleries are stored as URLs in admin_details JSONB rather than
+      // base64 blobs. The 5-image legacy gallery limit is not applied here.
+      const variantInput = p.variant_images === undefined ? {} : p.variant_images;
+      if (!variantInput || typeof variantInput !== 'object' || Array.isArray(variantInput))
+        return reply({ error: 'Invalid size galleries' }, 400, cors);
+      const variant_images: Record<string, string[]> = {};
+      const storagePrefix = env('SUPABASE_URL') + '/storage/v1/object/public/shanmuga-variant-photos/';
+      let totalVariantPhotos = 0;
+      const allowedSizes = new Set(sizes.map(item => item[0]));
+      for (const [label, photos] of Object.entries(variantInput)) {
+        if (!allowedSizes.has(label) || !Array.isArray(photos))
+          return reply({ error: 'Image gallery belongs to an unknown size' }, 400, cors);
+        const urls: string[] = [];
+        for (const rawUrl of photos) {
+          if (typeof rawUrl !== 'string' || rawUrl.length > 2048 || !rawUrl.startsWith(storagePrefix) ||
+              !/^https:\/\/[^\s"'<>]+$/.test(rawUrl))
+            return reply({ error: 'Size gallery images must be uploaded through the admin uploader' }, 400, cors);
+          if (!urls.includes(rawUrl)) urls.push(rawUrl);
+          totalVariantPhotos++;
+          if (totalVariantPhotos > 200) return reply({ error: 'Maximum 200 variant photos per product; contact support for bulk galleries' }, 400, cors);
+        }
+        if (urls.length) variant_images[label] = urls;
+      }
       const rating = Number(p.rating);
       const details = {
         ta: safe(p.ta, 150), badge: safe(p.badge, 80),
         desc_ta: safe(p.desc_ta, 10000), highlights_ta: hlTa.map(item => item.trim()).filter(Boolean),
-        images: p.images, img, sizes,
+        images: p.images, img, sizes, variant_images,
         highlights: hl, rating: Number.isFinite(rating) ? Math.max(1, Math.min(5, rating)) : 4.5,
         reviews: Math.max(0, Math.min(1000000, Number(p.reviews) || 0)),
         custom: p.custom === true
