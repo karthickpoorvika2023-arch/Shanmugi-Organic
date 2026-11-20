@@ -1485,24 +1485,30 @@ html.lang-ta .sec-head .ta { font-size: 1em; color: inherit; }
 .catrail--circle .catcard__img {
   width: 100%;
   aspect-ratio: 1;
+  box-sizing: border-box;
   border-radius: 50%;
-  background: #ffffff; /* solid white circle instead of grey ring */
-  display: grid;
-  place-items: center;
-  padding: 12%;
+  background: #ffffff; /* white outer ring */
+  display: block;
+  overflow: hidden;
+  padding: 5px; /* exact white gap before the image */
   margin-bottom: 10px;
   transition: transform .16s ease, background .25s ease, box-shadow .16s ease;
 }
 
-/* Home category carousel: complete white circle, no cropped product. */
+/* Home category carousel: keep a perfect inner circle after the 5px white gap. */
 .catrail--circle .catcard__img img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   border-radius: 50%;
   background: #ffffff;
+}
+
+.catrail--circle .catcard__img img[src$=".svg"] {
+  object-fit: contain;
+  padding: 10%;
 }
 
 .catrail--circle .catcard:hover {
