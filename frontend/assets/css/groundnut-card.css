@@ -142,8 +142,8 @@ html.lang-ta .so-exact-card__en { display:none; }
 .so-exact-card__title {
   position:absolute;top:62.85%;left:5.35%;
   width:64%;margin:0;
-  font:500 8.15cqw/1.25 'Poppins','Noto Sans Tamil',sans-serif;
-  letter-spacing:-.1px;
+  font:700 8.15cqw/1.25 'Poppins','Noto Sans Tamil',sans-serif;
+  letter-spacing:-.043em;
   white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;
 }
@@ -155,7 +155,7 @@ html.lang-ta .so-exact-card__en { display:none; }
 html.lang-ta .so-exact-card__name.so-exact-card__ta { display:block;font-family:'Noto Sans Tamil',sans-serif;letter-spacing:-.025em;font-size:.8em;line-height:1.55; }
 .so-exact-card__price {
   position:absolute;top:62.82%;right:4.05%;margin:0;
-  font:600 8.15cqw/1.25 'Poppins',sans-serif;
+  font:700 8.15cqw/1.25 'Poppins',sans-serif;
   letter-spacing:-.01em;
   white-space:nowrap;
   color:#000;
@@ -214,4 +214,188 @@ html.lang-ta .so-exact-card__name.so-exact-card__ta { display:block;font-family:
 }
 @media(prefers-reduced-motion:reduce) {
   .so-exact-card__wish,.so-exact-card__add,.so-exact-card__arrow svg,.so-exact-card__photo-link img {transition-duration:.01ms!important;}
+}
+
+/* ======================================================================
+   V19 — Owner-reference compact mobile cards. Do not stretch cards:
+   the original 1163:1708 design proportions are preserved at all widths.
+   Quick View is accessible by touch or hover with existing data-quick hook.
+   ====================================================================== */
+.so-exact-card__quick {
+  box-sizing: border-box;
+  position: absolute;
+  z-index: 6;
+  right: 7.3%;
+  bottom: 47%;
+  left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgba(255,255,255,.58);
+  border-radius: 999px;
+  background: #176b37;
+  color: #fff;
+  padding: 6px 11px;
+  font: 600 clamp(11px, 2.5cqw, 14px)/1.1 'Poppins',sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 1;
+  transform: none;
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.so-exact-card__quick svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  flex: none;
+}
+.so-exact-card__quick:hover {
+  background: #0f552a;
+  box-shadow: 0 6px 14px rgba(0,0,0,.12);
+  transform: translateY(-2px);
+}
+.so-exact-card__quick:focus-visible { outline: 2px solid #f6b600; outline-offset: 2px; }
+@media (max-width: 700px) {
+  html body .pgrid.pgrid--3,
+  html body .pgrid.pgrid--4,
+  html body .home-bestsellers .pgrid[data-rail="bestseller"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    align-items: stretch;
+  }
+  html body .pgrid > .so-exact-card {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 1163 / 1708 !important;
+    margin: 0;
+    border-radius: 9%;
+    box-shadow: 0 3px 13px rgba(21,64,28,.05);
+  }
+  html body .so-exact-card__frame {
+    width: 100%;
+    height: 63.23%;
+  }
+  html body .so-exact-card__frame path { stroke-width: 8; }
+  html body .so-exact-card__photo-link {
+    left: 50%;
+    top: 5.5%;
+    height: 49%;
+    width: 52% !important;
+  }
+  html body .so-exact-card__photo-link img[data-so-card-image] {
+    width: 100%; height: 100%; object-fit: contain; max-height: none;
+  }
+  html body .so-exact-card__discount {
+    left: 7.4%; top: 8%;
+    min-width: 0; min-height: 0;
+    padding: 4px 6px;
+    border-radius: 5px;
+    font-size: clamp(8px,2.4vw,11px);
+  }
+  html body .so-exact-card__wish {
+    width: 29px; height: 29px;
+    top: 6.6%; right: 7.4%;
+    border-width: 1px;
+    background: rgba(255,255,255,.7);
+  }
+  html body .so-exact-card__rating {
+    top: 52.5%; left: 7.5%;
+    gap: 3px;
+    min-width: 0; min-height: 0;
+    padding: 4px 7px;
+    font-size: clamp(9px,2.9vw,12px);
+    box-shadow: 1px 3px 7px rgba(22,77,32,.2);
+  }
+  html body .so-exact-card__rating svg { width: 12px; height: 12px; }
+  html body .so-exact-card__quick {
+    display: inline-flex !important;
+    right: 6.2%; bottom: 45%;
+    gap: 3px;
+    padding: 4px 6px;
+    border-radius: 999px;
+    min-height: 23px;
+    font-size: clamp(8px,2.2vw,10px);
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: none;
+  }
+  html body .so-exact-card__quick svg { width: 11px; height: 11px; }
+  html body .so-exact-card__category {
+    top: 58.6%; right: 5%;
+    max-width: 75%;
+    font-size: clamp(6.5px,1.75vw,9px);
+    line-height: 1.1;
+  }
+  html body .so-exact-card__title {
+    top: 64.3%; left: 5.35%;
+    width: 64%;
+    font-size: clamp(12px,3.4vw,16px);
+    letter-spacing: -.04em;
+    line-height: 1.16;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html body .so-exact-card__title--mid { font-size: clamp(10px,3.05vw,14px); }
+  html body .so-exact-card__title--long { font-size: clamp(9px,2.8vw,13px); }
+  html body .so-exact-card__title .so-exact-card__name { white-space: nowrap; }
+  html.lang-ta body .so-exact-card__title .so-exact-card__ta {
+    font-size: .87em;
+    line-height: 1.23;
+    letter-spacing: 0;
+  }
+  html body .so-exact-card__price {
+    top: 64.2%; right: 5.35%;
+    font-size: clamp(12px,3.5vw,16px);
+    line-height: 1.16;
+  }
+  html body .so-exact-card__volume {
+    top: 70.5%; left: 5.35%;
+    font-size: clamp(10px,2.7vw,13px);
+    line-height: 1.22;
+  }
+  html body .so-exact-card__mrp {
+    top: 70.5%; right: 5.2%;
+    font-size: clamp(10px,2.65vw,12px);
+    line-height: 1.22;
+  }
+  html body .so-exact-card__description {
+    top: 76.5%; left: 5.35%; right: 5.35%;
+    max-height: 8%;
+    font-size: clamp(8px,2.17vw,10px);
+    line-height: 1.35;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  html body .so-exact-card__add {
+    top: auto;
+    bottom: 3%;
+    left: 6.5%;
+    width: 87%;
+    height: 10%;
+    min-height: 0;
+    padding: 0 4px;
+    border-radius: 8px;
+    gap: 5px;
+    font-size: clamp(10px,2.9vw,13px);
+    line-height: 1.15;
+  }
+  html body .so-exact-card__arrow { width: 12px; height: 12px; }
+}
+@media (max-width: 359px) {
+  html body .pgrid.pgrid--3, html body .pgrid.pgrid--4 { gap: 9px !important; }
+  html body .so-exact-card__title { font-size: 11px; }
+  html body .so-exact-card__title--mid { font-size: 10px; }
+  html body .so-exact-card__title--long { font-size: 9px; }
+  html body .so-exact-card__price { font-size: 12px; }
+  html body .so-exact-card__quick { font-size: 8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .so-exact-card__quick { transition: none!important; }
 }

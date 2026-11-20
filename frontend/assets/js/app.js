@@ -556,6 +556,7 @@
       (badge ? '<span class="so-exact-card__discount' + (!p.stock ? ' so-exact-card__discount--out' : '') + '">' + esc(badge) + '</span>' : '') +
       '<button type="button" class="so-exact-card__wish" data-wish="' + slug + '" aria-label="Add ' + esc(name) + ' to wishlist">' + heart + '</button>' +
       '<div class="so-exact-card__rating" aria-label="' + (rated ? rate.toFixed(1) + ' out of 5 stars' : 'Not rated yet') + '"><span>' + (rated ? rate.toFixed(1) : 'New') + '</span>' + (rated ? star : '') + '</div>' +
+      '<button type="button" class="so-exact-card__quick" data-quick="' + slug + '" aria-label="Quick view ' + esc(name) + '">' + ic('eye') + '<span>Quick View</span></button>' +
       '<span class="so-exact-card__category" title="' + esc(category) + '"><span class="so-exact-card__en">' + esc(category) + '</span><span class="so-exact-card__ta">' + esc(categoryTa) + '</span></span>' +
       '<div class="so-exact-card__title' + titleClass + '"><a class="so-exact-card__name so-exact-card__en" href="' + url + '" title="' + esc(name) + '">' + esc(name) + '</a><a class="so-exact-card__name so-exact-card__ta" href="' + url + '" title="' + esc(altName) + '">' + esc(altName) + '</a></div>' +
       '<p class="so-exact-card__price">' + money(p.price) + '</p>' +
