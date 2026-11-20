@@ -1,3 +1,4 @@
+@import url("./groundnut-card.css?v=reference-v16");
 /* ==========================================================================
    Shanmuga Organics — desktop stylesheet
    1. Tokens          6. Hero              11. Testimonials / newsletter
@@ -5153,7 +5154,7 @@ html.lang-ta .pgrid .pcard.pcard--ref .pcard__nm { display: none; }
   width: clamp(21px, 5.8cqw, 30px);
   height: clamp(21px, 5.8cqw, 30px);
   margin-left: 1px;
-  background: center / contain no-repeat url("../img/icons/card-arrow-white.svg?v=product-card-icon-v15");
+  background: center / contain no-repeat url("../img/icons/card-arrow-white.svg");
   transform: translate3d(0, 0, 0);
   transition: transform .28s cubic-bezier(.2,.75,.25,1);
 }

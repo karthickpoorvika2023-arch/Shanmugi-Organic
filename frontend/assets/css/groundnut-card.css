@@ -1,0 +1,217 @@
+/* Shanmuga Organics — EXACT USER-APPROVED PRODUCT CARD
+   Based on GROUNDNUT_CARD_CORRECTED_REFERENCE(1).html.
+   This stylesheet is loaded by style.css and never changes admin, auth or payment CSS.
+   Card aspect-ratio, notch geometry, placement, type size and colors come from the supplied HTML.
+*/
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+.pgrid .so-exact-card, .so-exact-card {
+  --so-green: #176b37;
+  --so-mint: #f4ffe9;
+  --so-red: #d21c16;
+  --so-white: #fff;
+  box-sizing: border-box;
+  container-type: inline-size;
+  isolation: isolate;
+  position: relative;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
+  aspect-ratio: 1163 / 1708;
+  overflow: hidden;
+  background: var(--so-white);
+  border: 0;
+  border-radius: 8.6%;
+  box-shadow: 0 .7cqw 2.2cqw rgba(0,0,0,.05);
+  font-family: 'Poppins','Noto Sans Tamil',sans-serif;
+  color: #000;
+  text-align: left;
+}
+.so-exact-card *, .so-exact-card *::before, .so-exact-card *::after { box-sizing: border-box; }
+.so-exact-card__frame {
+  pointer-events: none;
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 63.23%;
+  overflow: visible;
+}
+.so-exact-card__frame path {
+  fill: var(--so-mint);
+  stroke: var(--so-green);
+  stroke-width: 4;
+}
+.so-exact-card__photo-link {
+  position: absolute;
+  z-index: 1;
+  top: 5.25%;
+  left: 48.7%;
+  transform: translateX(-50%);
+  width: var(--so-image-width,24.94%);
+  height: 48.9%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.so-exact-card__photo-link img[data-so-card-image] {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  border: 0;
+  background: transparent;
+  mix-blend-mode: normal;
+  -webkit-user-drag: none;
+  transition: transform .28s cubic-bezier(.2,.75,.25,1);
+}
+.so-exact-card__photo-link img[hidden] { display: none !important; }
+.so-exact-card__fallback {
+  display: none;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  color: #176b37;
+  text-align: center;
+  font: 500 2.65cqw/1.4 'Poppins',sans-serif;
+}
+.so-exact-card__fallback svg { width: 15cqw; height: 18cqw; }
+.so-exact-card__photo-link.is-broken .so-exact-card__fallback { display: flex; }
+.so-exact-card__discount {
+  position: absolute;
+  z-index: 2;
+  left: 7.4%; top: 7.67%;
+  min-width: 15.95%; min-height: 4.10%;
+  display: flex; align-items:center; justify-content:center;
+  padding: .4cqw 1.15cqw;
+  border-radius: 1.50cqw;
+  background: var(--so-red); color: var(--so-white);
+  font: 700 2.90cqw/1 'Poppins',sans-serif;
+  white-space: nowrap;
+}
+.so-exact-card__discount--out { background: #697d70; }
+.so-exact-card__wish {
+  position:absolute; z-index:2;
+  top: 6.82%; right:8.30%;
+  display:grid; place-items:center;
+  width:9.5cqw; height:9.5cqw;
+  padding: 0;
+  border: .28cqw solid #d9d9d9;
+  border-radius:50%;
+  background: transparent;
+  color: #ff111c;
+  cursor:pointer;
+  transition:transform .2s ease,background .2s ease;
+}
+.so-exact-card__wish svg { width:75%;height:75%;fill:transparent;stroke:currentColor;stroke-width:2.7;transition:fill .2s ease; }
+.so-exact-card__wish:hover { transform:scale(1.05);background:rgba(255,255,255,.4); }
+.so-exact-card__wish.is-on svg { fill: currentColor; }
+.so-exact-card__wish:focus-visible,.so-exact-card__add:focus-visible,.so-exact-card__photo-link:focus-visible,
+.so-exact-card__name:focus-visible { outline:3px solid #ffb900;outline-offset:3px; }
+.so-exact-card__rating {
+  position:absolute; z-index:3;
+  left:9.45%; top:52.7%;
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:1.10cqw;
+  min-width:16.45cqw;min-height:7.4cqw;
+  padding:.7cqw 1.7cqw;
+  border-radius:999px;
+  background:white;color:#205b3a;
+  box-shadow:.9cqw 1.0cqw 1.1cqw rgba(22,77,32,.38);
+  font:700 4.15cqw/1 'Poppins',sans-serif;
+  white-space:nowrap;
+}
+.so-exact-card__rating svg { width:4.35cqw;height:4.35cqw;flex:none;fill:#ffb900; }
+.so-exact-card__category {
+  position:absolute;z-index:2;
+  top:57.63%;right:4.25%;
+  max-width:65%;margin:0;
+  color:var(--so-green);
+  font:700 2.75cqw/1.25 'Poppins','Noto Sans Tamil',sans-serif;
+  text-align:right;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.so-exact-card__ta { display:none; }
+html.lang-ta .so-exact-card__ta { display:inline; }
+html.lang-ta .so-exact-card__en { display:none; }
+.so-exact-card__title {
+  position:absolute;top:62.85%;left:5.35%;
+  width:64%;margin:0;
+  font:700 8.15cqw/1.25 'Poppins','Noto Sans Tamil',sans-serif;
+  letter-spacing:-.043em;
+  white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.so-exact-card__title--mid { font-size:7.2cqw; }
+.so-exact-card__title--long { font-size:6.3cqw; }
+.so-exact-card__name, .so-exact-card__name:visited { display:block; color:#000;text-decoration:none;overflow:hidden;text-overflow:ellipsis; }
+.so-exact-card__name.so-exact-card__ta { display:none; }
+.so-exact-card__name:hover { color: var(--so-green); }
+html.lang-ta .so-exact-card__name.so-exact-card__ta { display:block;font-family:'Noto Sans Tamil',sans-serif;letter-spacing:-.025em;font-size:.8em;line-height:1.55; }
+.so-exact-card__price {
+  position:absolute;top:62.82%;right:4.05%;margin:0;
+  font:700 8.15cqw/1.25 'Poppins',sans-serif;
+  letter-spacing:-.01em;
+  white-space:nowrap;
+  color:#000;
+}
+.so-exact-card__volume {
+  position:absolute;top:69.75%;left:5.35%;margin:0;
+  color:var(--so-green);
+  font:700 4.4cqw/1.25 'Poppins',sans-serif;
+  white-space:nowrap;
+}
+.so-exact-card__mrp {
+  position:absolute;top:69.65%;right:4.25%;margin:0;
+  color:#707070;
+  font:500 5.45cqw/1.25 'Poppins',sans-serif;
+  text-decoration-line:line-through;
+  text-decoration-thickness:.25cqw;
+  text-decoration-color:#999;
+  white-space:nowrap;
+}
+.so-exact-card__description {
+  position:absolute;top:75.25%;left:5.35%;right:4.1%;margin:0;
+  max-height:9.5%;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  line-clamp:2;
+  overflow:hidden;
+  color:var(--so-green);
+  font:600 2.65cqw/1.85 'Poppins','Noto Sans Tamil',sans-serif;
+  overflow-wrap:break-word;
+}
+.so-exact-card__add {
+  position:absolute;inset:84.10% auto auto 7.58%;z-index:2;
+  display:flex;justify-content:center;align-items:center;
+  gap:3.55cqw;width:85.6%;height:10.2%;
+  padding:0 3cqw;border:0;
+  border-radius:3.35cqw;
+  background:var(--so-green);
+  color:var(--so-white);
+  font:600 8.2cqw/1 'Poppins',sans-serif;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .2s ease,box-shadow .2s ease;
+}
+.so-exact-card__add:hover { background:#12592d;box-shadow:0 1cqw 2cqw rgba(22,107,55,.22); }
+.so-exact-card__add:disabled { background:#9ab79e; cursor:default; }
+.so-exact-card__add:active { transform:scale(.995); }
+.so-exact-card__arrow { display:inline-flex;align-items:center;justify-content:center;width:5cqw;height:5cqw;flex:none; }
+.so-exact-card__arrow svg { display:block;width:100%;height:100%;fill:currentColor;stroke:none;transform:translate3d(0,0,0);transition:transform .30s cubic-bezier(.22,.8,.25,1); }
+@media (hover:hover) and (pointer:fine) {
+  .so-exact-card__add:hover .so-exact-card__arrow svg { transform:translate3d(16%,-16%,0); }
+  .so-exact-card__photo-link:hover img[data-so-card-image] { transform: scale(1.02); }
+}
+.so-exact-card__add:focus-visible .so-exact-card__arrow svg { transform:translate3d(16%,-16%,0); }
+@media(max-width:700px) {
+  .pgrid.pgrid--3,.pgrid.pgrid--4 {grid-template-columns:minmax(0,1fr);gap:18px;}
+  .pgrid .so-exact-card {width:100%;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .so-exact-card__wish,.so-exact-card__add,.so-exact-card__arrow svg,.so-exact-card__photo-link img {transition-duration:.01ms!important;}
+}

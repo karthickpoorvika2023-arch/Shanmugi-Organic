@@ -518,71 +518,62 @@
   /* -------------------------------------------------------- product card --- */
   function card(p, opts) {
     opts = opts || {};
-    // The same product card is used on Home, About and Products listing pages.
-    // Keep the original data-* action hooks; design changes do not change cart data.
+    // Exact visual geometry from the user's supplied Groundnut Oil HTML.
+    // Product contents and all commerce events come from live SITE data.
     const slug = esc(p.slug || '');
-    const productUrl = 'product.html?p=' + encodeURIComponent(p.slug || '');
-    const imageSrc = String(p.img || '').trim();
-    const rating = Number(p.rating || 0);
-    const rated = Number.isFinite(rating) && rating > 0;
-    const off = Number(p.off || 0);
-    const hasSale = Number.isFinite(off) && off > 0;
-    const brief = String(p.desc || '').trim();
-    // Only show an MRP strike-through when the stored original price is
-    // valid and strictly above this product's actual selling price.
-    // This is catalog/Admin data, not a hard-coded or fabricated discount.
-    const salePrice = Number(p.price);
+    const url = 'product.html?p=' + encodeURIComponent(p.slug || '');
+    const name = String(p.name || 'Product');
+    const altName = String(p.ta || name);
+    const category = String(p.catName || p.cat || 'Shanmuga Organics');
+    const categoryTa = String(p.catTa || category);
+    const details = String(p.desc || '').trim();
+    const photo = String(p.img || '').trim();
+    const rate = Number(p.rating);
+    const rated = Number.isFinite(rate) && rate > 0;
+    const sale = Number(p.price);
     const mrp = Number(p.mrp);
-    const showMrp = Number.isFinite(salePrice) && salePrice > 0 &&
-      Number.isFinite(mrp) && mrp > salePrice;
-    const mediaClass = 'pcard__media' + (imageSrc ? '' : ' is-image-missing');
-    const placeholderSvg = '<svg viewBox="0 0 80 88" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M29 12h22v10l7 9v41a7 7 0 0 1-7 7H29a7 7 0 0 1-7-7V31l7-9z"/><path d="M29 13V8h22v5M22 39h36M22 65h36"/><path d="M40 48c-7 1-10 5-9 12 9 0 13-5 9-12zm0 0c6 1 11 6 10 12-7 0-12-4-10-12z"/></svg>';
-    // The frame follows the reference: rounded green outline and angled lower-left notch.
-    const frame = '<svg class="pcard__frame" viewBox="0 0 560 520" preserveAspectRatio="none" aria-hidden="true">' +
-      '<path d="M58 7 H502 Q548 7 548 56 V476 H210 L174 508 H14 V57 Q14 7 58 7 Z"/>' +
-      '</svg>';
-    const actionArrow = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H19V14M19 5l-10 10"/><path d="M19 15v4H5V5h5"/></svg>';
-    const badge = !p.stock ? 'Out of Stock' : hasSale ? Math.round(off) + '% OFF' : p.badge ? esc(p.badge) : '';
-    const badgeClass = !p.stock ? ' pcard__badge--out' : hasSale ? ' pcard__badge--sale' : '';
-
-    return '<article class="pcard pcard--ref" data-slug="' + slug + '">' +
-      '<div class="' + mediaClass + '">' + frame +
-      '<a class="pcard__image-link" href="' + productUrl + '" aria-label="View ' + esc(p.name) + '">' +
-      (imageSrc ? '<img data-pcard-image src="' + esc(imageSrc) + '" alt="' + esc(p.name) + '" loading="lazy">' : '') +
-      '<span class="pcard__fallback">' + placeholderSvg + '<span>Product photo coming soon</span></span></a>' +
-      (badge ? '<span class="pcard__badge' + badgeClass + '">' + badge + '</span>' : '') +
-      '<button type="button" class="pcard__wish" data-wish="' + slug + '" aria-label="Add ' + esc(p.name) + ' to wishlist">' + ic('heart') + '</button>' +
-      '<span class="pcard__rating-chip" aria-label="' + (rated ? rating.toFixed(1) + ' out of 5 stars' : 'New product') + '">' +
-      (rated ? '<b>' + rating.toFixed(1) + '</b><span aria-hidden="true">★</span>' : '<b>New</b>') + '</span>' +
-      '<button type="button" class="pcard__quick" data-quick="' + slug + '">' + ic('eye') + ' Quick View</button>' +
-      '</div>' +
-      '<div class="pcard__body">' +
-      '<span class="pcard__cat">' + esc(p.catName || p.cat || 'Shanmuga Organics') + '</span>' +
-      '<div class="pcard__headline"><div class="pcard__namewrap">' +
-      '<a class="pcard__nm" href="' + productUrl + '">' + esc(p.name) + '</a>' +
-      '<span class="pcard__ta ta">' + esc(p.ta || '') + '</span>' +
-      '</div><div class="pcard__price"><b>' + money(p.price) + '</b></div></div>' +
-      '<div class="pcard__pack-price-row">' +
-      '<span class="pcard__unit">' + esc(p.unit || '') + '</span>' +
-      (showMrp ? '<s class="pcard__mrp" aria-label="MRP ' + money(mrp) + '">' + money(mrp) + '</s>' : '') +
-      '</div>' +
-      (brief ? '<p class="pcard__intro">' + esc(brief) + '</p>' : '<p class="pcard__intro"></p>') +
-      (p.stock ? '<button type="button" class="btn btn--primary pcard__cta" data-add="' + slug + '"><span>Add to Cart</span>' + actionArrow + '</button>' :
-        '<button type="button" class="btn btn--ghost pcard__cta" disabled><span>Out of Stock</span></button>') +
-      '</div></article>';
+    const isMrpHigher = Number.isFinite(mrp) && Number.isFinite(sale) && mrp > sale && sale > 0;
+    const discount = isMrpHigher ? Math.round((mrp - sale) * 100 / mrp) : Number(p.off || 0);
+    const badge = !p.stock ? 'Out of Stock' : discount > 0 ? discount + '% OFF' : String(p.badge || '').trim();
+    const titleLength = name.length;
+    const titleClass = titleLength > 23 ? ' so-exact-card__title--long' :
+      titleLength > 16 ? ' so-exact-card__title--mid' : '';
+    // Bottles look like the reference; broader products (grains, powder packs)
+    // get a wider image box without changing frame proportions.
+    const bottleLike = /oil|ghee|hair|honey|juice|syrup/i.test(name);
+    const imageWidth = bottleLike ? '24.94%' : '40%';
+    const fallback = '<svg viewBox="0 0 80 88" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M29 12h22v10l7 9v41a7 7 0 0 1-7 7H29a7 7 0 0 1-7-7V31l7-9z"/><path d="M29 13V8h22v5M22 39h36M22 65h36"/><path d="M40 48c-7 1-10 5-9 12 9 0 13-5 9-12zm0 0c6 1 11 6 10 12-7 0-12-4-10-12z"/></svg>';
+    const frame = '<svg class="so-exact-card__frame" viewBox="0 0 1163 1080" preserveAspectRatio="none" aria-hidden="true"><path d="M 126 35 L 1026 35 C 1082 35 1127 80 1127 136 L 1127 958 L 433 958 L 357 1034 L 36 1034 L 36 136 C 36 80 81 35 126 35 Z"/></svg>';
+    const heart = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 42.5 6.9 26.8C-1.6 18.9 4 6.8 14.2 6.8c4.4 0 7.6 2.3 9.8 5.8 2.2-3.5 5.4-5.8 9.8-5.8 10.2 0 15.8 12.1 7.3 20L24 42.5Z"/></svg>';
+    const star = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 1.9 3.05 6.21 6.87 1-4.96 4.83 1.17 6.84L12 17.55l-6.13 3.23 1.17-6.84-4.96-4.83 6.87-1L12 1.9Z"/></svg>';
+    // The exact two-path vector is embedded here, so there is no missing asset.
+    const arrow = '<span class="so-exact-card__arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="7.4 7.5 20 20.3" focusable="false"><path d="M25.704,8.394h-8.379c-.467.008-.84.394-.832.861.008.456.376.824.832.832h6.335s-10.525,10.525-10.525,10.525c-.331.331-.331.866,0,1.197s.866.331,1.197,0l10.525-10.525v6.335c-.008.467.364.853.832.861s.853-.364.861-.832c0-.01,0-.02,0-.029v-8.379c0-.467-.379-.846-.846-.846h0Z"/><path d="M24.84,20.367v3.009c0,.99-.81,1.8-1.8,1.8h-11.34c-.99,0-1.8-.81-1.8-1.8v-11.34c0-.99.81-1.8,1.8-1.8h3.052c.552,0,1-.448,1-1h0c0-.552-.448-1-1-1h-3.052c-2.099,0-3.8,1.701-3.8,3.8v11.34c0,2.09,1.71,3.8,3.8,3.8h11.34c2.099,0,3.8-1.701,3.8-3.8v-3.009c0-.552-.448-1-1-1h0c-.552,0-1,.448-1,1Z"/></svg></span>';
+    return '<article class="so-exact-card" data-slug="' + slug + '" style="--so-image-width:' + imageWidth + '" aria-label="' + esc(name) + '">' +
+      frame +
+      '<a class="so-exact-card__photo-link' + (photo ? '' : ' is-broken') + '" href="' + url + '" aria-label="View ' + esc(name) + '">' +
+      (photo ? '<img data-so-card-image src="' + esc(photo) + '" alt="' + esc(name) + '" loading="lazy">' : '') +
+      '<span class="so-exact-card__fallback">' + fallback + '<span>Product photo coming soon</span></span></a>' +
+      (badge ? '<span class="so-exact-card__discount' + (!p.stock ? ' so-exact-card__discount--out' : '') + '">' + esc(badge) + '</span>' : '') +
+      '<button type="button" class="so-exact-card__wish" data-wish="' + slug + '" aria-label="Add ' + esc(name) + ' to wishlist">' + heart + '</button>' +
+      '<div class="so-exact-card__rating" aria-label="' + (rated ? rate.toFixed(1) + ' out of 5 stars' : 'Not rated yet') + '"><span>' + (rated ? rate.toFixed(1) : 'New') + '</span>' + (rated ? star : '') + '</div>' +
+      '<span class="so-exact-card__category" title="' + esc(category) + '"><span class="so-exact-card__en">' + esc(category) + '</span><span class="so-exact-card__ta">' + esc(categoryTa) + '</span></span>' +
+      '<div class="so-exact-card__title' + titleClass + '"><a class="so-exact-card__name so-exact-card__en" href="' + url + '" title="' + esc(name) + '">' + esc(name) + '</a><a class="so-exact-card__name so-exact-card__ta" href="' + url + '" title="' + esc(altName) + '">' + esc(altName) + '</a></div>' +
+      '<p class="so-exact-card__price">' + money(p.price) + '</p>' +
+      '<p class="so-exact-card__volume">' + esc(p.unit || '') + '</p>' +
+      (isMrpHigher ? '<s class="so-exact-card__mrp" aria-label="Original MRP ' + money(mrp) + '">' + money(mrp) + '</s>' : '') +
+      '<p class="so-exact-card__description" title="' + esc(details) + '">' + esc(details) + '</p>' +
+      (p.stock ? '<button class="so-exact-card__add" type="button" data-add="' + slug + '"><span>Add to Cart</span>' + arrow + '</button>' :
+        '<button class="so-exact-card__add" type="button" disabled><span>Out of Stock</span></button>') +
+      '</article>';
   }
 
-  // Handle photo URLs that are missing or not publicly accessible (e.g. a
-  // deleted Supabase Storage file) without showing broken-image icons/alt text.
-  // The capture listener also works for cards rendered after async catalog load.
+  // Broken private/removed image URLs should not expose broken-image glyphs.
   document.addEventListener('error', function (event) {
-    var target = event.target;
-    if (!target || !target.matches || !target.matches('img[data-pcard-image]')) return;
-    var media = target.closest('.pcard__media');
-    if (media) {
-      media.classList.add('is-image-missing');
-      target.hidden = true;
-    }
+    const img = event.target;
+    if (!img || !img.matches || !img.matches('img[data-so-card-image]')) return;
+    const link = img.closest('.so-exact-card__photo-link');
+    if (link) link.classList.add('is-broken');
+    img.hidden = true;
   }, true);
 
   /* ------------------------------------------------------------ carousel --- */
