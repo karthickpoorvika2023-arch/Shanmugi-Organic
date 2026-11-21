@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "shanmuki-organics",
+  "main": "./cloudflare-worker.js",
+  "compatibility_date": "2026-11-21",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "drop-trailing-slash",
+    "run_worker_first": ["/api/*"]
+  }
+}

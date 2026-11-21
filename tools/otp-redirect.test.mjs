@@ -26,6 +26,7 @@ function setup({ email = 'shopper@example.com', result, signin = false, recovery
         contains(name) { return classes.has(name); }, toggle(name, enabled) { enabled ? classes.add(name) : classes.delete(name); } },
       addEventListener(name, fn) { this.listeners[name] = fn; },
       appendChild(node) { this.children.push(node); },
+      replaceChildren(...nodes) { this.children = nodes; },
       setAttribute() {}, focus() {}, select() {}, scrollIntoView() {}
     };
   }
@@ -101,7 +102,7 @@ for (const [label, result, expectedHome] of [
   app.enter('123456');
   await app.verify();
   assert.deepEqual(app.calls, [['verify', 'shopper@example.com', '123456', 'email']]);
-  assert.equal(app.location.href === 'http://localhost:4173/', expectedHome, `${label} sign-in OTP redirect`);
+  assert.equal(app.location.href === 'index.html', expectedHome, `${label} sign-in OTP redirect`);
   assert.equal(app.storage.has('so_pending_signin_email'), !expectedHome);
 }
 {

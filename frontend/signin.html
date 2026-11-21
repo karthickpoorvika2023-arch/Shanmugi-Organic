@@ -412,45 +412,24 @@
         window.location.href = 'verify-otp.html?mode=signin&email=' + encodeURIComponent(email);
         return;
       }
-if (window.location.hostname === "shanmugaorganics.netlify.app") {
-  const response = await fetch(
-    "/.netlify/functions/signin-otp-start",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    }
-  );
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.error || "Could not send OTP");
-  }
-
-  sessionStorage.setItem("so_pending_signin_email", email);
-
-  window.location.href =
-    "verify-otp.html?mode=signin&email=" +
-    encodeURIComponent(email);
-
-  return;
-}
-
-      const { error } = await window.Supabase.signIn(email, password);
-
-      if (error) {
-        throw error;
+      // All hosted sign-ins must request an email OTP. Only Netlify uses its
+      // legacy function; Cloudflare uses our Worker API. Never fall back to a
+      // password-only session if the OTP endpoint is unavailable.
+      const otpEndpoint = window.location.hostname === 'shanmugaorganics.netlify.app'
+        ? '/.netlify/functions/signin-otp-start'
+        : '/api/signin-otp/start';
+      const response = await fetch(otpEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const result = await response.json().catch(function () { return null; });
+      if (!response.ok || !result?.sent) {
+        throw new Error(result?.error || 'OTP service unavailable. Please check the Cloudflare Worker deployment.');
       }
-
-      // Success - redirect to original page if specified, else account page
-      showAlert('Sign in successful! Redirecting...', 'success');
-
-      const target = safeTarget();
-
-      setTimeout(() => {
-        window.location.href = target;
-      }, 1000);
+      try { sessionStorage.setItem('so_pending_signin_email', email); } catch (e) { /* private mode */ }
+      window.location.href = 'verify-otp.html?mode=signin&email=' + encodeURIComponent(email);
+      return;
 
     } catch (error) {
       console.error('Sign in error:', error);
