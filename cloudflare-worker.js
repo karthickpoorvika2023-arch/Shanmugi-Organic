@@ -80,7 +80,7 @@ async function sendSignInOtp(request, env) {
     const passwordResponse = await fetch(new URL('/auth/v1/token?grant_type=password', supabaseUrl), {
       method: 'POST', headers,
       body: JSON.stringify({ email, password }),
-      redirect: 'error'
+      redirect: 'manual'
     });
     if (!passwordResponse.ok) {
       if (passwordResponse.status === 400 || passwordResponse.status === 401 || passwordResponse.status === 422) {
@@ -102,7 +102,7 @@ async function sendSignInOtp(request, env) {
     const otpResponse = await fetch(new URL('/auth/v1/otp', supabaseUrl), {
       method: 'POST', headers,
       body: JSON.stringify({ email, create_user: false }),
-      redirect: 'error'
+      redirect: 'manual'
     });
     if (!otpResponse.ok) {
       if (otpResponse.status === 429) {

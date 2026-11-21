@@ -30,6 +30,8 @@ let upstreamCalls = [];
 let passwordStatus = 200;
 let otpStatus = 200;
 globalThis.fetch = async (url, options) => {
+  // Cloudflare Workers reject redirect: 'error' before sending the request.
+  assert.equal(options.redirect, 'manual', 'Worker fetch must use Cloudflare-supported manual redirects');
   const name = new URL(url).pathname;
   const body = JSON.parse(options.body);
   upstreamCalls.push({ name, body, headers: options.headers });
